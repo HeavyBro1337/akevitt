@@ -23,7 +23,7 @@ type Account struct {
 }
 
 // Save, through `gob`, `Account` data at specified key in the database.
-func (account Account) save(key uint64, db *bolt.DB) error {
+func (account Account) Save(key uint64, db *bolt.DB) error {
 	errResult := db.Update(func(tx *bolt.Tx) error {
 		bkt, err := tx.CreateBucketIfNotExists([]byte(BUCKET_ACCOUNTS))
 
