@@ -13,12 +13,11 @@ import (
 const BUCKET_USERS string = "Players"
 
 type Player struct {
-	ID       uint64
 	Username string
 	Password string
 }
 
-func (p Player) Save(db *bolt.DB) error {
+func (p Player) Save(id uint64, db *bolt.DB) error {
 	errResult := db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(BUCKET_USERS))
 
@@ -29,7 +28,7 @@ func (p Player) Save(db *bolt.DB) error {
 		if err != nil {
 			return err
 		}
-		b.Put(Int2Byte(p.ID), serialized)
+		b.Put(Int2Byte(id), serialized)
 		return nil
 	})
 	return errResult
@@ -44,11 +43,13 @@ func CreatePlayer(db *bolt.DB, player Player) error {
 		if err != nil {
 			return err
 		}
+		id, _ := b.NextSequence()
+
 		serialized, err := player.Serialize()
+
 		if err != nil {
 			return err
 		}
-		id, _ := b.NextSequence()
 
 		b.Put(Int2Byte(id), serialized)
 		return nil
