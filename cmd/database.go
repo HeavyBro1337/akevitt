@@ -15,7 +15,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-const BUCKET_USERS string = "Accounts"
+const BUCKET_ACCOUNTS string = "Accounts"
 
 type Account struct {
 	Username string
@@ -25,7 +25,7 @@ type Account struct {
 // Save, through `gob`, `Account` data at specified key in the database.
 func (account Account) save(key uint64, db *bolt.DB) error {
 	errResult := db.Update(func(tx *bolt.Tx) error {
-		bkt, err := tx.CreateBucketIfNotExists([]byte(BUCKET_USERS))
+		bkt, err := tx.CreateBucketIfNotExists([]byte(BUCKET_ACCOUNTS))
 
 		if err != nil {
 			return err
@@ -46,7 +46,7 @@ func (account Account) String() string {
 
 func createAccount(db *bolt.DB, account Account) error {
 	errResult := db.Update(func(tx *bolt.Tx) error {
-		bkt, err := tx.CreateBucketIfNotExists([]byte(BUCKET_USERS))
+		bkt, err := tx.CreateBucketIfNotExists([]byte(BUCKET_ACCOUNTS))
 		if err != nil {
 			return err
 		}
@@ -66,10 +66,10 @@ func createAccount(db *bolt.DB, account Account) error {
 
 // Retrieves data, through `gob`, by converting byte array (value) at `key`
 // into `Account`.
-func GetAccount(key uint64, db *bolt.DB) Account {
+func getAccount(key uint64, db *bolt.DB) Account {
 	var result Account
 	db.Update(func(tx *bolt.Tx) error {
-		bkt, err := tx.CreateBucketIfNotExists([]byte(BUCKET_USERS))
+		bkt, err := tx.CreateBucketIfNotExists([]byte(BUCKET_ACCOUNTS))
 		if err != nil {
 			return err
 		}
