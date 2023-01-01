@@ -14,10 +14,22 @@ import (
 	"log"
 
 	"github.com/boltdb/bolt"
+	"github.com/fatih/color"
 	"github.com/gliderlabs/ssh"
 )
 
 const BUCKET_ACCOUNTS string = "Accounts"
+// In-game object.
+type Object interface {
+	Description() string // Retrieve description about that object
+	Save(key uint64, db *bolt.DB) error // Save object into database
+}
+
+func (self Account) Description() string {
+	format := "Name: %s\nThis is player.\n"
+	return fmt.Sprintf(color.BlueString(format), color.GreenString(self.Username))
+	
+}
 
 type Account struct {
 	Username string
@@ -32,7 +44,7 @@ func (account Account) Save(key uint64, db *bolt.DB) error {
 		if err != nil {
 			return err
 		}
-		serialized, err := account.Serialize()
+		serialized, err := Serialize(account)
 		if err != nil {
 			return err
 		}
@@ -59,7 +71,7 @@ func createAccount(db *bolt.DB, account Account) (id uint64, err error) {
 		}
 		idResult, _ = bkt.NextSequence()
 
-		serialized, err := account.Serialize()
+		serialized, err := Serialize(account)
 
 		if err != nil {
 			return err
@@ -80,7 +92,7 @@ func getAccount(key uint64, db *bolt.DB) (account Account, err error) {
 		if err != nil {
 			return err
 		}
-		result, err = DeserializeAccount(bkt.Get(intToByte(key)))
+		result, err = Deserialize[Account](bkt.Get(intToByte(key)))
 		if err != nil {
 			log.Fatal("Decode error: ", err)
 		}
@@ -112,7 +124,7 @@ func doesAccountExists(username string, db *bolt.DB) bool {
 			return err
 		}
 		bucket.ForEach(func(k, v []byte) error {
-			acc, err := DeserializeAccount(v)
+			acc, err := Deserialize[Account](v)
 			if err != nil {
 				return err
 			}
@@ -138,7 +150,7 @@ func Login(username string, password string, db *bolt.DB) (bool, *Account)  {
 			return err
 		}
 		bucket.ForEach(func(k, v []byte) error {
-			acc, err := DeserializeAccount(v)
+			acc, err := Deserialize[Account](v)
 			if err != nil {
 				return err
 			}
@@ -163,19 +175,19 @@ func intToByte(value uint64) []byte {
 	return binaryId
 }
 
-// Converts `Account` to byte array
-func (account Account) Serialize() ([]byte, error) {
-	var accBuff bytes.Buffer
-	enc := gob.NewEncoder(&accBuff)
-	encodeErr := enc.Encode(account)
+// Converts `T` to byte array
+func Serialize[T Object](v T) ([]byte, error) {
+	var buff bytes.Buffer
+	enc := gob.NewEncoder(&buff)
+	encodeErr := enc.Encode(v)
 	if encodeErr != nil {
 		return nil, encodeErr
 	}
-	return accBuff.Bytes(), nil
+	return buff.Bytes(), nil
 }
-// Converts byte array to Account struct.
-func DeserializeAccount(b []byte) (Account, error) {
-	var result Account
+// Converts byte array to T struct.
+func Deserialize[T Object](b []byte) (T, error) {
+	var result T
 	var decodeBuffer bytes.Buffer
 	decodeBuffer.Write(b)
 	dec := gob.NewDecoder(&decodeBuffer)
