@@ -7,29 +7,19 @@ For more information, view the man page or README.md
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"strings"
 
 	"github.com/boltdb/bolt"
-	"github.com/fatih/color"
 	"github.com/gdamore/tcell/v2"
 	"github.com/gliderlabs/ssh"
 	"github.com/rivo/tview"
-	"golang.org/x/term"
 )
 
 const COMMAND_PREFIX string = "/"
-
-const LOGO string = `
-   _____   __               .__  __    __   
-  /  _  \ |  | __ _______  _|__|/  |__/  |_ 
- /  /_\  \|  |/ // __ \  \/ /  \   __\   __\
-/    |    \    <\  ___/\   /|  ||  |  |  |  
-\____|__  /__|_ \\___  >\_/ |__||__|  |__|  
-        \/     \/    \/                    
-`
 
 type InputType int
 
@@ -38,6 +28,12 @@ const (
 	Command
 	Message
 )
+
+type ActiveSession struct {
+	account *Account
+	ui      *tview.Application
+	chat    *tview.Form
+}
 
 func main() {
 	//var sessions = make(map[ssh.Session]*Account)
@@ -48,66 +44,30 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	var sessions = make(map[ssh.Session]*Account)
+	var sessions = make(map[ssh.Session]ActiveSession)
 	// Open the SSH session with any clients who connect
 	ssh.Handle(func(sesh ssh.Session) {
-		sessions[sesh] = nil
 		screen, err := NewSessionScreen(sesh)
 		if err != nil {
 			fmt.Fprintln(sesh.Stderr(), "unable to create screen:", err)
 			return
 		}
 
+		purgeDeadSessions(&sessions)
 
-    purgeDeadSessions(&sessions)
-		
-    
-    app := tview.NewApplication().SetScreen(screen).EnableMouse(true)
-		var username string
-		var password string
-		var playerMessage string
-		gameScreen := tview.NewForm().AddInputField("Say: ", "", 128, nil, func(text string) {
-			playerMessage = text
-		}).
-			AddButton("Send", func() {
-				broadcastMessage(&sessions, playerMessage, sesh)
-			})
-		loginScreen := tview.NewForm().AddInputField("Username: ", "", 32, nil, func(text string) {
-			username = text
-			println(username)
-		}).
-			AddPasswordField("Password: ", "", 32, '*', func(text string) {
-				password = text
-				println(password)
-			})
-
-      loginScreen.
-      AddButton("Login", func() {
-        purgeDeadSessions(&sessions)
-				ok, acc := Login(username, password, db)
-				if ok {
-					if !checkCurrentLogin(*acc, &sessions) {
-						sessions[sesh] = acc
-						app.SetRoot(gameScreen, true)
-					} else {
-						app.SetRoot(errorBox("Somebody already logged in!", app, &loginScreen), false)
-					}
-				} else {
-					app.SetRoot(errorBox("Wrong password or username!", app, &loginScreen), false)
-				}
-
-			})
-    
+		app := tview.NewApplication().SetScreen(screen).EnableMouse(true)
+		sessions[sesh] = ActiveSession{chat: nil, account: nil, ui: app}
 		welcome := tview.NewModal().
 			SetText("Welcome to Akevitt. Would you like to register an account?").
 			AddButtons([]string{"Yes", "Login"}).
 			SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 				if buttonLabel == "Login" {
-					app.SetRoot(loginScreen, true)
+					app.SetRoot(generateLoginScreen(sesh, &sessions, db), true)
+				} else if buttonLabel == "Yes" {
+					app.SetRoot(generateRegistrationScreen(sesh, &sessions, db))
 				}
 			})
-      
-		loginScreen.SetBorder(true).SetTitle("Login")
+
 		app.SetRoot(welcome, false)
 		if err := app.Run(); err != nil {
 			fmt.Fprintln(sesh.Stderr(), err)
@@ -120,56 +80,17 @@ func main() {
 	log.Fatal(ssh.ListenAndServe(":1487", nil))
 }
 
-// Performs login based on user input.
-func loginCommand(sesh ssh.Session, uTerm *term.Terminal, db *bolt.DB, sessions map[ssh.Session]*Account) {
-	name, err := uTerm.ReadLine()
-	if err != nil {
-		return
-	}
-	password, err := uTerm.ReadPassword("Enter password: ")
-	if err != nil {
-		return
-	}
-	exists, acc := Login(name, password, db)
-	// We check if we logged in successfully
-	if exists {
-		// We also check if it was logged in already from the other user.
-		if !checkCurrentLogin(*acc, &sessions) {
-			sessions[sesh] = acc
-			io.WriteString(sesh, fmt.Sprintf(color.GreenString("Login successful. Welcome back, %s\n"), acc.Username))
-			return
-		} else {
-			io.WriteString(sesh, color.RedString("Error: this account is already logged in.\n"))
-			return
-		}
-	} else {
-		io.WriteString(sesh, color.RedString("Fail: wrong password or username.\n"))
-		return
-	}
-}
-
 // Broadcasts message
-func broadcastMessage(sessions *map[ssh.Session]*Account, message string, session ssh.Session) error {
-	for k, element := range *sessions {
-		if k == session {
-			// prevent broadcasting message to sender.
-			if element == nil {
-				io.WriteString(k, "Please "+color.GreenString("/login")+" or "+color.GreenString("/register")+"\n")
-				continue
-			}
-			continue
-		}
+func broadcastMessage(sessions *map[ssh.Session]ActiveSession, message string, session ssh.Session) error {
+	for key, element := range *sessions {
 		// The user is not authenticated
-		if element == nil {
+		if element.account == nil {
 			continue
 		}
-		if (*sessions)[session] == nil {
-			continue
-		}
-		_, err := io.WriteString(k, fmt.Sprintf(color.CyanString("%s: %s\n"), (*sessions)[session].Username, message))
-		if err != nil {
-			delete(*sessions, k)
-			continue
+		appendText(element.chat, *(*sessions)[session].account, message, element.ui)
+		// element.ui.Draw()
+		if key != session {
+			element.ui.ForceDraw()
 		}
 	}
 	return nil
@@ -187,14 +108,10 @@ func parseInput(inp string) (status InputType) {
 	}
 	return Message
 }
-func removeSession(s *[]ssh.Session, i int) {
-	(*s)[i] = (*s)[len(*s)-1]
-	(*s) = (*s)[:len(*s)-1]
-}
 
 // Iterates through all currently dead sessions by trying to send null character.
 // If it gets an error, then we found the dead session and we purge them from active ones.
-func purgeDeadSessions(sessions *map[ssh.Session]*Account) {
+func purgeDeadSessions(sessions *map[ssh.Session]ActiveSession) {
 	for k := range *sessions {
 
 		_, err := io.WriteString(k, "\000")
@@ -205,12 +122,149 @@ func purgeDeadSessions(sessions *map[ssh.Session]*Account) {
 }
 func errorBox[T tview.Primitive](message string, app *tview.Application, back *T) *tview.Modal {
 	result := tview.NewModal().SetText("Error!").SetText(message).SetTextColor(tcell.ColorRed).
-  SetBackgroundColor(tcell.ColorBlack).
-  AddButtons([]string{"Close"}).SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-    app.SetRoot(*back, false)
-  })
-  result.SetBorderColor(tcell.ColorDarkRed)
-  result.SetBorder(true)
+		SetBackgroundColor(tcell.ColorBlack).
+		AddButtons([]string{"Close"}).SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+		app.SetRoot(*back, false)
+	})
+	result.SetBorderColor(tcell.ColorDarkRed)
+	result.SetBorder(true)
 	return result
 
+}
+
+// generate game screen where all the things should happen
+func generateGameScreen(sesh ssh.Session, sessions *map[ssh.Session]ActiveSession) *tview.Form {
+	var playerMessage string
+	const LABEL string = "Message: "
+	gameScreen := tview.NewForm().AddInputField(LABEL, "", 128, nil, func(text string) {
+		playerMessage = text
+	})
+	gameScreen.GetFormItemByLabel(LABEL).(*tview.InputField).SetDoneFunc(func(key tcell.Key) {
+		println(key)
+		if key == tcell.KeyEnter {
+			if playerMessage == "" {
+				return
+			}
+			switch parseInput(playerMessage) {
+			case Message:
+				broadcastMessage(sessions, playerMessage, sesh)
+			case Command:
+				{
+					sendPrivateMessageToClient((*sessions)[sesh], "This is test")
+				}
+
+			}
+			playerMessage = ""
+			gameScreen.GetFormItemByLabel(LABEL).(*tview.InputField).SetText("")
+			(*sessions)[sesh].ui.SetFocus(gameScreen.GetFormItemByLabel(LABEL))
+
+		}
+
+	})
+	return gameScreen
+}
+func sendPrivateMessageToClient(active ActiveSession, message string) {
+	appendNoSenderText(active.chat, message, active.ui)
+}
+
+// generate login screen
+func generateLoginScreen(sesh ssh.Session, sessions *map[ssh.Session]ActiveSession, db *bolt.DB) *tview.Form {
+	var username string
+	var password string
+
+	gameScreen := generateGameScreen(sesh, sessions)
+
+	loginScreen := tview.NewForm().AddInputField("Username: ", "", 32, nil, func(text string) {
+		username = text
+	}).
+		AddPasswordField("Password: ", "", 32, '*', func(text string) {
+			password = text
+		})
+
+	loginScreen.
+		AddButton("Login", func() {
+			purgeDeadSessions(sessions)
+			ok, acc := Login(username, password, db)
+			if ok {
+				if !checkCurrentLogin(*acc, sessions) {
+					if active, ok := (*sessions)[sesh]; ok {
+						active.account = acc
+						active.chat = gameScreen
+						(*sessions)[sesh] = active
+					}
+					(*sessions)[sesh].ui.SetRoot(gameScreen, true)
+
+				} else {
+					(*sessions)[sesh].ui.SetRoot(errorBox("Somebody already logged in!", (*sessions)[sesh].ui, &loginScreen), false)
+				}
+			} else {
+				(*sessions)[sesh].ui.SetRoot(errorBox("Wrong password or username!", (*sessions)[sesh].ui, &loginScreen), false)
+			}
+
+		})
+	loginScreen.SetBorder(true).SetTitle("Login")
+	return loginScreen
+}
+
+// generate register screen
+func generateRegistrationScreen(sesh ssh.Session, sessions *map[ssh.Session]ActiveSession, db *bolt.DB) (*tview.Form, bool) {
+	var username string
+	var password string
+	var repeatPassword string
+
+	gameScreen := generateGameScreen(sesh, sessions)
+
+	registerScreen := tview.NewForm().AddInputField("Username: ", "", 32, nil, func(text string) {
+		username = text
+	}).
+		AddPasswordField("Password: ", "", 32, '*', func(text string) {
+			password = text
+		}).
+		AddPasswordField("Repeat password: ", "", 32, '*', func(text string) {
+			repeatPassword = text
+		})
+
+	registerScreen.
+		AddButton("Create account", func() {
+			purgeDeadSessions(sessions)
+			if password != repeatPassword {
+				(*sessions)[sesh].ui.SetRoot(errorBox("Password don't match", (*sessions)[sesh].ui, &registerScreen),
+					false)
+				return
+			}
+			if !doesAccountExists(username, db) {
+				acc := Account{Username: username, Password: password}
+				createAccount(db, acc)
+				if active, ok := (*sessions)[sesh]; ok {
+					active.account = &acc
+					active.chat = gameScreen
+					(*sessions)[sesh] = active
+					(*sessions)[sesh].ui.SetRoot(generateGameScreen(sesh, sessions), true)
+				}
+			} else {
+				(*sessions)[sesh].ui.SetRoot(errorBox("Account already exists", (*sessions)[sesh].ui, &registerScreen), false)
+			}
+		})
+	registerScreen.SetBorder(true).SetTitle("Register")
+	return registerScreen, true
+}
+
+// Appends message to the end-user
+func appendText(text *tview.Form, account Account, message string, ui *tview.Application) error {
+	if text == nil {
+		return errors.New("TextView is nil")
+	}
+	text.AddTextView(account.Username+": ", message, 0, 1, false, false)
+	return nil
+}
+
+func appendNoSenderText(text *tview.Form, message string, ui *tview.Application) error {
+	if text == nil {
+		return errors.New("TextView is nil")
+	}
+	text.
+		AddTextView("", message, 0, 1, false, false)
+
+	text.GetFormItem(text.GetFormItemCount() - 1).(*tview.TextView).SetTextColor(tcell.ColorPink)
+	return nil
 }

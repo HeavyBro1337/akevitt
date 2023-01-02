@@ -19,16 +19,17 @@ import (
 )
 
 const BUCKET_ACCOUNTS string = "Accounts"
+
 // In-game object.
 type Object interface {
-	Description() string // Retrieve description about that object
+	Description() string                // Retrieve description about that object
 	Save(key uint64, db *bolt.DB) error // Save object into database
 }
 
-func (self Account) Description() string {
+func (acc Account) Description() string {
 	format := "Name: %s\nThis is player.\n"
-	return fmt.Sprintf(color.BlueString(format), color.GreenString(self.Username))
-	
+	return fmt.Sprintf(color.BlueString(format), color.GreenString(acc.Username))
+
 }
 
 type Account struct {
@@ -56,7 +57,7 @@ func (account Account) Save(key uint64, db *bolt.DB) error {
 
 func (account Account) String() string {
 	// Do not ever pass the password.
-	return fmt.Sprintf("%s", account.Username)
+	return account.Username
 }
 
 func createAccount(db *bolt.DB, account Account) (id uint64, err error) {
@@ -76,7 +77,7 @@ func createAccount(db *bolt.DB, account Account) (id uint64, err error) {
 		if err != nil {
 			return err
 		}
-		
+
 		bkt.Put(intToByte(idResult), serialized)
 		return nil
 	})
@@ -96,25 +97,27 @@ func getAccount(key uint64, db *bolt.DB) (account Account, err error) {
 		if err != nil {
 			log.Fatal("Decode error: ", err)
 		}
-		
+
 		return nil
 	})
 	return result, dberr
 }
+
 // Checks current account for being in an active sessions. True if the account is already logged in.
-func checkCurrentLogin(acc Account, sessions *map[ssh.Session]*Account) bool {
-	// We want make sure we purge dead sessions before looking for active. 
+func checkCurrentLogin(acc Account, sessions *map[ssh.Session]ActiveSession) bool {
+	// We want make sure we purge dead sessions before looking for active.
 	purgeDeadSessions(sessions)
 	for _, v := range *sessions {
-		if v == nil {
+		if v.account == nil {
 			continue
 		}
-		if *v == acc {
+		if *v.account == acc {
 			return true
 		}
 	}
 	return false
 }
+
 // Checks that user exists in the database by username.
 func doesAccountExists(username string, db *bolt.DB) bool {
 	var result bool = false
@@ -139,9 +142,8 @@ func doesAccountExists(username string, db *bolt.DB) bool {
 	return result
 }
 
-
 // Logins character and retrieves account from database. It returns true if the login was successfull
-func Login(username string, password string, db *bolt.DB) (bool, *Account)  {
+func Login(username string, password string, db *bolt.DB) (bool, *Account) {
 	var accrResult *Account = nil
 	exists := false
 	db.Update(func(tx *bolt.Tx) error {
@@ -166,8 +168,6 @@ func Login(username string, password string, db *bolt.DB) (bool, *Account)  {
 	return exists, accrResult
 }
 
-
-
 // Converts `Uint64` to byte array
 func intToByte(value uint64) []byte {
 	binaryId := make([]byte, 8)
@@ -185,6 +185,7 @@ func Serialize[T Object](v T) ([]byte, error) {
 	}
 	return buff.Bytes(), nil
 }
+
 // Converts byte array to T struct.
 func Deserialize[T Object](b []byte) (T, error) {
 	var result T
