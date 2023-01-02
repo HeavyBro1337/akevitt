@@ -4,3 +4,4 @@ akevitt.db
 akevitt.db.lock
 cmd/akevitt.db
 cmd/akevitt.db.lock
+debug.bin
