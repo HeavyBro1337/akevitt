@@ -32,7 +32,7 @@ const (
 type ActiveSession struct {
 	account *Account
 	ui      *tview.Application
-	chat    *tview.Form
+	chat    *tview.List
 }
 
 func main() {
@@ -133,13 +133,20 @@ func errorBox[T tview.Primitive](message string, app *tview.Application, back *T
 }
 
 // generate game screen where all the things should happen
-func generateGameScreen(sesh ssh.Session, sessions *map[ssh.Session]ActiveSession) *tview.Form {
+func generateGameScreen(sesh ssh.Session, sessions *map[ssh.Session]ActiveSession) (*tview.Grid, *tview.List) {
 	var playerMessage string
 	const LABEL string = "Message: "
-	gameScreen := tview.NewForm().AddInputField(LABEL, "", 128, nil, func(text string) {
+	chatLog := tview.NewList()
+	inputField := tview.NewForm().AddInputField(LABEL, "", 32, nil, func(text string) {
 		playerMessage = text
 	})
-	gameScreen.GetFormItemByLabel(LABEL).(*tview.InputField).SetDoneFunc(func(key tcell.Key) {
+	gameScreen := tview.NewGrid().
+		SetRows(3).
+		SetColumns(30).
+		AddItem(chatLog, 1, 0, 3, 3, 0, 0, false).
+		SetBorders(true).
+		AddItem(inputField, 0, 0, 1, 3, 0, 0, true)
+	inputField.GetFormItemByLabel(LABEL).(*tview.InputField).SetDoneFunc(func(key tcell.Key) {
 		println(key)
 		if key == tcell.KeyEnter {
 			if playerMessage == "" {
@@ -155,13 +162,13 @@ func generateGameScreen(sesh ssh.Session, sessions *map[ssh.Session]ActiveSessio
 
 			}
 			playerMessage = ""
-			gameScreen.GetFormItemByLabel(LABEL).(*tview.InputField).SetText("")
-			(*sessions)[sesh].ui.SetFocus(gameScreen.GetFormItemByLabel(LABEL))
+			inputField.GetFormItemByLabel(LABEL).(*tview.InputField).SetText("")
+			(*sessions)[sesh].ui.SetFocus(inputField.GetFormItemByLabel(LABEL))
 
 		}
 
 	})
-	return gameScreen
+	return gameScreen, chatLog
 }
 func sendPrivateMessageToClient(active ActiveSession, message string) {
 	appendNoSenderText(active.chat, message, active.ui)
@@ -172,7 +179,7 @@ func generateLoginScreen(sesh ssh.Session, sessions *map[ssh.Session]ActiveSessi
 	var username string
 	var password string
 
-	gameScreen := generateGameScreen(sesh, sessions)
+	gameScreen, chatLog := generateGameScreen(sesh, sessions)
 
 	loginScreen := tview.NewForm().AddInputField("Username: ", "", 32, nil, func(text string) {
 		username = text
@@ -189,7 +196,7 @@ func generateLoginScreen(sesh ssh.Session, sessions *map[ssh.Session]ActiveSessi
 				if !checkCurrentLogin(*acc, sessions) {
 					if active, ok := (*sessions)[sesh]; ok {
 						active.account = acc
-						active.chat = gameScreen
+						active.chat = chatLog
 						(*sessions)[sesh] = active
 					}
 					(*sessions)[sesh].ui.SetRoot(gameScreen, true)
@@ -212,7 +219,7 @@ func generateRegistrationScreen(sesh ssh.Session, sessions *map[ssh.Session]Acti
 	var password string
 	var repeatPassword string
 
-	gameScreen := generateGameScreen(sesh, sessions)
+	gameScreen, chatLog := generateGameScreen(sesh, sessions)
 
 	registerScreen := tview.NewForm().AddInputField("Username: ", "", 32, nil, func(text string) {
 		username = text
@@ -237,9 +244,9 @@ func generateRegistrationScreen(sesh ssh.Session, sessions *map[ssh.Session]Acti
 				createAccount(db, acc)
 				if active, ok := (*sessions)[sesh]; ok {
 					active.account = &acc
-					active.chat = gameScreen
+					active.chat = chatLog
 					(*sessions)[sesh] = active
-					(*sessions)[sesh].ui.SetRoot(generateGameScreen(sesh, sessions), true)
+					(*sessions)[sesh].ui.SetRoot(gameScreen, true)
 				}
 			} else {
 				(*sessions)[sesh].ui.SetRoot(errorBox("Account already exists", (*sessions)[sesh].ui, &registerScreen), false)
@@ -250,21 +257,21 @@ func generateRegistrationScreen(sesh ssh.Session, sessions *map[ssh.Session]Acti
 }
 
 // Appends message to the end-user
-func appendText(text *tview.Form, account Account, message string, ui *tview.Application) error {
+func appendText(text *tview.List, account Account, message string, ui *tview.Application) error {
 	if text == nil {
 		return errors.New("TextView is nil")
 	}
-	text.AddTextView(account.Username+": ", message, 0, 1, false, false)
+	text.InsertItem(0, account.Username, message, 'M', nil)
+	text.SetWrapAround(true)
 	return nil
 }
 
-func appendNoSenderText(text *tview.Form, message string, ui *tview.Application) error {
+func appendNoSenderText(text *tview.List, message string, ui *tview.Application) error {
 	if text == nil {
 		return errors.New("TextView is nil")
 	}
 	text.
-		AddTextView("", message, 0, 1, false, false)
+		AddItem("", message, 'S', nil)
 
-	text.GetFormItem(text.GetFormItemCount() - 1).(*tview.TextView).SetTextColor(tcell.ColorPink)
 	return nil
 }
