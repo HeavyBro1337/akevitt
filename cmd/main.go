@@ -1,7 +1,7 @@
 /*
 Program written by Maxwell Jensen, Ivan Korchmit (c) 2023
 Licensed under European Union Public Licence 1.2.
-For more information, view the man page or README.md
+For more information, view LICENCE or README
 */
 
 package main
@@ -9,14 +9,13 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io"
-	"log"
-	"strings"
-
 	"github.com/boltdb/bolt"
 	"github.com/gdamore/tcell/v2"
 	"github.com/gliderlabs/ssh"
 	"github.com/rivo/tview"
+	"io"
+	"log"
+	"strings"
 )
 
 const COMMAND_PREFIX string = "/"
@@ -120,6 +119,7 @@ func purgeDeadSessions(sessions *map[ssh.Session]ActiveSession) {
 		}
 	}
 }
+
 func errorBox[T tview.Primitive](message string, app *tview.Application, back *T) *tview.Modal {
 	result := tview.NewModal().SetText("Error!").SetText(message).SetTextColor(tcell.ColorRed).
 		SetBackgroundColor(tcell.ColorBlack).
@@ -129,7 +129,6 @@ func errorBox[T tview.Primitive](message string, app *tview.Application, back *T
 	result.SetBorderColor(tcell.ColorDarkRed)
 	result.SetBorder(true)
 	return result
-
 }
 
 // generate game screen where all the things should happen
@@ -164,12 +163,11 @@ func generateGameScreen(sesh ssh.Session, sessions *map[ssh.Session]ActiveSessio
 			playerMessage = ""
 			inputField.GetFormItemByLabel(LABEL).(*tview.InputField).SetText("")
 			(*sessions)[sesh].ui.SetFocus(inputField.GetFormItemByLabel(LABEL))
-
 		}
-
 	})
 	return gameScreen, chatLog
 }
+
 func sendPrivateMessageToClient(active ActiveSession, message string) {
 	appendNoSenderText(active.chat, message, active.ui)
 }
