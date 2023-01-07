@@ -1,3 +1,9 @@
+/*
+Program written by Ivan Korchmit (c) 2023
+Licensed under European Union Public Licence 1.2.
+For more information, view LICENCE or README
+*/
+
 package main
 
 import (
