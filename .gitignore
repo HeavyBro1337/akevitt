@@ -1,7 +1,8 @@
+# executables
 cmd/akevitt
-cmd/akevitt.exe
-akevitt.db
-akevitt.db.lock
-cmd/akevitt.db
-cmd/akevitt.db.lock
+*.exe
+# database files
+*.db
+*.db.lock
+# Compiled project executable, made with Powershell script
 debug.bin
