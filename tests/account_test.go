@@ -1,8 +1,8 @@
-package main_test
+package main
 
 import (
-	akevitt "akevitt/cmd"
-	"fmt"
+	"akevitt/core/database"
+	"akevitt/core/database/utils"
 	"os"
 	"testing"
 
@@ -28,10 +28,8 @@ func Test_CreateWithEmptyCredentials(t *testing.T) {
 	db := initDB(t)
 	defer destroyDB(db, t)
 	// Register
-	acc := akevitt.Account{Username: "", Password: ""}
-	_, err := akevitt.CreateAccount(db, acc)
+	_, err := database.CreateAccount(db, "", "")
 	if err == nil { // No errors were made. But it should
-		fmt.Printf("Test failed: %s", err.Error())
 		t.Fail()
 	}
 
@@ -40,12 +38,11 @@ func Test_CreateDuplicateAccounts(t *testing.T) {
 	db := initDB(t)
 	defer destroyDB(db, t)
 	// Register
-	dupAcc := akevitt.Account{Username: "IamUserIwillDuplicateMyself", Password: "000000"}
-	_, err := akevitt.CreateAccount(db, dupAcc)
+	_, err := database.CreateAccount(db, "IamUserIwillDuplicateMyself", "000000")
 	if err != nil {
 		t.FailNow()
 	}
-	_, err = akevitt.CreateAccount(db, dupAcc)
+	_, err = database.CreateAccount(db, "IamUserIwillDuplicateMyself", "000000")
 	if err == nil {
 		t.Fail()
 	}
@@ -54,8 +51,7 @@ func Test_CreateDuplicateAccounts(t *testing.T) {
 func Test_CreateAccountsWithEmptyPassword(t *testing.T) {
 	db := initDB(t)
 	defer destroyDB(db, t)
-	pwdlessAcc := akevitt.Account{Username: "Passwordless27", Password: ""}
-	_, err := akevitt.CreateAccount(db, pwdlessAcc)
+	_, err := database.CreateAccount(db, "Passwordless27", "")
 	if err == nil {
 		t.FailNow()
 	}
@@ -64,29 +60,36 @@ func Test_CreateAccountsWithEmptyPassword(t *testing.T) {
 func Test_RetrieveAccounts(t *testing.T) {
 	db := initDB(t)
 	defer destroyDB(db, t)
-	hbAcc := akevitt.Account{Username: "HeavyBro", Password: "1337"}
-	hsrAcc := akevitt.Account{Username: "Hauser", Password: "999"}
 
-	id_heavybro, err := akevitt.CreateAccount(db, hbAcc)
+	id_heavybro, err := database.CreateAccount(db, "HeavyBro", "1337")
 	if err != nil {
 		t.FailNow()
 	}
-	id_hauser, err := akevitt.CreateAccount(db, hsrAcc)
+	id_hauser, err := database.CreateAccount(db, "Hauser", "999")
 	if err != nil {
 		t.FailNow()
 	}
-	retAcc, err := akevitt.GetAccount(id_heavybro, db) // HeavyBro Account
+	retAcc, err := database.GetAccount(id_heavybro, db) // HeavyBro Account
 	if err != nil {
 		t.FailNow()
 	}
-	if retAcc.Username != "HeavyBro" || retAcc.Password != "1337" {
+	if retAcc.Username != "HeavyBro" || retAcc.Password != utils.HashString("1337") {
 		t.Fail()
 	}
-	retAcc, err = akevitt.GetAccount(id_hauser, db) // Hauser Account
+	retAcc, err = database.GetAccount(id_hauser, db) // Hauser Account
 	if err != nil {
 		t.FailNow()
 	}
-	if retAcc.Username != "Hauser" || retAcc.Password != "999" {
+	if retAcc.Username != "Hauser" || retAcc.Password != utils.HashString("999") {
+		t.Fail()
+	}
+}
+
+func Test_HashString(t *testing.T) {
+	originalText := "qwerty1234"
+	hashedText := utils.HashString(originalText)
+	t.Logf("Original text: %s\nHashed text: %s", originalText, hashedText)
+	if originalText == hashedText {
 		t.Fail()
 	}
 }
