@@ -2,7 +2,7 @@ package input
 
 import "strings"
 
-const COMMAND_PREFIX string = "/"
+const MESSAGE_PREFIX string = "say"
 
 type InputType int
 
@@ -13,14 +13,14 @@ const (
 )
 
 // Entry point for all client input
-func ParseInput(inp string) (status InputType) {
+func ParseInput(inp string) (status InputType, parsedInput string) {
 
 	// Check that the string is empty, otherwise see if its q/Q
 	if len(inp) == 0 {
-		return Ignore
-	} else if strings.HasPrefix(inp, COMMAND_PREFIX) {
+		return Ignore, inp
+	} else if strings.HasPrefix(inp, MESSAGE_PREFIX) {
 		// We entered command
-		return Command
+		return Message, strings.Replace(inp, MESSAGE_PREFIX, "", 1)
 	}
-	return Message
+	return Command, strings.Replace(inp, MESSAGE_PREFIX, "", 1)
 }

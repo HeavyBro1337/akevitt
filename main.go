@@ -18,7 +18,6 @@ import (
 )
 
 func main() {
-	//var sessions = make(map[ssh.Session]*Account)
 	// Open the database file in your current directory.
 	// It will be created if it doesn't exist.
 	db, err := bolt.Open("akevitt.db", 0600, nil)

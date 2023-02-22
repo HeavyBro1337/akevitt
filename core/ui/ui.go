@@ -6,6 +6,7 @@ import (
 	"akevitt/core/input"
 	"akevitt/core/network"
 	"errors"
+	"strings"
 
 	"github.com/boltdb/bolt"
 	"github.com/gdamore/tcell/v2"
@@ -145,25 +146,33 @@ func GenerateGameScreen(sesh ssh.Session, sessions *map[ssh.Session]network.Acti
 		AddItem(chatLog, 1, 0, 3, 3, 0, 0, false).
 		SetBorders(true).
 		AddItem(inputField, 0, 0, 1, 3, 0, 0, true)
+
 	inputField.GetFormItemByLabel(LABEL).(*tview.InputField).SetDoneFunc(func(key tcell.Key) {
-		println(key)
 		if key == tcell.KeyEnter {
 			if playerMessage == "" {
 				return
 			}
-			switch input.ParseInput(playerMessage) {
+			switch status, parsedInput := input.ParseInput(playerMessage); status {
+
 			case input.Message:
+				if strings.TrimSpace(parsedInput) == "" {
+					break
+				}
 				network.BroadcastMessage(sessions, playerMessage, sesh, func(message string, sender credentials.Account, currentSession network.ActiveSession) {
-					AppendText(currentSession.Chat, sender, message, currentSession.UI)
+					AppendText(currentSession.Chat, sender, parsedInput, currentSession.UI)
 				})
 			}
+
 			playerMessage = ""
 			inputField.GetFormItemByLabel(LABEL).(*tview.InputField).SetText("")
 			(*sessions)[sesh].UI.SetFocus(inputField.GetFormItemByLabel(LABEL))
 		}
+
 	})
+
 	return gameScreen, chatLog
 }
+
 func GenerateWelcomeScreen(app *tview.Application, sesh ssh.Session, currentlyActiveSessions map[ssh.Session]network.ActiveSession, db *bolt.DB) *tview.Modal {
 	welcome := tview.NewModal().
 		SetText("Welcome to Akevitt. Would you like to register an account?").
