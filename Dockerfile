@@ -1,15 +1,16 @@
-#build stage
-FROM golang:alpine AS builder
-RUN apk add --no-cache git
-WORKDIR /go/src/app
-COPY . .
-RUN go get -d -v ./...
-RUN go build -o /go/bin/app -v ./...
+FROM golang:1.19-alpine
 
-#final stage
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-COPY --from=builder /go/bin/app /app
-ENTRYPOINT /app
-LABEL Name=akevitt Version=0.0.1
+WORKDIR /app
+
+COPY . .
+
+RUN mkdir data
+
+RUN go mod download
+
+
+RUN go build -o /akevitt
+
 EXPOSE 2222
+
+CMD [ "/akevitt" ]

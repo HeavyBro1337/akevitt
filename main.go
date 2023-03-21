@@ -11,6 +11,7 @@ import (
 	"akevitt/core/ui"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/boltdb/bolt"
 	"github.com/gliderlabs/ssh"
@@ -18,9 +19,15 @@ import (
 )
 
 func main() {
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("The akevitt is running at %s", wd)
+
 	// Open the database file in your current directory.
 	// It will be created if it doesn't exist.
-	db, err := bolt.Open("akevitt.db", 0600, nil)
+	db, err := bolt.Open("data/akevitt.db", 0600, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
