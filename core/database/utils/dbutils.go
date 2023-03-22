@@ -16,9 +16,12 @@ func IntToByte(value uint64) []byte {
 func HashString(input string) string {
 	hash := sha256.New()
 	_, err := hash.Write([]byte(input))
+
 	if err != nil {
 		return ""
 	}
+
 	result := hash.Sum(nil)
+
 	return string(result)
 }

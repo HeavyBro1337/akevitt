@@ -7,10 +7,10 @@ For more information, view LICENCE or README
 package database
 
 import (
-	"akevitt/core/database/credentials"
 	"akevitt/core/database/utils"
 	"akevitt/core/network"
 	"akevitt/core/objects"
+	"akevitt/core/objects/credentials"
 	"errors"
 	"log"
 

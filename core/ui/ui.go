@@ -2,9 +2,9 @@ package ui
 
 import (
 	"akevitt/core/database"
-	"akevitt/core/database/credentials"
 	"akevitt/core/input"
 	"akevitt/core/network"
+	"akevitt/core/objects/credentials"
 	"errors"
 	"strings"
 
@@ -161,6 +161,10 @@ func GenerateGameScreen(sesh ssh.Session, sessions *map[ssh.Session]network.Acti
 				network.BroadcastMessage(sessions, playerMessage, sesh, func(message string, sender credentials.Account, currentSession network.ActiveSession) {
 					AppendText(currentSession.Chat, sender, parsedInput, currentSession.UI)
 				})
+			case input.Command:
+				if strings.TrimSpace(parsedInput) == "" {
+					break
+				}
 			}
 
 			playerMessage = ""

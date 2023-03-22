@@ -1,7 +1,7 @@
 package network
 
 import (
-	"akevitt/core/database/credentials"
+	"akevitt/core/objects/credentials"
 	"io"
 
 	"github.com/gliderlabs/ssh"
@@ -14,8 +14,8 @@ type ActiveSession struct {
 	Chat    *tview.List
 }
 
-// Iterates through all currently dead sessions by trying to send null character.
-// If it gets an error, then we found the dead session and we purge them from active ones.
+// Iterates through all current sessions by trying to send null character.
+// If it receives an error, it indicates of session being dead.
 func PurgeDeadSessions(sessions *map[ssh.Session]ActiveSession) {
 	for k := range *sessions {
 

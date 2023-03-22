@@ -1,7 +1,7 @@
 package network
 
 import (
-	"akevitt/core/database/credentials"
+	"akevitt/core/objects/credentials"
 
 	"github.com/gliderlabs/ssh"
 )
