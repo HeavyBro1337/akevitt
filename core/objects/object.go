@@ -7,7 +7,6 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-// In-game object.
 type Object interface {
 	Description() string                // Retrieve description about that object
 	Save(key uint64, db *bolt.DB) error // Save object into database
