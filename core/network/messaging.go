@@ -1,22 +1,20 @@
 package network
 
 import (
-	"akevitt/core/objects/credentials"
-
 	"github.com/gliderlabs/ssh"
 )
 
 // Broadcasts message
-func BroadcastMessage(sessions *map[ssh.Session]ActiveSession, message string, session ssh.Session,
-	onMessage func(message string, sender credentials.Account, currentSession ActiveSession)) error {
-	for key, element := range *sessions {
+func BroadcastMessage(sessions *map[ssh.Session]ActiveSession, message string, sender ActiveSession,
+	onMessage func(message string, sender ActiveSession, currentSession ActiveSession)) error {
+	for _, element := range *sessions {
 		// The user is not authenticated
 		if element.Account == nil {
 			continue
 		}
-		onMessage(message, *(*sessions)[session].Account, element)
+		onMessage(message, sender, element)
 		// element.ui.Draw()
-		if key != session {
+		if element != sender {
 			element.UI.ForceDraw()
 		}
 	}

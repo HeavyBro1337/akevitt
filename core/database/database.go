@@ -108,7 +108,6 @@ func DoesAccountExist(username string, db *bolt.DB) bool {
 func Login(username string, password string, db *bolt.DB) (bool, *credentials.Account) {
 	var accrResult *credentials.Account = nil
 	exists := false
-
 	hashedPassword := utils.HashString(password)
 
 	db.Update(func(tx *bolt.Tx) error {

@@ -6,3 +6,5 @@ cmd/akevitt
 *.db.lock
 # Compiled project executable, made with Powershell script
 debug.bin
+# Sensitive data
+**/data/*

@@ -9,9 +9,15 @@ import (
 )
 
 type ActiveSession struct {
-	Account *credentials.Account
-	UI      *tview.Application
-	Chat    *tview.List
+	Account     *credentials.Account
+	UI          *tview.Application
+	Chat        *tview.List
+	UIPrimitive *tview.Primitive
+}
+
+func (self *ActiveSession) SetRoot(p *tview.Primitive) {
+	self.UIPrimitive = p
+	self.UI.SetRoot(*p, true)
 }
 
 // Iterates through all current sessions by trying to send null character.

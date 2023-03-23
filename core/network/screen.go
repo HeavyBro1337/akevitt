@@ -4,7 +4,7 @@ Licensed under European Union Public Licence 1.2.
 For more information, view LICENCE or README
 */
 
-package ui
+package network
 
 import (
 	"errors"
