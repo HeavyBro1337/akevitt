@@ -73,9 +73,7 @@ func gameScreen(engine *akevitt.Akevitt, session *network.ActiveSession) tview.P
 		AddItem(inputField, 0, 0, 1, 3, 0, 0, true)
 	inputField.GetFormItemByLabel(LABEL).(*tview.InputField).SetDoneFunc(func(key tcell.Key) {
 		if key == tcell.KeyEnter {
-			println("sending message")
 			if playerMessage == "" {
-				println("Message is empty")
 				return
 			}
 			status, parsedInput := input.ParseInput(playerMessage)

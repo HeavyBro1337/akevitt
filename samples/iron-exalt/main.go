@@ -31,8 +31,6 @@ func main() {
 				fmt.Printf("err: %v\n", err)
 				return
 			}
-			log.Println(sender.Account.Username)
-			log.Println(message)
 		}).
 		Finish()
 
