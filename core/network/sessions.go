@@ -15,9 +15,9 @@ type ActiveSession struct {
 	UIPrimitive *tview.Primitive
 }
 
-func (self *ActiveSession) SetRoot(p *tview.Primitive) {
-	self.UIPrimitive = p
-	self.UI.SetRoot(*p, true)
+func (session ActiveSession) SetRoot(p tview.Primitive) {
+	session.UIPrimitive = &p
+	session.UI.SetRoot(p, true)
 }
 
 // Iterates through all current sessions by trying to send null character.

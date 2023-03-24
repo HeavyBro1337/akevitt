@@ -29,5 +29,6 @@ func (c Character) Create() error {
 	c.Health = 100
 	c.MaxHealth = c.Health
 	c.Name = "John Doe"
+
 	return nil
 }

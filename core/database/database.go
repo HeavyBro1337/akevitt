@@ -13,20 +13,24 @@ import (
 	"akevitt/core/objects/credentials"
 	"errors"
 	"log"
+	"strings"
 
 	"github.com/boltdb/bolt"
 	"github.com/gliderlabs/ssh"
 )
 
-func CreateAccount(db *bolt.DB, username, password string) (id uint64, err error) {
+func CreateAccount(db *bolt.DB, username, password string) error {
 	var idResult uint64
 	account := credentials.Account{Username: username, Password: utils.HashString(password)}
-	if username == "" || password == "" {
-		return 0, errors.New("invalid data")
+
+	if strings.TrimSpace(username) == "" || strings.TrimSpace(password) == "" {
+		return errors.New("invalid data")
 	}
-	if DoesAccountExist(account.Username, db) {
-		return 0, errors.New("this account already does exist")
+
+	if DoesAccountExist(strings.TrimSpace(account.Username), db) {
+		return errors.New("this account already does exist")
 	}
+
 	errResult := db.Update(func(tx *bolt.Tx) error {
 		bkt, err := tx.CreateBucketIfNotExists([]byte(credentials.AccountBucket))
 		if err != nil {
@@ -43,7 +47,7 @@ func CreateAccount(db *bolt.DB, username, password string) (id uint64, err error
 		bkt.Put(utils.IntToByte(idResult), serialized)
 		return nil
 	})
-	return idResult, errResult
+	return errResult
 }
 
 // Retrieves data, through `gob`, by converting byte array (value) at `key`
