@@ -28,7 +28,7 @@ func Test_CreateWithEmptyCredentials(t *testing.T) {
 	db := initDB(t)
 	defer destroyDB(db, t)
 	// Register
-	err := database.CreateAccount(db, "", "")
+	_, err := database.CreateAccount(db, "", "")
 	if err == nil { // No errors were made. But it should
 		t.Fail()
 	}
@@ -38,11 +38,11 @@ func Test_CreateDuplicateAccounts(t *testing.T) {
 	db := initDB(t)
 	defer destroyDB(db, t)
 	// Register
-	err := database.CreateAccount(db, "IamUserIwillDuplicateMyself", "000000")
+	_, err := database.CreateAccount(db, "IamUserIwillDuplicateMyself", "000000")
 	if err != nil {
 		t.FailNow()
 	}
-	err = database.CreateAccount(db, "IamUserIwillDuplicateMyself", "000000")
+	_, err = database.CreateAccount(db, "IamUserIwillDuplicateMyself", "000000")
 	if err == nil {
 		t.Fail()
 	}
@@ -51,7 +51,7 @@ func Test_CreateDuplicateAccounts(t *testing.T) {
 func Test_CreateAccountsWithEmptyPassword(t *testing.T) {
 	db := initDB(t)
 	defer destroyDB(db, t)
-	err := database.CreateAccount(db, "Passwordless27", "")
+	_, err := database.CreateAccount(db, "Passwordless27", "")
 	if err == nil {
 		t.FailNow()
 	}

@@ -5,6 +5,7 @@ import (
 	"akevitt/core/input"
 	"akevitt/core/network"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -13,14 +14,14 @@ import (
 
 func AppendText(currentSession network.ActiveSession, senderSession network.ActiveSession, message string) error {
 	if currentSession.Chat == nil {
-		return errors.New("TextView is nil")
+		return errors.New("Chat log element is nil")
 	}
 	currentSession.Chat.InsertItem(0, senderSession.Account.Username, message, 'M', nil)
 	currentSession.Chat.SetWrapAround(true)
 	return nil
 }
 
-func loginScreen(engine *akevitt.Akevitt, session network.ActiveSession) tview.Primitive {
+func loginScreen(engine *akevitt.Akevitt, session *network.ActiveSession) tview.Primitive {
 	var username string
 	var password string
 	loginScreen := tview.NewForm().
@@ -31,13 +32,21 @@ func loginScreen(engine *akevitt.Akevitt, session network.ActiveSession) tview.P
 			password = text
 		})
 	loginScreen.AddButton("Login", func() {
-		engine.Login(username, password, session)
+		err := engine.Login(username, password, session)
+
+		if err != nil {
+			fmt.Printf("err: %v\n", err)
+			ErrorBox(err.Error(), session.UI, session.UIPrimitive)
+			return
+		}
+		session.SetRoot(gameScreen(engine, session))
 	})
 	return loginScreen
 }
 
-func ErrorBox[T tview.Primitive](message string, app *tview.Application, back *T) tview.Primitive {
-
+func ErrorBox(message string, app *tview.Application, back *tview.Primitive) {
+	fmt.Printf("app: %v\n", app)
+	fmt.Printf("back: %v\n", back)
 	result := tview.NewModal().SetText("Error!").SetText(message).SetTextColor(tcell.ColorRed).
 		SetBackgroundColor(tcell.ColorBlack).
 		AddButtons([]string{"Close"}).SetDoneFunc(func(buttonIndex int, buttonLabel string) {
@@ -45,38 +54,43 @@ func ErrorBox[T tview.Primitive](message string, app *tview.Application, back *T
 	})
 	result.SetBorderColor(tcell.ColorDarkRed)
 	result.SetBorder(true)
-	return result
+	app.SetRoot(result, true)
 }
 
-func gameScreen(engine *akevitt.Akevitt, session network.ActiveSession) tview.Primitive {
+func gameScreen(engine *akevitt.Akevitt, session *network.ActiveSession) tview.Primitive {
+	fmt.Printf("session: %v\n", session.Account)
 	var playerMessage string
 	const LABEL string = "Message: "
-	chatLog := tview.NewList()
+	session.Chat = tview.NewList()
 	inputField := tview.NewForm().AddInputField(LABEL, "", 32, nil, func(text string) {
 		playerMessage = text
 	})
 	gameScreen := tview.NewGrid().
 		SetRows(3).
 		SetColumns(30).
-		AddItem(chatLog, 1, 0, 3, 3, 0, 0, false).
+		AddItem(session.Chat, 1, 0, 3, 3, 0, 0, false).
 		SetBorders(true).
 		AddItem(inputField, 0, 0, 1, 3, 0, 0, true)
 	inputField.GetFormItemByLabel(LABEL).(*tview.InputField).SetDoneFunc(func(key tcell.Key) {
 		if key == tcell.KeyEnter {
+			println("sending message")
 			if playerMessage == "" {
+				println("Message is empty")
 				return
 			}
-			switch status, parsedInput := input.ParseInput(playerMessage); status {
+			status, parsedInput := input.ParseInput(playerMessage)
+			switch status {
 			case input.Message:
 				if strings.TrimSpace(parsedInput) == "" {
 					break
 				}
-				engine.SendOOCMessage(playerMessage, session)
+				engine.SendOOCMessage(parsedInput, session)
 			case input.Command:
 				if strings.TrimSpace(parsedInput) == "" {
 					break
 				}
 			}
+
 			playerMessage = ""
 			inputField.GetFormItemByLabel(LABEL).(*tview.InputField).SetText("")
 			session.UI.SetFocus(inputField.GetFormItemByLabel(LABEL))
@@ -85,7 +99,7 @@ func gameScreen(engine *akevitt.Akevitt, session network.ActiveSession) tview.Pr
 	return gameScreen
 }
 
-func registerScreen(engine *akevitt.Akevitt, session network.ActiveSession) tview.Primitive {
+func registerScreen(engine *akevitt.Akevitt, session *network.ActiveSession) tview.Primitive {
 	var username string
 	var password string
 	var repeatPassword string

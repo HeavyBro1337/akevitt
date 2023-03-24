@@ -19,16 +19,16 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-func CreateAccount(db *bolt.DB, username, password string) error {
+func CreateAccount(db *bolt.DB, username, password string) (*credentials.Account, error) {
 	var idResult uint64
 	account := credentials.Account{Username: username, Password: utils.HashString(password)}
 
 	if strings.TrimSpace(username) == "" || strings.TrimSpace(password) == "" {
-		return errors.New("invalid data")
+		return nil, errors.New("invalid data")
 	}
 
 	if DoesAccountExist(strings.TrimSpace(account.Username), db) {
-		return errors.New("this account already does exist")
+		return nil, errors.New("this account already does exist")
 	}
 
 	errResult := db.Update(func(tx *bolt.Tx) error {
@@ -47,7 +47,7 @@ func CreateAccount(db *bolt.DB, username, password string) error {
 		bkt.Put(utils.IntToByte(idResult), serialized)
 		return nil
 	})
-	return errResult
+	return &account, errResult
 }
 
 // Retrieves data, through `gob`, by converting byte array (value) at `key`
@@ -70,7 +70,7 @@ func GetAccount(key uint64, db *bolt.DB) (account credentials.Account, err error
 }
 
 // Checks current account for being in an active sessions. True if the account is already logged in.
-func CheckCurrentLogin(acc credentials.Account, sessions *map[ssh.Session]network.ActiveSession) bool {
+func CheckCurrentLogin(acc credentials.Account, sessions *map[ssh.Session]*network.ActiveSession) bool {
 	// We want make sure we purge dead sessions before looking for active.
 	network.PurgeDeadSessions(sessions)
 	for _, v := range *sessions {
@@ -110,7 +110,7 @@ func DoesAccountExist(username string, db *bolt.DB) bool {
 
 // Logins character and retrieves account from database. It returns true if the login was successfull
 func Login(username string, password string, db *bolt.DB) (bool, *credentials.Account) {
-	var accrResult *credentials.Account = nil
+	var accOut *credentials.Account = nil
 	exists := false
 	hashedPassword := utils.HashString(password)
 
@@ -125,7 +125,7 @@ func Login(username string, password string, db *bolt.DB) (bool, *credentials.Ac
 				return err
 			}
 			if acc.Username == username && acc.Password == hashedPassword {
-				accrResult = &acc
+				accOut = &acc
 				exists = true
 				return nil
 			}
@@ -133,5 +133,5 @@ func Login(username string, password string, db *bolt.DB) (bool, *credentials.Ac
 		})
 		return nil
 	})
-	return exists, accrResult
+	return exists, accOut
 }

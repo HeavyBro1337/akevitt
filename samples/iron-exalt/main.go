@@ -21,13 +21,18 @@ func main() {
 		RootScreen(rootScreen).
 		DatabasePath("data/iron-exalt.db").
 		CreateDatabaseIfNotExists()
+
 	events := akevitt.GameEventHandler{}
+
 	events.
-		LoginFail(func(engine *akevitt.Akevitt, session network.ActiveSession) {
-			session.UI.SetRoot(ErrorBox("Login failed!!!!", session.UI, session.UIPrimitive), true)
-		}).
-		OOCMessage(func(engine *akevitt.Akevitt, session network.ActiveSession, sender network.ActiveSession, message string) {
-			AppendText(session, sender, message)
+		OOCMessage(func(engine *akevitt.Akevitt, session *network.ActiveSession, sender *network.ActiveSession, message string) {
+			err := AppendText(*session, *sender, message)
+			if err != nil {
+				fmt.Printf("err: %v\n", err)
+				return
+			}
+			log.Println(sender.Account.Username)
+			log.Println(message)
 		}).
 		Finish()
 
@@ -36,7 +41,7 @@ func main() {
 	log.Fatal(engine.Run())
 }
 
-func rootScreen(engine *akevitt.Akevitt, session network.ActiveSession) tview.Primitive {
+func rootScreen(engine *akevitt.Akevitt, session *network.ActiveSession) tview.Primitive {
 	welcome := tview.NewModal().
 		SetText(fmt.Sprintf("Welcome to %s. Would you like to register an account?", engine.GetGameName())).
 		AddButtons([]string{"Register", "Login"}).
