@@ -1,4 +1,4 @@
-package objects
+package akevitt
 
 import (
 	"bytes"
@@ -13,7 +13,7 @@ type Object interface {
 }
 
 // Converts `T` to byte array
-func Serialize[T Object](v T) ([]byte, error) {
+func serialize[T Object](v T) ([]byte, error) {
 	var buff bytes.Buffer
 	enc := gob.NewEncoder(&buff)
 	encodeErr := enc.Encode(v)
@@ -24,7 +24,7 @@ func Serialize[T Object](v T) ([]byte, error) {
 }
 
 // Converts byte array to T struct.
-func Deserialize[T Object](b []byte) (T, error) {
+func deserialize[T Object](b []byte) (T, error) {
 	var result T
 	var decodeBuffer bytes.Buffer
 	decodeBuffer.Write(b)

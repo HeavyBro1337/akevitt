@@ -1,10 +1,5 @@
 # executables
-cmd/akevitt
 *.exe
 # database files
 *.db
 *.db.lock
-# Compiled project executable, made with Powershell script
-debug.bin
-# Sensitive data
-**/data/*

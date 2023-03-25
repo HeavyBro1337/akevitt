@@ -1,9 +1,7 @@
 package main
 
 import (
-	"akevitt"
-	"akevitt/core/input"
-	"akevitt/core/network"
+	"akevitt/akevitt"
 	"errors"
 	"fmt"
 	"strings"
@@ -12,16 +10,16 @@ import (
 	"github.com/rivo/tview"
 )
 
-func AppendText(currentSession network.ActiveSession, senderSession network.ActiveSession, message string) error {
+func AppendText(currentSession akevitt.ActiveSession, senderSession akevitt.ActiveSession, message string) error {
 	if currentSession.Chat == nil {
-		return errors.New("Chat log element is nil")
+		return errors.New("chat log element is nil")
 	}
 	currentSession.Chat.InsertItem(0, senderSession.Account.Username, message, 'M', nil)
 	currentSession.Chat.SetWrapAround(true)
 	return nil
 }
 
-func loginScreen(engine *akevitt.Akevitt, session *network.ActiveSession) tview.Primitive {
+func loginScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {
 	var username string
 	var password string
 	loginScreen := tview.NewForm().
@@ -57,7 +55,7 @@ func ErrorBox(message string, app *tview.Application, back *tview.Primitive) {
 	app.SetRoot(result, true)
 }
 
-func gameScreen(engine *akevitt.Akevitt, session *network.ActiveSession) tview.Primitive {
+func gameScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {
 	fmt.Printf("session: %v\n", session.Account)
 	var playerMessage string
 	const LABEL string = "Message: "
@@ -65,6 +63,7 @@ func gameScreen(engine *akevitt.Akevitt, session *network.ActiveSession) tview.P
 	inputField := tview.NewForm().AddInputField(LABEL, "", 32, nil, func(text string) {
 		playerMessage = text
 	})
+
 	gameScreen := tview.NewGrid().
 		SetRows(3).
 		SetColumns(30).
@@ -73,20 +72,15 @@ func gameScreen(engine *akevitt.Akevitt, session *network.ActiveSession) tview.P
 		AddItem(inputField, 0, 0, 1, 3, 0, 0, true)
 	inputField.GetFormItemByLabel(LABEL).(*tview.InputField).SetDoneFunc(func(key tcell.Key) {
 		if key == tcell.KeyEnter {
+			playerMessage = strings.TrimSpace(playerMessage)
 			if playerMessage == "" {
 				return
 			}
-			status, parsedInput := input.ParseInput(playerMessage)
-			switch status {
-			case input.Message:
-				if strings.TrimSpace(parsedInput) == "" {
-					break
-				}
-				engine.SendOOCMessage(parsedInput, session)
-			case input.Command:
-				if strings.TrimSpace(parsedInput) == "" {
-					break
-				}
+
+			err := engine.ProcessCommand(playerMessage, session)
+
+			if err != nil {
+				ErrorBox(err.Error(), session.UI, session.UIPrimitive)
 			}
 
 			playerMessage = ""
@@ -97,7 +91,7 @@ func gameScreen(engine *akevitt.Akevitt, session *network.ActiveSession) tview.P
 	return gameScreen
 }
 
-func registerScreen(engine *akevitt.Akevitt, session *network.ActiveSession) tview.Primitive {
+func registerScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {
 	var username string
 	var password string
 	var repeatPassword string

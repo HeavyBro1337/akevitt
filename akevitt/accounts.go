@@ -1,14 +1,12 @@
-package credentials
+package akevitt
 
 import (
-	"akevitt/core/database/utils"
-	"akevitt/core/objects"
 	"fmt"
 
 	"github.com/boltdb/bolt"
 )
 
-const AccountBucket string = "Accounts"
+const accountBucket string = "Accounts"
 
 type Account struct {
 	Username string
@@ -18,16 +16,16 @@ type Account struct {
 // Save, through `gob`, `Account` data at specified key in the database.
 func (account Account) Save(key uint64, db *bolt.DB) error {
 	errResult := db.Update(func(tx *bolt.Tx) error {
-		bkt, err := tx.CreateBucketIfNotExists([]byte(AccountBucket))
+		bkt, err := tx.CreateBucketIfNotExists([]byte(accountBucket))
 
 		if err != nil {
 			return err
 		}
-		serialized, err := objects.Serialize(account)
+		serialized, err := serialize(account)
 		if err != nil {
 			return err
 		}
-		bkt.Put(utils.IntToByte(key), serialized)
+		bkt.Put(intToByte(key), serialized)
 		return nil
 	})
 	return errResult

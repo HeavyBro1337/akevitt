@@ -4,75 +4,51 @@ Licensed under European Union Public Licence 1.2.
 For more information, view LICENCE or README
 */
 
-package database
+package akevitt
 
 import (
-	"akevitt/core/database/utils"
-	"akevitt/core/network"
-	"akevitt/core/objects"
-	"akevitt/core/objects/credentials"
 	"errors"
-	"log"
 	"strings"
 
 	"github.com/boltdb/bolt"
 	"github.com/gliderlabs/ssh"
 )
 
-func CreateAccount(db *bolt.DB, username, password string) (*credentials.Account, error) {
+func createAccount(db *bolt.DB, username, password string) (*Account, error) {
 	var idResult uint64
-	account := credentials.Account{Username: username, Password: utils.HashString(password)}
+	account := Account{Username: username, Password: hashString(password)}
 
 	if strings.TrimSpace(username) == "" || strings.TrimSpace(password) == "" {
 		return nil, errors.New("invalid data")
 	}
 
-	if DoesAccountExist(strings.TrimSpace(account.Username), db) {
+	if doesAccountExist(strings.TrimSpace(account.Username), db) {
 		return nil, errors.New("this account already does exist")
 	}
 
 	errResult := db.Update(func(tx *bolt.Tx) error {
-		bkt, err := tx.CreateBucketIfNotExists([]byte(credentials.AccountBucket))
+		bkt, err := tx.CreateBucketIfNotExists([]byte(accountBucket))
 		if err != nil {
 			return err
 		}
 		idResult, _ = bkt.NextSequence()
 
-		serialized, err := objects.Serialize(account)
+		serialized, err := serialize(account)
 
 		if err != nil {
 			return err
 		}
 
-		bkt.Put(utils.IntToByte(idResult), serialized)
+		bkt.Put(intToByte(idResult), serialized)
 		return nil
 	})
 	return &account, errResult
 }
 
-// Retrieves data, through `gob`, by converting byte array (value) at `key`
-// into `Account`.
-func GetAccount(key uint64, db *bolt.DB) (account credentials.Account, err error) {
-	var result credentials.Account
-	dberr := db.Update(func(tx *bolt.Tx) error {
-		bkt, err := tx.CreateBucketIfNotExists([]byte(credentials.AccountBucket))
-		if err != nil {
-			return err
-		}
-		result, err = objects.Deserialize[credentials.Account](bkt.Get(utils.IntToByte(key)))
-		if err != nil {
-			log.Fatal("Decode error: ", err)
-		}
-
-		return nil
-	})
-	return result, dberr
-}
-
 // Checks current account for being in an active sessions. True if the account is already logged in.
-func CheckCurrentLogin(acc credentials.Account, sessions *map[ssh.Session]*network.ActiveSession) bool {
+func checkCurrentLogin(acc Account, sessions *map[ssh.Session]*ActiveSession) bool {
 	// We want make sure we purge dead sessions before looking for active.
-	network.PurgeDeadSessions(sessions)
+	purgeDeadSession(sessions)
 	for _, v := range *sessions {
 		if v.Account == nil {
 			continue
@@ -85,15 +61,15 @@ func CheckCurrentLogin(acc credentials.Account, sessions *map[ssh.Session]*netwo
 }
 
 // Checks that user exists in the database by username.
-func DoesAccountExist(username string, db *bolt.DB) bool {
+func doesAccountExist(username string, db *bolt.DB) bool {
 	var result bool = false
 	db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(credentials.AccountBucket))
+		bucket, err := tx.CreateBucketIfNotExists([]byte(accountBucket))
 		if err != nil {
 			return err
 		}
 		bucket.ForEach(func(k, v []byte) error {
-			acc, err := objects.Deserialize[credentials.Account](v)
+			acc, err := deserialize[Account](v)
 			if err != nil {
 				return err
 			}
@@ -109,18 +85,18 @@ func DoesAccountExist(username string, db *bolt.DB) bool {
 }
 
 // Logins character and retrieves account from database. It returns true if the login was successfull
-func Login(username string, password string, db *bolt.DB) (bool, *credentials.Account) {
-	var accOut *credentials.Account = nil
+func login(username string, password string, db *bolt.DB) (bool, *Account) {
+	var accOut *Account = nil
 	exists := false
-	hashedPassword := utils.HashString(password)
+	hashedPassword := hashString(password)
 
 	db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(credentials.AccountBucket))
+		bucket, err := tx.CreateBucketIfNotExists([]byte(accountBucket))
 		if err != nil {
 			return err
 		}
 		bucket.ForEach(func(k, v []byte) error {
-			acc, err := objects.Deserialize[credentials.Account](v)
+			acc, err := deserialize[Account](v)
 			if err != nil {
 				return err
 			}
