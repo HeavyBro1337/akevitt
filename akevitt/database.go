@@ -8,6 +8,7 @@ package akevitt
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/boltdb/bolt"
@@ -15,34 +16,61 @@ import (
 )
 
 func createAccount(db *bolt.DB, username, password string) (*Account, error) {
-	var idResult uint64
-	account := Account{Username: username, Password: hashString(password)}
 
 	if strings.TrimSpace(username) == "" || strings.TrimSpace(password) == "" {
 		return nil, errors.New("invalid data")
 	}
 
+	account := Account{Username: username, password: hashString(password)}
+
 	if doesAccountExist(strings.TrimSpace(account.Username), db) {
 		return nil, errors.New("this account already does exist")
 	}
+	_, err := createObject(db, accountBucket, account)
 
-	errResult := db.Update(func(tx *bolt.Tx) error {
-		bkt, err := tx.CreateBucketIfNotExists([]byte(accountBucket))
+	return &account, err
+}
+
+func overwriteObject[T Object](db *bolt.DB, key uint64, bucket string, object T) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		bkt, err := tx.CreateBucketIfNotExists([]byte(bucket))
+
 		if err != nil {
 			return err
 		}
-		idResult, _ = bkt.NextSequence()
 
-		serialized, err := serialize(account)
+		serialized, err := serialize(object)
 
 		if err != nil {
 			return err
 		}
 
-		bkt.Put(intToByte(idResult), serialized)
+		bkt.Put(intToByte(key), serialized)
 		return nil
 	})
-	return &account, errResult
+}
+
+func createObject[T Object](db *bolt.DB, bucket string, object T) (uint64, error) {
+	var id uint64
+	err := db.Update(func(tx *bolt.Tx) error {
+		bkt, err := tx.CreateBucketIfNotExists([]byte(bucket))
+
+		if err != nil {
+			return err
+		}
+
+		id, err = bkt.NextSequence()
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return 0, err
+	}
+	return id, overwriteObject(db, id, bucket, object)
 }
 
 // Checks current account for being in an active sessions. True if the account is already logged in.
@@ -60,9 +88,35 @@ func checkCurrentLogin(acc Account, sessions *map[ssh.Session]*ActiveSession) bo
 	return false
 }
 
+func findObject[T GameObject](db *bolt.DB, account Account) (T, uint64, error) {
+	var id uint64
+	var result T
+	err := db.View(func(tx *bolt.Tx) error {
+		bucket, err := tx.CreateBucketIfNotExists([]byte(gameObjectBucket))
+		if err != nil {
+			return err
+		}
+		return bucket.ForEach(func(k, v []byte) error {
+			obj, err := deserialize[T](v)
+			if err != nil {
+				return err
+			}
+			if account != obj.GetAccount() {
+				return nil
+			}
+
+			result = obj
+			id = byteToInt(k)
+
+			return nil
+		})
+	})
+	return result, id, err
+}
+
 // Checks that user exists in the database by username.
 func doesAccountExist(username string, db *bolt.DB) bool {
-	var result bool = false
+	result := false
 	db.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(accountBucket))
 		if err != nil {
@@ -85,12 +139,11 @@ func doesAccountExist(username string, db *bolt.DB) bool {
 }
 
 // Logins character and retrieves account from database. It returns true if the login was successfull
-func login(username string, password string, db *bolt.DB) (bool, *Account) {
-	var accOut *Account = nil
-	exists := false
+func login(username string, password string, db *bolt.DB) (*Account, error) {
+	var accref *Account = nil
 	hashedPassword := hashString(password)
 
-	db.Update(func(tx *bolt.Tx) error {
+	err := db.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(accountBucket))
 		if err != nil {
 			return err
@@ -100,14 +153,17 @@ func login(username string, password string, db *bolt.DB) (bool, *Account) {
 			if err != nil {
 				return err
 			}
-			if acc.Username == username && acc.Password == hashedPassword {
-				accOut = &acc
-				exists = true
+			fmt.Printf("acc: %v\n", acc)
+			if acc.Username == username && acc.password == hashedPassword {
+				accref = &acc
 				return nil
 			}
 			return nil
 		})
 		return nil
 	})
-	return exists, accOut
+	if accref == nil {
+		return nil, errors.New("wrong name or password")
+	}
+	return accref, err
 }

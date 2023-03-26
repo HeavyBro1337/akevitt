@@ -31,12 +31,13 @@ type Akevitt struct {
 	commands       map[string]func(engine *Akevitt, session *ActiveSession, command string) // Registered commands
 }
 type GameEventHandler struct {
-	oocMessage func(engine *Akevitt, session *ActiveSession, sender *ActiveSession, message string)
-	validated  bool // True when it has passed all of the validation
+	oocMessage  func(engine *Akevitt, session *ActiveSession, sender *ActiveSession, message string)
+	roomMessage func(engine *Akevitt, session *ActiveSession, sender *ActiveSession, message string)
+	validated   bool // True when it has passed all of the validation
 }
 
 // Creates new instance of engine with provided defaults.
-func (engine *Akevitt) Defaults() *Akevitt {
+func (engine *Akevitt) UseDefaults() *Akevitt {
 	engine.activeSessions = make(map[ssh.Session]*ActiveSession)
 	engine.bind = ":2222"
 	engine.dbPath = "data/database.db"
@@ -46,14 +47,14 @@ func (engine *Akevitt) Defaults() *Akevitt {
 }
 
 // Listen to specific address and/or port
-func (engine *Akevitt) Bind(bind string) *Akevitt {
+func (engine *Akevitt) UseBindAddress(bind string) *Akevitt {
 	engine.bind = bind
 
 	return engine
 }
 
 // The file name that will act as a database
-func (engine *Akevitt) DatabasePath(path string) *Akevitt {
+func (engine *Akevitt) UseDatabasePath(path string) *Akevitt {
 	engine.dbPath = path
 
 	return engine
@@ -66,14 +67,14 @@ func (engine *Akevitt) UseMouse(toggle bool) *Akevitt {
 }
 
 // Set the game's name. Default: Change Me!
-func (engine *Akevitt) GameName(name string) *Akevitt {
+func (engine *Akevitt) UseGameName(name string) *Akevitt {
 	engine.gameName = name
 
 	return engine
 }
 
 // Creates database file if not exists. The custom path must be already specified, before creating.
-func (engine *Akevitt) CreateDatabaseIfNotExists() *Akevitt {
+func (engine *Akevitt) UseCreateDatabaseIfNotExists() *Akevitt {
 	db, err := bolt.Open(engine.dbPath, 0600, nil)
 
 	if err != nil {
@@ -108,6 +109,8 @@ func (engine *Akevitt) Run() error {
 		app := tview.NewApplication().SetScreen(screen).EnableMouse(engine.mouse)
 		engine.activeSessions[sesh] = &ActiveSession{Chat: nil, Account: nil, UI: app}
 
+		engine.activeSessions[sesh].RelatedGameObjects = make(map[string]GameObject)
+
 		engine.activeSessions[sesh].SetRoot(engine.rootScreen(engine, engine.activeSessions[sesh]))
 		if err := app.Run(); err != nil {
 			fmt.Fprintln(sesh.Stderr(), err)
@@ -121,16 +124,16 @@ func (engine *Akevitt) Run() error {
 }
 
 // Set the root screen. The player will see it on connection.
-func (engine *Akevitt) RootScreen(s func(engine *Akevitt, session *ActiveSession) tview.Primitive) *Akevitt {
+func (engine *Akevitt) UseRootScreen(s func(engine *Akevitt, session *ActiveSession) tview.Primitive) *Akevitt {
 	engine.rootScreen = s
 
 	return engine
 }
 
 func (engine *Akevitt) Login(username, password string, session *ActiveSession) error {
-	ok, account := login(username, password, engine.db)
-	if !ok {
-		return errors.New("wrong password or username")
+	account, err := login(username, password, engine.db)
+	if err != nil {
+		return err
 	}
 	if checkCurrentLogin(*account, &engine.activeSessions) {
 		return errors.New("the session is already active")
@@ -158,11 +161,24 @@ func (event *GameEventHandler) OOCMessage(c func(engine *Akevitt, session *Activ
 	return event
 }
 
+func (event *GameEventHandler) Message(c func(engine *Akevitt, session *ActiveSession, sender *ActiveSession, message string)) *GameEventHandler {
+	event.roomMessage = c
+	return event
+}
+
 func (engine *Akevitt) SendOOCMessage(message string, session *ActiveSession) {
 	purgeDeadSession(&engine.activeSessions)
 	broadcastMessage(engine.activeSessions, message, session,
 		func(message string, sender *ActiveSession, currentSession *ActiveSession) {
 			engine.callbacks.oocMessage(engine, currentSession, sender, message)
+		})
+}
+
+func (engine *Akevitt) SendRoomMessage(message string, session *ActiveSession) {
+	purgeDeadSession(&engine.activeSessions)
+	broadcastMessage(engine.activeSessions, message, session,
+		func(message string, sender *ActiveSession, currentSession *ActiveSession) {
+			engine.callbacks.roomMessage(engine, currentSession, sender, message)
 		})
 }
 
@@ -174,13 +190,19 @@ func (engine *Akevitt) Register(username, password string, session *ActiveSessio
 	account, err := createAccount(engine.db, username, password)
 	session.Account = account
 	return err
-
 }
 
-func (engine *Akevitt) RegisterCommand(command string, function func(e *Akevitt, session *ActiveSession, command string)) {
+func FindObject[T GameObject](engine *Akevitt, session *ActiveSession) (T, uint64, error) {
+	return findObject[T](engine.db, *session.Account)
+}
+
+func (engine *Akevitt) RegisterCommand(command string, function func(e *Akevitt, session *ActiveSession, command string)) *Akevitt {
 	command = strings.TrimSpace(command)
 	engine.commands[command] = function
+
+	return engine
 }
+
 func (engine *Akevitt) ProcessCommand(command string, session *ActiveSession) error {
 	zeroarg := strings.Fields(command)[0]
 	nozeroargarr := strings.Fields(command)[1:]
@@ -195,6 +217,7 @@ func (engine *Akevitt) ProcessCommand(command string, session *ActiveSession) er
 
 	return nil
 }
+
 func (events *GameEventHandler) Finish() {
 	// TODO: Implement better validation for detecting errors!
 	hasPassed := true
@@ -216,6 +239,6 @@ func (events *GameEventHandler) Finish() {
 	events.validated = hasPassed
 }
 
-func CreateObject[T GameObject](object T, engine *Akevitt, session *ActiveSession) error {
-	return object.Create(engine, session)
+func (engine *Akevitt) SaveObject(gameObject GameObject, key uint64) error {
+	return overwriteObject(engine.db, key, gameObjectBucket, gameObject)
 }

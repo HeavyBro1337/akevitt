@@ -5,35 +5,44 @@ package main
 
 import (
 	"akevitt/akevitt"
-	"bytes"
 	"fmt"
-	"image/png"
 	"log"
-	"os"
-
-	"github.com/rivo/tview"
 )
 
 func main() {
 
 	engine := akevitt.Akevitt{}
-	engine.Defaults().
-		GameName("Iron Exalt").
+	engine.
+		UseDefaults().
+		UseGameName("Iron Exalt").
 		UseMouse(true).
-		RootScreen(rootScreen).
-		DatabasePath("data/iron-exalt.db").
-		CreateDatabaseIfNotExists().
-		RegisterCommand("ooc", ooc)
+		UseRootScreen(rootScreen).
+		UseDatabasePath("data/iron-exalt.db").
+		UseCreateDatabaseIfNotExists().
+		RegisterCommand("ooc", ooc).
+		RegisterCommand("say", characterMessage)
 
 	events := akevitt.GameEventHandler{}
 
 	events.
 		OOCMessage(func(engine *akevitt.Akevitt, session *akevitt.ActiveSession, sender *akevitt.ActiveSession, message string) {
-			err := AppendText(*session, *sender, message)
+			err := AppendText(*session, sender.Account.Username, message, 'O')
 			if err != nil {
 				fmt.Printf("err: %v\n", err)
+			}
+		}).
+		Message(func(engine *akevitt.Akevitt, session, sender *akevitt.ActiveSession, message string) {
+			character, ok := sender.RelatedGameObjects[currentCharacterKey].(*Character)
+			if !ok {
+				fmt.Println("Error: the current character turned out not to be a character struct!")
 				return
 			}
+
+			err := AppendText(*session, character.name, message, 'R')
+			if err != nil {
+				fmt.Printf("err: %v\n", err)
+			}
+
 		}).
 		Finish()
 
@@ -42,41 +51,6 @@ func main() {
 	log.Fatal(engine.Run())
 }
 
-func rootScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {
-	b, err := os.ReadFile("./data/logo.png")
-	if err != nil {
-		panic("Cannot find image!!!")
-	}
-	pngLogo, err := png.Decode(bytes.NewReader(b))
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	image := tview.NewImage().SetImage(pngLogo)
-	wizard := tview.NewModal().
-		SetText(fmt.Sprintf("Welcome to %s! Would you register your account?", engine.GetGameName())).
-		AddButtons([]string{"Register", "Login"}).
-		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-			if buttonLabel == "Login" {
-				session.SetRoot(loginScreen(engine, session))
-			} else if buttonLabel == "Register" {
-				session.SetRoot(registerScreen(engine, session))
-			}
-		})
-	welcome := tview.NewGrid().
-		SetBorders(false).
-		SetRows(3, 0, 3).
-		SetColumns(30, 0, 30).
-		AddItem(image, 0, 0, 3, 27, 0, 0, false).
-		AddItem(wizard, 2, 2, 3, 3, 0, 0, false)
-	return welcome
-}
-
 type Room struct {
 	Name string
-}
-type Character struct {
-	Name      string
-	Health    int
-	MaxHealth int
-	account   *akevitt.Account
 }

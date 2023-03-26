@@ -3,13 +3,18 @@ package akevitt
 import (
 	"bytes"
 	"encoding/gob"
-
-	"github.com/boltdb/bolt"
 )
 
 type Object interface {
-	Description() string                // Retrieve description about that object
-	Save(key uint64, db *bolt.DB) error // Save object into database
+	Description() string                    // Retrieve description about that object
+	Save(key uint64, engine *Akevitt) error // Save object into database
+}
+
+// In-game object that you can interact within the game.
+type GameObject interface {
+	Object
+	Create(engine *Akevitt, session *ActiveSession, params interface{}) error
+	GetAccount() Account
 }
 
 // Converts `T` to byte array
@@ -31,4 +36,8 @@ func deserialize[T Object](b []byte) (T, error) {
 	dec := gob.NewDecoder(&decodeBuffer)
 	err := dec.Decode(&result)
 	return result, err
+}
+
+func CreateObject[T GameObject](engine *Akevitt, session *ActiveSession, object T, params interface{}) (T, error) {
+	return object, object.Create(engine, session, params)
 }

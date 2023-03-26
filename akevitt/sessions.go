@@ -8,10 +8,11 @@ import (
 )
 
 type ActiveSession struct {
-	Account     *Account
-	UI          *tview.Application
-	Chat        *tview.List
-	UIPrimitive *tview.Primitive
+	Account            *Account
+	RelatedGameObjects map[string]GameObject
+	UI                 *tview.Application
+	Chat               *tview.List
+	UIPrimitive        *tview.Primitive
 }
 
 func (session *ActiveSession) SetRoot(p tview.Primitive) {

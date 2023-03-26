@@ -12,6 +12,11 @@ func intToByte(value uint64) []byte {
 	return binaryId
 }
 
+// Converts byte array to `Uint64`
+func byteToInt(source []byte) uint64 {
+	return binary.LittleEndian.Uint64(source)
+}
+
 // Hashes string using SHA-256 algorithm
 func hashString(input string) string {
 	hash := sha256.New()
