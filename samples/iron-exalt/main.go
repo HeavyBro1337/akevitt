@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	room := Room{Name: "Spawn Room"}
 
 	engine := akevitt.Akevitt{}
 	engine.
@@ -20,7 +21,9 @@ func main() {
 		UseDatabasePath("data/iron-exalt.db").
 		UseCreateDatabaseIfNotExists().
 		RegisterCommand("ooc", ooc).
-		RegisterCommand("say", characterMessage)
+		RegisterCommand("say", characterMessage).
+		RegisterCommand("stats", characterStats).
+		SetSpawnRoom(room)
 
 	events := akevitt.GameEventHandler{}
 
@@ -32,13 +35,23 @@ func main() {
 			}
 		}).
 		Message(func(engine *akevitt.Akevitt, session, sender *akevitt.ActiveSession, message string) {
-			character, ok := sender.RelatedGameObjects[currentCharacterKey].(*Character)
+			senderCharacter, ok := sender.RelatedGameObjects[currentCharacterKey].(*Character)
 			if !ok {
 				fmt.Println("Error: the current character turned out not to be a character struct!")
 				return
 			}
 
-			err := AppendText(*session, character.name, message, 'R')
+			sessionChacter, ok := session.RelatedGameObjects[currentCharacterKey].(*Character)
+			if !ok {
+				fmt.Println("Error: the current character turned out not to be a character struct!")
+				return
+			}
+
+			if sessionChacter.currentRoom.Name != senderCharacter.currentRoom.Name {
+				return
+			}
+
+			err := AppendText(*session, senderCharacter.Name, message, 'R')
 			if err != nil {
 				fmt.Printf("err: %v\n", err)
 			}
@@ -49,8 +62,4 @@ func main() {
 	engine.ConfigureCallbacks(&events)
 
 	log.Fatal(engine.Run())
-}
-
-type Room struct {
-	Name string
 }

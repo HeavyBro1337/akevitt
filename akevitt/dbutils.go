@@ -3,6 +3,7 @@ package akevitt
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"fmt"
 )
 
 // Converts `Uint64` to byte array
@@ -18,15 +19,15 @@ func byteToInt(source []byte) uint64 {
 }
 
 // Hashes string using SHA-256 algorithm
-func hashString(input string) string {
+func hashString(input string) (string, error) {
 	hash := sha256.New()
 	_, err := hash.Write([]byte(input))
 
 	if err != nil {
-		return ""
+		return "", err
 	}
 
 	result := hash.Sum(nil)
-
-	return string(result)
+	fmt.Printf("string(result): %v\n", string(result))
+	return string(result), nil
 }

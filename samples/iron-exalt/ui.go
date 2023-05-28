@@ -20,6 +20,7 @@ func AppendText(currentSession akevitt.ActiveSession, senderName string, message
 	}
 	currentSession.Chat.InsertItem(0, senderName, message, sh, nil)
 	currentSession.Chat.SetWrapAround(true)
+
 	return nil
 }
 
@@ -41,9 +42,12 @@ func loginScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.
 			ErrorBox(err.Error(), session.UI, session.UIPrimitive)
 			return
 		}
+
 		character, _, err := akevitt.FindObject[*Character](engine, session)
+
 		if err != nil {
 			session.SetRoot(characterCreationWizard(engine, session))
+			fmt.Printf("find obj err: %v\n", err)
 			return
 		}
 
@@ -61,9 +65,10 @@ func ErrorBox(message string, app *tview.Application, back *tview.Primitive) {
 		AddButtons([]string{"Close"}).SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 		app.SetRoot(*back, false)
 	})
+
 	result.SetBorderColor(tcell.ColorDarkRed)
 	result.SetBorder(true)
-	app.SetRoot(result, true)
+	app.SetRoot(result, true).SetFocus(result)
 }
 
 func gameScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {

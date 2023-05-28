@@ -10,11 +10,21 @@ type Object interface {
 	Save(key uint64, engine *Akevitt) error // Save object into database
 }
 
-// In-game object that you can interact within the game.
+// Gameobject which is associated with the account.
 type GameObject interface {
 	Object
 	Create(engine *Akevitt, session *ActiveSession, params interface{}) error
 	GetAccount() Account
+	GetRoom() Room
+}
+
+type Room interface {
+	Object
+	GetEntrances() []Entrance
+}
+
+type Entrance interface {
+	Object
 }
 
 // Converts `T` to byte array

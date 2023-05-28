@@ -9,10 +9,11 @@ import (
 const currentCharacterKey string = "currentCharacter"
 
 type Character struct {
-	name      string
-	health    int
-	maxHealth int
-	account   akevitt.Account
+	Name        string
+	Health      int
+	MaxHealth   int
+	account     akevitt.Account
+	currentRoom Room
 }
 
 type CharacterParams struct {
@@ -25,22 +26,34 @@ func (character *Character) Create(engine *akevitt.Akevitt, session *akevitt.Act
 	if !ok {
 		return errors.New("invalid params given")
 	}
-	character.name = characterParams.name
-	character.health = 10
-	character.maxHealth = 10
-	character.account = *session.Account
 
-	return nil
+	character.Name = characterParams.name
+	character.Health = 10
+	character.MaxHealth = 10
+	character.account = *session.Account
+	character.currentRoom = engine.GetSpawnRoom().(Room)
+
+	key, err := engine.GetNewKey(false)
+
+	if err != nil {
+		return err
+	}
+
+	return character.Save(key, engine)
 }
 
 func (character *Character) Save(key uint64, engine *akevitt.Akevitt) error {
-	return nil
+	return engine.SaveObject(character, key)
 }
 
 func (character *Character) Description() string {
-	return fmt.Sprintf("%s, HP: %d/%d", character.name, character.health, character.maxHealth)
+	return fmt.Sprintf("%s, HP: %d/%d", character.Name, character.Health, character.MaxHealth)
 }
 
 func (character *Character) GetAccount() akevitt.Account {
 	return character.account
+}
+
+func (character *Character) GetRoom() akevitt.Room {
+	return character.currentRoom
 }
