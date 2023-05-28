@@ -6,10 +6,11 @@ import (
 
 const accountBucket string = "Accounts"
 const gameObjectBucket string = "GameObjects"
+const worldObjectsBucket string = "WorldObjects"
 
 type Account struct {
 	Username string
-	password string
+	Password string
 }
 
 func (account Account) Save(key uint64, engine *Akevitt) error {

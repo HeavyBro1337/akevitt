@@ -20,15 +20,16 @@ import (
 
 // The engine struct. Handles connections, user-provided logic and database.
 type Akevitt struct {
-	activeSessions map[ssh.Session]*ActiveSession                                           // Active sessions
-	dbPath         string                                                                   // Database path
-	rootScreen     func(engine *Akevitt, session *ActiveSession) tview.Primitive            // Screen that user will see on connect
-	bind           string                                                                   // Port or address to listen
-	db             *bolt.DB                                                                 // Database file
-	mouse          bool                                                                     // Allow client to use their mouse
-	gameName       string                                                                   // Game's title
-	callbacks      *GameEventHandler                                                        // Struct for holding all of the callbacks
-	commands       map[string]func(engine *Akevitt, session *ActiveSession, command string) // Registered commands
+	activeSessions map[ssh.Session]*ActiveSession                                                 // Active sessions
+	dbPath         string                                                                         // Database path
+	rootScreen     func(engine *Akevitt, session *ActiveSession) tview.Primitive                  // Screen that user will see on connect
+	bind           string                                                                         // Port or address to listen
+	db             *bolt.DB                                                                       // Database file
+	mouse          bool                                                                           // Allow client to use their mouse
+	gameName       string                                                                         // Game's title
+	hooks          *GameEventHandler                                                              // Struct for holding all of the callbacks
+	defaultRoom    Room                                                                           // Default room where new players will spawn.
+	commands       map[string]func(engine *Akevitt, session *ActiveSession, command string) error // Registered commands
 }
 type GameEventHandler struct {
 	oocMessage  func(engine *Akevitt, session *ActiveSession, sender *ActiveSession, message string)
@@ -42,7 +43,7 @@ func (engine *Akevitt) UseDefaults() *Akevitt {
 	engine.bind = ":2222"
 	engine.dbPath = "data/database.db"
 	engine.gameName = "Change Me!"
-	engine.commands = make(map[string]func(engine *Akevitt, session *ActiveSession, command string))
+	engine.commands = make(map[string]func(engine *Akevitt, session *ActiveSession, command string) error)
 	return engine
 }
 
@@ -152,7 +153,7 @@ func (engine *Akevitt) ConfigureCallbacks(event *GameEventHandler) *Akevitt {
 		log.Fatal("the event handler is not validated!")
 	}
 
-	engine.callbacks = event
+	engine.hooks = event
 	return engine
 }
 
@@ -170,15 +171,19 @@ func (engine *Akevitt) SendOOCMessage(message string, session *ActiveSession) {
 	purgeDeadSession(&engine.activeSessions)
 	broadcastMessage(engine.activeSessions, message, session,
 		func(message string, sender *ActiveSession, currentSession *ActiveSession) {
-			engine.callbacks.oocMessage(engine, currentSession, sender, message)
+			engine.hooks.oocMessage(engine, currentSession, sender, message)
 		})
+}
+
+func (engine *Akevitt) WhisperMessage(message string, session *ActiveSession, receiver *ActiveSession, onMessage func(message string, sender *ActiveSession, currentSession *ActiveSession)) {
+	onMessage(message, session, receiver)
 }
 
 func (engine *Akevitt) SendRoomMessage(message string, session *ActiveSession) {
 	purgeDeadSession(&engine.activeSessions)
 	broadcastMessage(engine.activeSessions, message, session,
 		func(message string, sender *ActiveSession, currentSession *ActiveSession) {
-			engine.callbacks.roomMessage(engine, currentSession, sender, message)
+			engine.hooks.roomMessage(engine, currentSession, sender, message)
 		})
 }
 
@@ -196,7 +201,7 @@ func FindObject[T GameObject](engine *Akevitt, session *ActiveSession) (T, uint6
 	return findObject[T](engine.db, *session.Account)
 }
 
-func (engine *Akevitt) RegisterCommand(command string, function func(e *Akevitt, session *ActiveSession, command string)) *Akevitt {
+func (engine *Akevitt) RegisterCommand(command string, function func(e *Akevitt, session *ActiveSession, command string) error) *Akevitt {
 	command = strings.TrimSpace(command)
 	engine.commands[command] = function
 
@@ -241,4 +246,25 @@ func (events *GameEventHandler) Finish() {
 
 func (engine *Akevitt) SaveObject(gameObject GameObject, key uint64) error {
 	return overwriteObject(engine.db, key, gameObjectBucket, gameObject)
+}
+
+func (engine *Akevitt) SaveWorldObject(object Object, key uint64) error {
+	return overwriteObject(engine.db, key, worldObjectsBucket, object)
+}
+
+func (engine *Akevitt) SetSpawnRoom(room Room) *Akevitt {
+	engine.defaultRoom = room
+	return engine
+}
+
+func (engine *Akevitt) GetSpawnRoom() Room {
+	return engine.defaultRoom
+}
+
+func (engine *Akevitt) GetNewKey(isWorld bool) (uint64, error) {
+	if !isWorld {
+		return getNewKey(engine.db, gameObjectBucket)
+	} else {
+		return getNewKey(engine.db, worldObjectsBucket)
+	}
 }
