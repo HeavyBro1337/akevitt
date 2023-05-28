@@ -121,6 +121,29 @@ func checkCurrentLogin(acc Account, sessions *map[ssh.Session]*ActiveSession) bo
 	return false
 }
 
+func getKeys(db *bolt.DB, roomKeys []uint64) ([]uint64, error) {
+	var result []uint64
+
+	err := db.Update(func(tx *bolt.Tx) error {
+		bucket, err := tx.CreateBucketIfNotExists([]byte(gameObjectBucket))
+
+		if err != nil {
+			return err
+		}
+
+		return bucket.ForEach(func(k, v []byte) error {
+			uintKey := byteToInt(k)
+
+			if in(roomKeys, uintKey) {
+				result = append(result, uintKey)
+			}
+
+			return nil
+		})
+	})
+	return result, err
+}
+
 func findObject[T GameObject](db *bolt.DB, account Account) (T, uint64, error) {
 	var id uint64
 	var result T

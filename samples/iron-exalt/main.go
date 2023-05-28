@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	room := Room{Name: "Spawn Room"}
+	room := &Room{Name: "Spawn Room"}
 
 	engine := akevitt.Akevitt{}
 	engine.
@@ -23,6 +23,7 @@ func main() {
 		RegisterCommand("ooc", ooc).
 		RegisterCommand("say", characterMessage).
 		RegisterCommand("stats", characterStats).
+		RegisterCommand("help", help).
 		SetSpawnRoom(room)
 
 	events := akevitt.GameEventHandler{}

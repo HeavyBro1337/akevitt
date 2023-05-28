@@ -13,7 +13,7 @@ type Character struct {
 	Health      int
 	MaxHealth   int
 	account     akevitt.Account
-	currentRoom Room
+	currentRoom *Room
 }
 
 type CharacterParams struct {
@@ -31,7 +31,7 @@ func (character *Character) Create(engine *akevitt.Akevitt, session *akevitt.Act
 	character.Health = 10
 	character.MaxHealth = 10
 	character.account = *session.Account
-	character.currentRoom = engine.GetSpawnRoom().(Room)
+	character.currentRoom = engine.GetSpawnRoom().(*Room)
 
 	key, err := engine.GetNewKey(false)
 

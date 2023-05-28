@@ -268,3 +268,13 @@ func (engine *Akevitt) GetNewKey(isWorld bool) (uint64, error) {
 		return getNewKey(engine.db, worldObjectsBucket)
 	}
 }
+
+func (engine *Akevitt) GetKeys(room Room) ([]uint64, error) {
+	keys, err := room.GetKeys(engine)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return getKeys(engine.db, keys)
+}

@@ -22,7 +22,7 @@ func characterMessage(engine *akevitt.Akevitt, session *akevitt.ActiveSession, c
 func characterStats(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
 	character, ok := session.RelatedGameObjects[currentCharacterKey].(*Character)
 	if !ok {
-		return errors.New("Hello")
+		return errors.New("could not cast to character")
 	}
 
 	statsString := fmt.Sprintf(
@@ -38,6 +38,28 @@ func characterStats(engine *akevitt.Akevitt, session *akevitt.ActiveSession, com
 		character.MaxHealth,
 		character.currentRoom.Name)
 	sepLines := strings.Split(statsString, "\n")
+	for i := len(sepLines) - 1; i > 0; i-- {
+		sender := "STATS"
+
+		if i != 0 {
+			sender = ""
+		}
+
+		AppendText(*session, sender, sepLines[i], ' ')
+	}
+	return nil
+}
+
+func help(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
+
+	helpString := `
+	ooc <message> - Out-of-character Chat
+	say <message> - Tell the message to everyone within the same room.
+	stats		  - Show character stats
+	help		  - Print this
+	`
+
+	sepLines := strings.Split(helpString, "\n")
 	for i := len(sepLines) - 1; i > 0; i-- {
 		sender := "STATS"
 

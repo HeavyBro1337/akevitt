@@ -31,3 +31,12 @@ func hashString(input string) (string, error) {
 	fmt.Printf("string(result): %v\n", string(result))
 	return string(result), nil
 }
+
+func in[T comparable](collection []T, value T) bool {
+	for _, b := range collection {
+		if b == value {
+			return true
+		}
+	}
+	return false
+}

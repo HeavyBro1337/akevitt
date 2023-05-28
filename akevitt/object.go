@@ -20,10 +20,13 @@ type GameObject interface {
 
 type Room interface {
 	Object
-	GetEntrances() []Entrance
+	GetExits() []Exit
+	GetKeys(engine *Akevitt) ([]uint64, error)
+	AddObject(engine *Akevitt, key uint64) error
+	RemoveObject(engine *Akevitt, key uint64) error
 }
 
-type Entrance interface {
+type Exit interface {
 	Object
 }
 
