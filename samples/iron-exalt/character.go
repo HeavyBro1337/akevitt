@@ -9,11 +9,12 @@ import (
 const currentCharacterKey string = "currentCharacter"
 
 type Character struct {
-	Name        string
-	Health      int
-	MaxHealth   int
-	account     akevitt.Account
-	currentRoom *Room
+	CharacterName  string
+	Health         int
+	MaxHealth      int
+	CurrentRoomKey uint64
+	account        akevitt.Account
+	currentRoom    *Room
 }
 
 type CharacterParams struct {
@@ -27,12 +28,12 @@ func (character *Character) Create(engine *akevitt.Akevitt, session *akevitt.Act
 		return errors.New("invalid params given")
 	}
 
-	character.Name = characterParams.name
+	character.CharacterName = characterParams.name
 	character.Health = 10
 	character.MaxHealth = 10
 	character.account = *session.Account
 	character.currentRoom = engine.GetSpawnRoom().(*Room)
-
+	character.CurrentRoomKey = character.currentRoom.Key
 	key, err := engine.GetNewKey(false)
 
 	if err != nil {
@@ -46,14 +47,24 @@ func (character *Character) Save(key uint64, engine *akevitt.Akevitt) error {
 	return engine.SaveObject(character, key)
 }
 
+func (character *Character) OnLoad(engine *akevitt.Akevitt) error {
+	obj, err := engine.GetObject(character.CurrentRoomKey)
+	character.currentRoom = obj.(*Room)
+	return err
+}
+
 func (character *Character) Description() string {
-	return fmt.Sprintf("%s, HP: %d/%d", character.Name, character.Health, character.MaxHealth)
+	return fmt.Sprintf("%s, HP: %d/%d", character.CharacterName, character.Health, character.MaxHealth)
 }
 
 func (character *Character) GetAccount() akevitt.Account {
 	return character.account
 }
 
-func (character *Character) GetRoom() akevitt.Room {
-	return character.currentRoom
+func (character *Character) Name() string {
+	return character.CharacterName
+}
+
+func (character *Character) OnRoomLookup() uint64 {
+	return character.CurrentRoomKey
 }

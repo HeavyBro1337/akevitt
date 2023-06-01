@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	room := &Room{Name: "Spawn Room"}
+	room := &Room{Name: "Spawn Room", DescriptionData: "Just a spawn room."}
 
 	engine := akevitt.Akevitt{}
 	engine.
@@ -24,6 +24,7 @@ func main() {
 		RegisterCommand("say", characterMessage).
 		RegisterCommand("stats", characterStats).
 		RegisterCommand("help", help).
+		RegisterCommand("look", look).
 		SetSpawnRoom(room)
 
 	events := akevitt.GameEventHandler{}
@@ -52,7 +53,7 @@ func main() {
 				return
 			}
 
-			err := AppendText(*session, senderCharacter.Name, message, 'R')
+			err := AppendText(*session, senderCharacter.CharacterName, message, 'R')
 			if err != nil {
 				fmt.Printf("err: %v\n", err)
 			}

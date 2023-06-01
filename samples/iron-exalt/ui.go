@@ -52,6 +52,7 @@ func loginScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.
 		}
 
 		character.account = *session.Account
+		character.OnLoad(engine)
 		session.SetRoot(gameScreen(engine, session))
 		session.RelatedGameObjects[currentCharacterKey] = character
 
@@ -64,11 +65,11 @@ func ErrorBox(message string, app *tview.Application, back *tview.Primitive) {
 		SetBackgroundColor(tcell.ColorBlack).
 		AddButtons([]string{"Close"}).SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 		app.SetRoot(*back, false)
-	})
+	}).SetFocus(0)
 
 	result.SetBorderColor(tcell.ColorDarkRed)
 	result.SetBorder(true)
-	app.SetRoot(result, true).SetFocus(result)
+	app.SetRoot(result, true)
 }
 
 func gameScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {

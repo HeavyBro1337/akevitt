@@ -32,11 +32,11 @@ func hashString(input string) (string, error) {
 	return string(result), nil
 }
 
-func in[T comparable](collection []T, value T) bool {
-	for _, b := range collection {
-		if b == value {
-			return true
-		}
-	}
-	return false
-}
+// func in[T comparable](collection []T, value T) bool {
+// 	for _, b := range collection {
+// 		if b == value {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }

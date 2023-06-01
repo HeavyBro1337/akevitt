@@ -254,6 +254,15 @@ func (engine *Akevitt) SaveWorldObject(object Object, key uint64) error {
 
 func (engine *Akevitt) SetSpawnRoom(room Room) *Akevitt {
 	engine.defaultRoom = room
+
+	key, err := getNewKey(engine.db, worldObjectsBucket)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	engine.defaultRoom.Save(key, engine)
+
 	return engine
 }
 
@@ -269,12 +278,10 @@ func (engine *Akevitt) GetNewKey(isWorld bool) (uint64, error) {
 	}
 }
 
-func (engine *Akevitt) GetKeys(room Room) ([]uint64, error) {
-	keys, err := room.GetKeys(engine)
+func (engine *Akevitt) GetObject(key uint64) (Object, error) {
+	return findObjectByKey[GameObject](engine.db, key)
+}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return getKeys(engine.db, keys)
+func (engine *Akevitt) Lookup(roomKey uint64) ([]GameObject, error) {
+	return lookupGameObjects(engine.db, roomKey)
 }

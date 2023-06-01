@@ -32,7 +32,7 @@ func characterStats(engine *akevitt.Akevitt, session *akevitt.ActiveSession, com
 	  Room: %s
 	================
 	`,
-		character.Name,
+		character.CharacterName,
 		character.account.Username,
 		character.Health,
 		character.MaxHealth,
@@ -68,6 +68,32 @@ func help(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command strin
 		}
 
 		AppendText(*session, sender, sepLines[i], ' ')
+	}
+	return nil
+}
+
+func look(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
+	character, ok := session.RelatedGameObjects[currentCharacterKey].(*Character)
+	if !ok {
+		return errors.New("could not cast to character")
+	}
+
+	// args := strings.Fields(command)
+
+	if true {
+		objs, err := engine.Lookup(character.CurrentRoomKey)
+
+		if err != nil {
+			return err
+		}
+
+		for i := 0; i < len(objs); i++ {
+			err = AppendText(*session, fmt.Sprintf("%d: %s", objs[i], objs[i].Name()), "", ' ')
+
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

@@ -21,7 +21,6 @@ type Room struct {
 	Name            string
 	DescriptionData string
 	Exits           []akevitt.Exit
-	ObjectKeys      []uint64
 	Key             uint64
 }
 
@@ -61,20 +60,8 @@ func (room *Room) Save(key uint64, engine *akevitt.Akevitt) error {
 	return engine.SaveWorldObject(room, key)
 }
 
-func (room *Room) GetKeys(engine *akevitt.Akevitt) ([]uint64, error) {
-	return room.ObjectKeys, nil
-}
-
-func (room *Room) AddObject(engine *akevitt.Akevitt, key uint64) error {
-	room.ObjectKeys = append(room.ObjectKeys, key)
-
-	return room.Save(room.Key, engine)
-}
-
-func (room *Room) RemoveObject(engine *akevitt.Akevitt, key uint64) error {
-	room.ObjectKeys = remove(room.ObjectKeys, key)
-
-	return room.Save(room.Key, engine)
+func (room *Room) Lookup(engine *akevitt.Akevitt) ([]akevitt.GameObject, error) {
+	return engine.Lookup(room.Key)
 }
 
 func remove[T comparable](l []T, item T) []T {
