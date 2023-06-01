@@ -23,6 +23,7 @@ type GameObject interface {
 type Room interface {
 	Object
 	GetExits() []Exit
+	GetKey() uint64
 }
 
 type Exit interface {

@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	room := &Room{Name: "Spawn Room", DescriptionData: "Just a spawn room."}
+	room := &Room{Name: "Spawn Room", DescriptionData: "Just a spawn room.", Key: 0}
 
 	engine := akevitt.Akevitt{}
 	engine.

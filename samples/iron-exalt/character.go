@@ -48,9 +48,17 @@ func (character *Character) Save(key uint64, engine *akevitt.Akevitt) error {
 }
 
 func (character *Character) OnLoad(engine *akevitt.Akevitt) error {
-	obj, err := engine.GetObject(character.CurrentRoomKey)
-	character.currentRoom = obj.(*Room)
-	return err
+	println("Invoked on load")
+
+	room, err := akevitt.GetObject[*Room](engine, character.CurrentRoomKey, true)
+
+	if err != nil {
+		return err
+	}
+
+	character.currentRoom = room
+
+	return nil
 }
 
 func (character *Character) Description() string {

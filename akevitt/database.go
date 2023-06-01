@@ -176,10 +176,10 @@ func findObject[T GameObject](db *bolt.DB, account Account) (T, uint64, error) {
 	return result, id, err
 }
 
-func findObjectByKey[T Object](db *bolt.DB, key uint64) (T, error) {
+func findObjectByKey[T Object](db *bolt.DB, key uint64, bucket string) (T, error) {
 	var result T
 	err := db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(gameObjectBucket))
+		bucket, err := tx.CreateBucketIfNotExists([]byte(bucket))
 		if err != nil {
 			return err
 		}

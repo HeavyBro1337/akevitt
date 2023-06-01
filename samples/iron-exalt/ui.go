@@ -52,7 +52,13 @@ func loginScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.
 		}
 
 		character.account = *session.Account
-		character.OnLoad(engine)
+		err = character.OnLoad(engine)
+
+		if err != nil {
+			fmt.Printf("err loading character: %v\n", err)
+			return
+		}
+
 		session.SetRoot(gameScreen(engine, session))
 		session.RelatedGameObjects[currentCharacterKey] = character
 
