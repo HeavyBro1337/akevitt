@@ -10,10 +10,10 @@ import (
 )
 
 func main() {
-	room := &Room{Name: "Spawn Room", DescriptionData: "Just a spawn room.", Key: 0, Exits: []uint64{1, 2, 3}}
+	room := &Room{Name: "Spawn Room", DescriptionData: "Just a spawn room.", Key: 0, Exits: []uint64{1, 2}}
 	rooms := []*Room{
-		{Name: "Mine", DescriptionData: "Mine of the corporation.", Key: 1, Exits: []uint64{1, 2, 3}},
-		{Name: "Iron City", DescriptionData: "The lounge of the miners.", Key: 2, Exits: []uint64{1, 2, 3}},
+		{Name: "Mine", DescriptionData: "Mine of the corporation.", Key: 1, Exits: []uint64{0, 2, 3}},
+		{Name: "Iron City", DescriptionData: "The lounge of the miners.", Key: 2, Exits: []uint64{1, 0}},
 	}
 
 	engine := akevitt.Akevitt{}
@@ -30,6 +30,7 @@ func main() {
 		RegisterCommand("help", help).
 		RegisterCommand("look", look).
 		RegisterCommand("enter", enterRoom).
+		RegisterCommand("exits", lookExits).
 		SetSpawnRoom(room)
 
 	events := akevitt.GameEventHandler{}

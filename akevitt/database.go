@@ -156,7 +156,7 @@ func findObjectByAccount[T GameObject](db *bolt.DB, account Account) (T, uint64,
 }
 
 func findObjectByKey[T Object](db *bolt.DB, key uint64, bucket string) (T, error) {
-	var result T
+	var result *T
 	err := db.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(bucket))
 		if err != nil {
@@ -168,13 +168,17 @@ func findObjectByKey[T Object](db *bolt.DB, key uint64, bucket string) (T, error
 				return err
 			}
 			if byteToInt(k) == key {
-				result = obj
-				return nil
+				result = &obj
 			}
 			return nil
 		})
 	})
-	return result, err
+
+	if result == nil {
+		err = errors.Join(err, errors.New("could not find anything in database"))
+	}
+
+	return *result, err
 }
 
 // Checks that user exists in the database by username.

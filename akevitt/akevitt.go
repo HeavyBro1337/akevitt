@@ -78,8 +78,18 @@ func (engine *Akevitt) UseGameName(name string) *Akevitt {
 	return engine
 }
 
-func (engine *Akevitt) IsRoomReachable(roomKey uint64, currentRoomKey uint64) bool {
-	return false
+func IsRoomReachable[T Room](engine *Akevitt, session *ActiveSession, roomKey uint64, currentRoomKey uint64) (bool, error) {
+	room, err := findObjectByKey[T](engine.db, roomKey, worldObjectsBucket)
+	exits := room.GetExits()
+	if err != nil {
+		return false, err
+	}
+
+	if exits == nil {
+		return false, errors.New("exits is nil")
+	}
+
+	return find(exits, currentRoomKey), nil
 }
 
 // Creates database file if not exists. The custom path must be already specified, before creating.
@@ -209,6 +219,7 @@ func (engine *Akevitt) WhisperMessage(message string, session *ActiveSession, re
 
 func (engine *Akevitt) SendRoomMessage(message string, session *ActiveSession) {
 	purgeDeadSessions(&engine.activeSessions)
+
 	broadcastMessage(engine.activeSessions, message, session,
 		func(message string, sender *ActiveSession, currentSession *ActiveSession) {
 			engine.hooks.roomMessage(engine, currentSession, sender, message)

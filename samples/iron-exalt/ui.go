@@ -45,14 +45,14 @@ func loginScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.
 		character, key, err := akevitt.FindObject[*Character](engine, session)
 
 		if err != nil {
+			fmt.Printf("err: %v\n", err)
 			session.SetRoot(characterCreationWizard(engine, session))
 			return
 		}
 
 		character.account = *session.Account
-		err = character.OnLoad(engine)
 
-		if err != nil {
+		if character.OnLoad(engine) != nil {
 			fmt.Printf("err loading character: %v\n", err)
 			return
 		}

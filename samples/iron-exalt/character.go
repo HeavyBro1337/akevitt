@@ -34,6 +34,7 @@ func (character *Character) Create(engine *akevitt.Akevitt, session *akevitt.Act
 	character.currentRoom = engine.GetSpawnRoom().(*Room)
 	character.Map = make(map[string]akevitt.Object, 0)
 	character.account = *session.Account
+	character.Map["account"] = character.account
 	character.CurrentRoomKey = character.currentRoom.Key
 	key, err := engine.GetNewKey(false)
 
@@ -56,9 +57,9 @@ func (character *Character) GetMap() map[string]akevitt.Object {
 
 func (character *Character) OnLoad(engine *akevitt.Akevitt) error {
 	println("Invoked on load")
-
+	fmt.Printf("character.CurrentRoomKey: %v\n", character.CurrentRoomKey)
 	room, err := akevitt.GetObject[*Room](engine, character.CurrentRoomKey, true)
-
+	fmt.Printf("room: %v\n", room)
 	if err != nil {
 		return err
 	}

@@ -20,6 +20,27 @@ func characterMessage(engine *akevitt.Akevitt, session *akevitt.ActiveSession, c
 	return nil
 }
 
+func lookExits(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
+	character, ok := session.RelatedGameObjects[currentCharacterKey].Second.(*Character)
+	if !ok {
+		return errors.New("could not cast to character")
+	}
+	for _, v := range character.currentRoom.Exits {
+		room, err := akevitt.GetObject[*Room](engine, v, true)
+
+		if err != nil {
+			return err
+		}
+
+		err = AppendText(*session, fmt.Sprintf("Room %s (%d)", room.Name, v))
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func enterRoom(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
 	character, ok := session.RelatedGameObjects[currentCharacterKey].Second.(*Character)
 	if !ok {
@@ -31,11 +52,28 @@ func enterRoom(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command 
 		return err
 	}
 
-	if engine.IsRoomReachable(roomKey, character.CurrentRoomKey) {
-		character.CurrentRoomKey = roomKey
+	reachable, err := akevitt.IsRoomReachable[*Room](engine, session, roomKey, character.CurrentRoomKey)
+
+	if err != nil {
+		return err
 	}
 
-	return nil
+	if reachable {
+		character.CurrentRoomKey = roomKey
+		actualRoom, err := akevitt.GetObject[*Room](engine, roomKey, true)
+
+		if err != nil {
+			return err
+		}
+
+		character.currentRoom = actualRoom
+
+		engine.SendRoomMessage("Entered room", session)
+
+		return character.Save(session.RelatedGameObjects[currentCharacterKey].First, engine)
+	} else {
+		return errors.New("room is unreachable")
+	}
 }
 
 func characterStats(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
@@ -84,9 +122,13 @@ func look(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command strin
 		return errors.New("could not cast to character")
 	}
 
-	// args := strings.Fields(command)
+	key, err := strconv.ParseUint(command, 10, 64)
 
-	if true {
+	if err != nil {
+		return err
+	}
+
+	if key == 0 {
 		keysAndGo := akevitt.Lookup[*Character](engine, character.CurrentRoomKey)
 
 		for _, v := range keysAndGo {
@@ -95,6 +137,16 @@ func look(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command strin
 			if err != nil {
 				return err
 			}
+		}
+	} else {
+		obj, err := akevitt.GetObject[*Character](engine, key, false)
+
+		if err != nil {
+			return err
+		}
+
+		if obj.CurrentRoomKey != character.CurrentRoomKey {
+			return errors.New("unknown key specified")
 		}
 	}
 
