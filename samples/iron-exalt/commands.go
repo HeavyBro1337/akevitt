@@ -38,14 +38,15 @@ func characterStats(engine *akevitt.Akevitt, session *akevitt.ActiveSession, com
 		character.MaxHealth,
 		character.currentRoom.Name)
 	sepLines := strings.Split(statsString, "\n")
-	for i := len(sepLines) - 1; i > 0; i-- {
+
+	for i, v := range sepLines {
 		sender := "STATS"
 
 		if i != 0 {
 			sender = ""
 		}
 
-		AppendText(*session, sender, sepLines[i], ' ')
+		AppendText(*session, sender, v, "%[1]s")
 	}
 	return nil
 }
@@ -55,19 +56,14 @@ func help(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command strin
 	helpString := `
 	ooc <message> - Out-of-character Chat
 	say <message> - Tell the message to everyone within the same room.
+	look		  - Look around all the objects
 	stats		  - Show character stats
 	help		  - Print this
 	`
 
 	sepLines := strings.Split(helpString, "\n")
-	for i := len(sepLines) - 1; i > 0; i-- {
-		sender := "STATS"
-
-		if i != 0 {
-			sender = ""
-		}
-
-		AppendText(*session, sender, sepLines[i], ' ')
+	for _, v := range sepLines {
+		AppendText(*session, v, "", "%s")
 	}
 	return nil
 }
@@ -83,13 +79,14 @@ func look(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command strin
 	if true {
 		keysAndGo := akevitt.Lookup[*Character](engine, character.CurrentRoomKey)
 
-		for k, v := range keysAndGo {
-			err := AppendText(*session, fmt.Sprintf("%d: %s", k, v.Name()), "", ' ')
+		for _, v := range keysAndGo {
+			err := AppendText(*session, fmt.Sprint(v.First), v.Second.Name(), "%s -> %s")
 
 			if err != nil {
 				return err
 			}
 		}
 	}
+
 	return nil
 }

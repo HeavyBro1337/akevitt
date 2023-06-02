@@ -283,12 +283,15 @@ func GetObject[T Object](engine *Akevitt, key uint64, isWorldObject bool) (T, er
 	return findObjectByKey[T](engine.db, key, gameObjectBucket)
 }
 
-func Lookup[T GameObject](engine *Akevitt, roomKey uint64) map[uint64]GameObject {
-	return nil
-	// purgeDeadSessions(&engine.activeSessions)
-	// for _, session := range engine.activeSessions {
-	// 	return filterMap(session.RelatedGameObjects, func(k string, v GameObject) bool {
-	// 		return v.OnRoomLookup() == roomKey
-	// 	})
-	// }
+func Lookup[T GameObject](engine *Akevitt, roomKey uint64) []Pair[uint64, GameObject] {
+	var result []Pair[uint64, GameObject] = make([]Pair[uint64, GameObject], 0)
+	purgeDeadSessions(&engine.activeSessions)
+	for _, session := range engine.activeSessions {
+		for _, pair := range filterMap(session.RelatedGameObjects, func(k string, v Pair[uint64, GameObject]) bool {
+			return v.Second.OnRoomLookup() == roomKey
+		}) {
+			result = append(result, pair)
+		}
+	}
+	return result
 }

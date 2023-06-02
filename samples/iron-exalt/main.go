@@ -31,7 +31,7 @@ func main() {
 
 	events.
 		OOCMessage(func(engine *akevitt.Akevitt, session *akevitt.ActiveSession, sender *akevitt.ActiveSession, message string) {
-			err := AppendText(*session, sender.Account.Username, message, 'O')
+			err := AppendText(*session, sender.Account.Username, message, "%s (OOC): %s")
 			if err != nil {
 				fmt.Printf("err: %v\n", err)
 			}
@@ -53,7 +53,7 @@ func main() {
 				return
 			}
 
-			err := AppendText(*session, senderCharacter.CharacterName, message, 'R')
+			err := AppendText(*session, senderCharacter.CharacterName, message, "%s (Room): %s")
 			if err != nil {
 				fmt.Printf("err: %v\n", err)
 			}
