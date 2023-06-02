@@ -150,7 +150,7 @@ func lookupGameObjects(db *bolt.DB, roomKey uint64) ([]GameObject, error) {
 	return result, err
 }
 
-func findObject[T GameObject](db *bolt.DB, account Account) (T, uint64, error) {
+func findObjectByAccount[T GameObject](db *bolt.DB, account Account) (T, uint64, error) {
 	var id uint64
 	var result T
 	err := db.Update(func(tx *bolt.Tx) error {
@@ -166,7 +166,7 @@ func findObject[T GameObject](db *bolt.DB, account Account) (T, uint64, error) {
 
 			objAcc, ok := obj.GetMap()["account"].(Account)
 
-			if ok && account != objAcc {
+			if !ok || account != objAcc {
 				return nil
 			}
 
