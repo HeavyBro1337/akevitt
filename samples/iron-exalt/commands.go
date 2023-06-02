@@ -148,6 +148,7 @@ func look(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command strin
 		if obj.CurrentRoomKey != character.CurrentRoomKey {
 			return errors.New("unknown key specified")
 		}
+		return AppendText(*session, fmt.Sprintf("%s: %s", obj.Name(), obj.Description()))
 	}
 
 	return nil
