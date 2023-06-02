@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"reflect"
 	"strings"
 
@@ -31,10 +32,12 @@ type Akevitt struct {
 	hooks          *GameEventHandler                                                              // Struct for holding all of the callbacks
 	defaultRoom    Room                                                                           // Default room where new players will spawn.
 	commands       map[string]func(engine *Akevitt, session *ActiveSession, command string) error // Registered commands
+	dbNoExists     bool
 }
 type GameEventHandler struct {
 	oocMessage  func(engine *Akevitt, session *ActiveSession, sender *ActiveSession, message string)
 	roomMessage func(engine *Akevitt, session *ActiveSession, sender *ActiveSession, message string)
+	onDBCreated func(engine *Akevitt) error
 	validated   bool // True when it has passed all of the validation
 }
 
@@ -75,8 +78,16 @@ func (engine *Akevitt) UseGameName(name string) *Akevitt {
 	return engine
 }
 
+func (engine *Akevitt) IsRoomReachable(roomKey uint64, currentRoomKey uint64) bool {
+	return false
+}
+
 // Creates database file if not exists. The custom path must be already specified, before creating.
 func (engine *Akevitt) UseCreateDatabaseIfNotExists() *Akevitt {
+	_, err := os.Stat(engine.dbPath)
+
+	engine.dbNoExists = errors.Is(err, os.ErrNotExist)
+
 	db, err := bolt.Open(engine.dbPath, 0600, nil)
 
 	if err != nil {
@@ -157,11 +168,25 @@ func (engine *Akevitt) ConfigureCallbacks(event *GameEventHandler) *Akevitt {
 	}
 
 	engine.hooks = event
+
+	if engine.dbNoExists && engine.hooks.onDBCreated != nil {
+		err := engine.hooks.onDBCreated(engine)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	return engine
 }
 
 func (event *GameEventHandler) OOCMessage(c func(engine *Akevitt, session *ActiveSession, sender *ActiveSession, message string)) *GameEventHandler {
 	event.oocMessage = c
+	return event
+}
+
+func (event *GameEventHandler) OnDatabaseCreate(c func(engine *Akevitt) error) *GameEventHandler {
+	event.onDBCreated = c
 	return event
 }
 

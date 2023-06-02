@@ -21,12 +21,8 @@ type GameObject interface {
 
 type Room interface {
 	Object
-	GetExits() []Exit
+	GetExits() []uint64
 	GetKey() uint64
-}
-
-type Exit interface {
-	Object
 }
 
 // Converts `T` to byte array

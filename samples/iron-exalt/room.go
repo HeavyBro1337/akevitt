@@ -20,13 +20,13 @@ func (entrance *Exit) Save(key uint64, engine *akevitt.Akevitt) error {
 type Room struct {
 	Name            string
 	DescriptionData string
-	Exits           []akevitt.Exit
+	Exits           []uint64
 	Key             uint64
 }
 
 type RoomParams struct {
 	name  string
-	exits []akevitt.Exit
+	exits []uint64
 }
 
 func (room *Room) GetKey() uint64 {
@@ -56,7 +56,7 @@ func (room *Room) Description() string {
 	return room.DescriptionData
 }
 
-func (room *Room) GetExits() []akevitt.Exit {
+func (room *Room) GetExits() []uint64 {
 	return room.Exits
 }
 

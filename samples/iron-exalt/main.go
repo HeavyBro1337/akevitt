@@ -10,7 +10,11 @@ import (
 )
 
 func main() {
-	room := &Room{Name: "Spawn Room", DescriptionData: "Just a spawn room.", Key: 0}
+	room := &Room{Name: "Spawn Room", DescriptionData: "Just a spawn room.", Key: 0, Exits: []uint64{1, 2, 3}}
+	rooms := []*Room{
+		{Name: "Mine", DescriptionData: "Mine of the corporation.", Key: 1, Exits: []uint64{1, 2, 3}},
+		{Name: "Iron City", DescriptionData: "The lounge of the miners.", Key: 2, Exits: []uint64{1, 2, 3}},
+	}
 
 	engine := akevitt.Akevitt{}
 	engine.
@@ -25,6 +29,7 @@ func main() {
 		RegisterCommand("stats", characterStats).
 		RegisterCommand("help", help).
 		RegisterCommand("look", look).
+		RegisterCommand("enter", enterRoom).
 		SetSpawnRoom(room)
 
 	events := akevitt.GameEventHandler{}
@@ -58,6 +63,16 @@ func main() {
 				fmt.Printf("err: %v\n", err)
 			}
 
+		}).
+		OnDatabaseCreate(func(engine *akevitt.Akevitt) error {
+			fmt.Println("Database didn't exist. Creating rooms...")
+			for _, v := range rooms {
+				err := v.Save(v.Key, engine)
+				if err != nil {
+					return err
+				}
+			}
+			return nil
 		}).
 		Finish()
 

@@ -4,6 +4,7 @@ import (
 	"akevitt/akevitt"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -15,6 +16,24 @@ func ooc(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string
 
 func characterMessage(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
 	engine.SendRoomMessage(command, session)
+
+	return nil
+}
+
+func enterRoom(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
+	character, ok := session.RelatedGameObjects[currentCharacterKey].Second.(*Character)
+	if !ok {
+		return errors.New("could not cast to character")
+	}
+	roomKey, err := strconv.ParseUint(command, 10, 64)
+
+	if err != nil {
+		return err
+	}
+
+	if engine.IsRoomReachable(roomKey, character.CurrentRoomKey) {
+		character.CurrentRoomKey = roomKey
+	}
 
 	return nil
 }
