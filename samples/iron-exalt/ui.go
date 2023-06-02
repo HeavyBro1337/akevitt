@@ -14,11 +14,11 @@ import (
 	"github.com/rivo/tview"
 )
 
-func AppendText(currentSession akevitt.ActiveSession, senderName string, message string, format string) error {
+func AppendText(currentSession akevitt.ActiveSession, message string) error {
 	if currentSession.Chat == nil {
 		return errors.New("chat log element is nil")
 	}
-	currentSession.Chat.AddItem(fmt.Sprintf(format, senderName, message), "", 0, nil)
+	currentSession.Chat.AddItem(message, "", 0, nil)
 	currentSession.Chat.SetWrapAround(true)
 	currentSession.Chat.ShowSecondaryText(false)
 	return nil
@@ -97,7 +97,7 @@ func gameScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.P
 			if playerMessage == "" {
 				return
 			}
-			err := AppendText(*session, "", playerMessage, "%[1]s")
+			err := AppendText(*session, playerMessage)
 
 			if err != nil {
 				ErrorBox(err.Error(), session.UI, session.UIPrimitive)
