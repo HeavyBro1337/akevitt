@@ -90,7 +90,7 @@ func (engine *Akevitt) UseCreateDatabaseIfNotExists() *Akevitt {
 
 // Launch the engine
 func (engine *Akevitt) Run() error {
-	gob.Register(map[string]Object{})
+	gob.Register(Account{})
 
 	defer engine.db.Close()
 

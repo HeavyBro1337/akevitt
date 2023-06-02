@@ -63,7 +63,3 @@ func (room *Room) GetExits() []akevitt.Exit {
 func (room *Room) Save(key uint64, engine *akevitt.Akevitt) error {
 	return engine.SaveWorldObject(room, key)
 }
-
-func (room *Room) Lookup(engine *akevitt.Akevitt) ([]akevitt.GameObject, error) {
-	return engine.Lookup(room.Key)
-}

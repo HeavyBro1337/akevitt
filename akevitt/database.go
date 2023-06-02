@@ -134,11 +134,14 @@ func lookupGameObjects(db *bolt.DB, roomKey uint64) ([]GameObject, error) {
 		return bucket.ForEach(func(k, v []byte) error {
 			obj, err := deserialize[GameObject](v)
 
+			fmt.Printf("byteToInt(k): %v\n", byteToInt(k))
 			if err != nil {
 				return err
 			}
-
+			fmt.Printf("gameobject: %v\n", obj)
 			key := obj.OnRoomLookup()
+
+			fmt.Printf("key: %v\n", key)
 
 			if key == roomKey {
 				result = append(result, obj)
@@ -166,7 +169,11 @@ func findObjectByAccount[T GameObject](db *bolt.DB, account Account) (T, uint64,
 
 			objAcc, ok := obj.GetMap()["account"].(Account)
 
-			if !ok || account != objAcc {
+			if !ok {
+				return errors.New("could not cast to account")
+			}
+
+			if account != objAcc {
 				return nil
 			}
 
@@ -195,8 +202,6 @@ func findObjectByKey[T Object](db *bolt.DB, key uint64, bucket string) (T, error
 				result = obj
 				return nil
 			}
-
-			result = obj
 			return nil
 		})
 	})

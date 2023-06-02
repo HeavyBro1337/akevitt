@@ -76,5 +76,7 @@ func (character *Character) Name() string {
 }
 
 func (character *Character) OnRoomLookup() uint64 {
+	fmt.Println("I have been looked up!")
+	fmt.Printf("character.CharacterName: %v\n", character.CharacterName)
 	return character.CurrentRoomKey
 }
