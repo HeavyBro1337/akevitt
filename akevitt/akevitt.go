@@ -7,6 +7,7 @@ For more information, view LICENCE or README
 package akevitt
 
 import (
+	"encoding/gob"
 	"errors"
 	"fmt"
 	"log"
@@ -89,6 +90,8 @@ func (engine *Akevitt) UseCreateDatabaseIfNotExists() *Akevitt {
 
 // Launch the engine
 func (engine *Akevitt) Run() error {
+	gob.Register(map[string]Object{})
+
 	defer engine.db.Close()
 
 	if engine.rootScreen == nil {
@@ -198,7 +201,7 @@ func (engine *Akevitt) Register(username, password string, session *ActiveSessio
 }
 
 func FindObject[T GameObject](engine *Akevitt, session *ActiveSession) (T, uint64, error) {
-	return findObject[T](engine.db, *session.Account)
+	return findObjectByAccount[T](engine.db, *session.Account)
 }
 
 func (engine *Akevitt) RegisterCommand(command string, function func(e *Akevitt, session *ActiveSession, command string) error) *Akevitt {
