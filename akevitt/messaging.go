@@ -7,15 +7,15 @@ import (
 // Broadcasts message
 func broadcastMessage(sessions map[ssh.Session]*ActiveSession, message string, sender *ActiveSession,
 	onMessage func(message string, sender *ActiveSession, currentSession *ActiveSession)) error {
-	for _, element := range sessions {
+	for _, session := range sessions {
 		// The user is not authenticated
-		if element.Account == nil {
+		if session.Account == nil {
 			continue
 		}
-		onMessage(message, sender, element)
+		onMessage(message, sender, session)
 		// element.ui.Draw()
-		if element != sender {
-			element.UI.ForceDraw()
+		if session != sender {
+			session.UI.ForceDraw()
 		}
 	}
 	return nil
