@@ -9,12 +9,13 @@ import (
 const currentCharacterKey string = "currentCharacter"
 
 type Character struct {
-	Name        string
-	Health      int
-	MaxHealth   int
-	account     akevitt.Account
-	currentRoom *Room
-	Map         map[string]akevitt.Object
+	Name           string
+	Health         int
+	MaxHealth      int
+	account        akevitt.Account
+	currentRoom    *Room
+	Map            map[string]akevitt.Object
+	CurrentRoomKey uint64
 }
 
 type CharacterParams struct {
@@ -28,13 +29,14 @@ func (character *Character) Create(engine *akevitt.Akevitt, session *akevitt.Act
 		return errors.New("invalid params given")
 	}
 
-	character.Name = characterParams.name
+	character.CharacterName = characterParams.name
 	character.Health = 10
 	character.MaxHealth = 10
 	character.account = *session.Account
 	character.currentRoom = engine.GetSpawnRoom().(*Room)
 	character.Map = make(map[string]akevitt.Object, 0)
 
+	character.CurrentRoomKey = character.currentRoom.Key
 	key, err := engine.GetNewKey(false)
 
 	if err != nil {
@@ -52,14 +54,32 @@ func (character *Character) GetMap() map[string]akevitt.Object {
 	return character.Map
 }
 
+func (character *Character) OnLoad(engine *akevitt.Akevitt) error {
+	println("Invoked on load")
+
+	room, err := akevitt.GetObject[*Room](engine, character.CurrentRoomKey, true)
+
+	if err != nil {
+		return err
+	}
+
+	character.currentRoom = room
+
+	return nil
+}
+
 func (character *Character) Description() string {
-	return fmt.Sprintf("%s, HP: %d/%d", character.Name, character.Health, character.MaxHealth)
+	return fmt.Sprintf("%s, HP: %d/%d", character.CharacterName, character.Health, character.MaxHealth)
 }
 
 func (character *Character) GetAccount() akevitt.Account {
 	return character.account
 }
 
-func (character *Character) GetRoom() akevitt.Room {
-	return character.currentRoom
+func (character *Character) Name() string {
+	return character.CharacterName
+}
+
+func (character *Character) OnRoomLookup() uint64 {
+	return character.CurrentRoomKey
 }

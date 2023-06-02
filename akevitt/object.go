@@ -13,17 +13,18 @@ type Object interface {
 // Gameobject which is associated with the account.
 type GameObject interface {
 	Object
+	Name() string
 	Create(engine *Akevitt, session *ActiveSession, params interface{}) error
 	GetRoom() Room
 	GetMap() map[string]Object
+	OnRoomLookup() uint64
+	OnLoad(engine *Akevitt) error
 }
 
 type Room interface {
 	Object
 	GetExits() []Exit
-	GetKeys(engine *Akevitt) ([]uint64, error)
-	AddObject(engine *Akevitt, key uint64) error
-	RemoveObject(engine *Akevitt, key uint64) error
+	GetKey() uint64
 }
 
 type Exit interface {
