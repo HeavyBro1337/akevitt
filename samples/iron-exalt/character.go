@@ -28,14 +28,13 @@ func (character *Character) Create(engine *akevitt.Akevitt, session *akevitt.Act
 	if !ok {
 		return errors.New("invalid params given")
 	}
-
 	character.CharacterName = characterParams.name
 	character.Health = 10
 	character.MaxHealth = 10
-	character.account = *session.Account
 	character.currentRoom = engine.GetSpawnRoom().(*Room)
 	character.Map = make(map[string]akevitt.Object, 0)
-
+	character.Map["account"] = *session.Account
+	character.account = *session.Account
 	character.CurrentRoomKey = character.currentRoom.Key
 	key, err := engine.GetNewKey(false)
 
