@@ -33,10 +33,11 @@ func (character *Character) Create(engine *akevitt.Akevitt, session *akevitt.Act
 	character.MaxHealth = 10
 	character.currentRoom = engine.GetSpawnRoom().(*Room)
 	character.Map = make(map[string]akevitt.Object, 0)
-	character.Map["account"] = *session.Account
 	character.account = *session.Account
 	character.CurrentRoomKey = character.currentRoom.Key
 	key, err := engine.GetNewKey(false)
+
+	session.RelatedGameObjects[currentCharacterKey] = akevitt.Pair[uint64, akevitt.GameObject]{First: key, Second: character}
 
 	if err != nil {
 		return err
@@ -76,7 +77,5 @@ func (character *Character) Name() string {
 }
 
 func (character *Character) OnRoomLookup() uint64 {
-	fmt.Println("I have been looked up!")
-	fmt.Printf("character.CharacterName: %v\n", character.CharacterName)
 	return character.CurrentRoomKey
 }

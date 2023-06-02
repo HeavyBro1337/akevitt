@@ -37,13 +37,13 @@ func main() {
 			}
 		}).
 		Message(func(engine *akevitt.Akevitt, session, sender *akevitt.ActiveSession, message string) {
-			senderCharacter, ok := sender.RelatedGameObjects[currentCharacterKey].(*Character)
+			senderCharacter, ok := sender.RelatedGameObjects[currentCharacterKey].Second.(*Character)
 			if !ok {
 				fmt.Println("Error: the current character turned out not to be a character struct!")
 				return
 			}
 
-			sessionChacter, ok := session.RelatedGameObjects[currentCharacterKey].(*Character)
+			sessionChacter, ok := session.RelatedGameObjects[currentCharacterKey].Second.(*Character)
 			if !ok {
 				fmt.Println("Error: the current character turned out not to be a character struct!")
 				return

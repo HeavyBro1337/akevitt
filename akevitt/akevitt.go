@@ -108,12 +108,12 @@ func (engine *Akevitt) Run() error {
 			return
 		}
 
-		purgeDeadSession(&engine.activeSessions)
+		purgeDeadSessions(&engine.activeSessions)
 
 		app := tview.NewApplication().SetScreen(screen).EnableMouse(engine.mouse)
 		engine.activeSessions[sesh] = &ActiveSession{Chat: nil, Account: nil, UI: app}
 
-		engine.activeSessions[sesh].RelatedGameObjects = make(map[string]GameObject)
+		engine.activeSessions[sesh].RelatedGameObjects = make(map[string]Pair[uint64, GameObject])
 
 		engine.activeSessions[sesh].SetRoot(engine.rootScreen(engine, engine.activeSessions[sesh]))
 		if err := app.Run(); err != nil {
@@ -171,7 +171,7 @@ func (event *GameEventHandler) Message(c func(engine *Akevitt, session *ActiveSe
 }
 
 func (engine *Akevitt) SendOOCMessage(message string, session *ActiveSession) {
-	purgeDeadSession(&engine.activeSessions)
+	purgeDeadSessions(&engine.activeSessions)
 	broadcastMessage(engine.activeSessions, message, session,
 		func(message string, sender *ActiveSession, currentSession *ActiveSession) {
 			engine.hooks.oocMessage(engine, currentSession, sender, message)
@@ -183,7 +183,7 @@ func (engine *Akevitt) WhisperMessage(message string, session *ActiveSession, re
 }
 
 func (engine *Akevitt) SendRoomMessage(message string, session *ActiveSession) {
-	purgeDeadSession(&engine.activeSessions)
+	purgeDeadSessions(&engine.activeSessions)
 	broadcastMessage(engine.activeSessions, message, session,
 		func(message string, sender *ActiveSession, currentSession *ActiveSession) {
 			engine.hooks.roomMessage(engine, currentSession, sender, message)
@@ -221,9 +221,7 @@ func (engine *Akevitt) ProcessCommand(command string, session *ActiveSession) er
 		return errors.New("command not found")
 	}
 
-	commandFunc(engine, session, nozeroarg)
-
-	return nil
+	return commandFunc(engine, session, nozeroarg)
 }
 
 func (events *GameEventHandler) Finish() {
@@ -285,6 +283,12 @@ func GetObject[T Object](engine *Akevitt, key uint64, isWorldObject bool) (T, er
 	return findObjectByKey[T](engine.db, key, gameObjectBucket)
 }
 
-func (engine *Akevitt) Lookup(roomKey uint64) ([]GameObject, error) {
-	return lookupGameObjects(engine.db, roomKey)
+func Lookup[T GameObject](engine *Akevitt, roomKey uint64) map[uint64]GameObject {
+	return nil
+	// purgeDeadSessions(&engine.activeSessions)
+	// for _, session := range engine.activeSessions {
+	// 	return filterMap(session.RelatedGameObjects, func(k string, v GameObject) bool {
+	// 		return v.OnRoomLookup() == roomKey
+	// 	})
+	// }
 }

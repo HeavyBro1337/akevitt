@@ -9,7 +9,7 @@ import (
 
 type ActiveSession struct {
 	Account            *Account
-	RelatedGameObjects map[string]GameObject
+	RelatedGameObjects map[string]Pair[uint64, GameObject]
 	UI                 *tview.Application
 	Chat               *tview.List
 	UIPrimitive        *tview.Primitive
@@ -22,7 +22,7 @@ func (session *ActiveSession) SetRoot(p tview.Primitive) {
 
 // Iterates through all current sessions by trying to send null character.
 // If it receives an error, it indicates of session being dead.
-func purgeDeadSession(sessions *map[ssh.Session]*ActiveSession) {
+func purgeDeadSessions(sessions *map[ssh.Session]*ActiveSession) {
 	for k := range *sessions {
 
 		_, err := io.WriteString(k, "\000")

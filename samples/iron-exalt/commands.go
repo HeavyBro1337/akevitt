@@ -20,7 +20,7 @@ func characterMessage(engine *akevitt.Akevitt, session *akevitt.ActiveSession, c
 }
 
 func characterStats(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
-	character, ok := session.RelatedGameObjects[currentCharacterKey].(*Character)
+	character, ok := session.RelatedGameObjects[currentCharacterKey].Second.(*Character)
 	if !ok {
 		return errors.New("could not cast to character")
 	}
@@ -73,7 +73,7 @@ func help(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command strin
 }
 
 func look(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
-	character, ok := session.RelatedGameObjects[currentCharacterKey].(*Character)
+	character, ok := session.RelatedGameObjects[currentCharacterKey].Second.(*Character)
 	if !ok {
 		return errors.New("could not cast to character")
 	}
@@ -81,14 +81,10 @@ func look(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command strin
 	// args := strings.Fields(command)
 
 	if true {
-		objs, err := engine.Lookup(character.CurrentRoomKey)
+		keysAndGo := akevitt.Lookup[*Character](engine, character.CurrentRoomKey)
 
-		if err != nil {
-			return err
-		}
-
-		for i := 0; i < len(objs); i++ {
-			err = AppendText(*session, fmt.Sprintf("%d: %s", objs[i], objs[i].Name()), "", ' ')
+		for k, v := range keysAndGo {
+			err := AppendText(*session, fmt.Sprintf("%d: %s", k, v.Name()), "", ' ')
 
 			if err != nil {
 				return err

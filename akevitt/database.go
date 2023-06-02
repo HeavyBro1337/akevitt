@@ -43,7 +43,7 @@ func overwriteObject[T Object](db *bolt.DB, key uint64, bucket string, object T)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("object: %v\n", object)
+
 		serialized, err := serialize(object)
 
 		if err != nil {
@@ -99,7 +99,9 @@ func getNewKey(db *bolt.DB, bucket string) (uint64, error) {
 
 		return nil
 	})
+
 	if err != nil {
+
 		return 0, err
 	}
 
@@ -109,7 +111,7 @@ func getNewKey(db *bolt.DB, bucket string) (uint64, error) {
 // Checks current account for being in an active sessions. True if the account is already logged in.
 func checkCurrentLogin(acc Account, sessions *map[ssh.Session]*ActiveSession) bool {
 	// We want make sure we purge dead sessions before looking for active.
-	purgeDeadSession(sessions)
+	purgeDeadSessions(sessions)
 	for _, v := range *sessions {
 		if v.Account == nil {
 			continue
@@ -119,38 +121,6 @@ func checkCurrentLogin(acc Account, sessions *map[ssh.Session]*ActiveSession) bo
 		}
 	}
 	return false
-}
-
-func lookupGameObjects(db *bolt.DB, roomKey uint64) ([]GameObject, error) {
-	var result []GameObject
-
-	err := db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(gameObjectBucket))
-
-		if err != nil {
-			return err
-		}
-
-		return bucket.ForEach(func(k, v []byte) error {
-			obj, err := deserialize[GameObject](v)
-
-			fmt.Printf("byteToInt(k): %v\n", byteToInt(k))
-			if err != nil {
-				return err
-			}
-			fmt.Printf("gameobject: %v\n", obj)
-			key := obj.OnRoomLookup()
-
-			fmt.Printf("key: %v\n", key)
-
-			if key == roomKey {
-				result = append(result, obj)
-			}
-
-			return nil
-		})
-	})
-	return result, err
 }
 
 func findObjectByAccount[T GameObject](db *bolt.DB, account Account) (T, uint64, error) {
@@ -179,7 +149,6 @@ func findObjectByAccount[T GameObject](db *bolt.DB, account Account) (T, uint64,
 
 			result = obj
 			id = byteToInt(k)
-			fmt.Printf("result: %v\n", result)
 			return nil
 		})
 	})

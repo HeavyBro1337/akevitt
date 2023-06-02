@@ -10,7 +10,6 @@ type Object interface {
 	Save(key uint64, engine *Akevitt) error // Save object into database
 }
 
-// Gameobject which is associated with the account.
 type GameObject interface {
 	Object
 	Name() string
@@ -33,10 +32,12 @@ type Exit interface {
 // Converts `T` to byte array
 func serialize[T Object](v T) ([]byte, error) {
 	var buff bytes.Buffer
+
 	enc := gob.NewEncoder(&buff)
-	encodeErr := enc.Encode(v)
-	if encodeErr != nil {
-		return nil, encodeErr
+	err := enc.Encode(v)
+
+	if err != nil {
+		return nil, err
 	}
 	return buff.Bytes(), nil
 }
@@ -45,9 +46,12 @@ func serialize[T Object](v T) ([]byte, error) {
 func deserialize[T Object](b []byte) (T, error) {
 	var result T
 	var decodeBuffer bytes.Buffer
+
 	decodeBuffer.Write(b)
+
 	dec := gob.NewDecoder(&decodeBuffer)
 	err := dec.Decode(&result)
+
 	return result, err
 }
 

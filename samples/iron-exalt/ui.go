@@ -38,16 +38,14 @@ func loginScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.
 		err := engine.Login(username, password, session)
 
 		if err != nil {
-			fmt.Printf("err: %v\n", err)
 			ErrorBox(err.Error(), session.UI, session.UIPrimitive)
 			return
 		}
 
-		character, _, err := akevitt.FindObject[*Character](engine, session)
+		character, key, err := akevitt.FindObject[*Character](engine, session)
 
 		if err != nil {
 			session.SetRoot(characterCreationWizard(engine, session))
-			fmt.Printf("find obj err: %v\n", err)
 			return
 		}
 
@@ -60,7 +58,7 @@ func loginScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.
 		}
 
 		session.SetRoot(gameScreen(engine, session))
-		session.RelatedGameObjects[currentCharacterKey] = character
+		session.RelatedGameObjects[currentCharacterKey] = akevitt.Pair[uint64, akevitt.GameObject]{First: key, Second: character}
 
 	})
 	return loginScreen
@@ -190,14 +188,12 @@ func characterCreationWizard(engine *akevitt.Akevitt, session *akevitt.ActiveSes
 		characterParams.name = name
 
 		emptychar := &Character{}
-		character, err := akevitt.CreateObject(engine, session, emptychar, characterParams)
+		_, err := akevitt.CreateObject(engine, session, emptychar, characterParams)
 
 		if err != nil {
 			ErrorBox(err.Error(), session.UI, session.UIPrimitive)
 			return
 		}
-
-		session.RelatedGameObjects[currentCharacterKey] = character
 
 		session.SetRoot(gameScreen(engine, session))
 	})
