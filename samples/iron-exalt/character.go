@@ -9,7 +9,7 @@ import (
 const currentCharacterKey string = "currentCharacter"
 
 type Character struct {
-	Name           string
+	CharacterName  string
 	Health         int
 	MaxHealth      int
 	account        akevitt.Account
@@ -70,10 +70,6 @@ func (character *Character) OnLoad(engine *akevitt.Akevitt) error {
 
 func (character *Character) Description() string {
 	return fmt.Sprintf("%s, HP: %d/%d", character.CharacterName, character.Health, character.MaxHealth)
-}
-
-func (character *Character) GetAccount() akevitt.Account {
-	return character.account
 }
 
 func (character *Character) Name() string {

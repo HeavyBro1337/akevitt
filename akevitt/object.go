@@ -15,7 +15,6 @@ type GameObject interface {
 	Object
 	Name() string
 	Create(engine *Akevitt, session *ActiveSession, params interface{}) error
-	GetRoom() Room
 	GetMap() map[string]Object
 	OnRoomLookup() uint64
 	OnLoad(engine *Akevitt) error
