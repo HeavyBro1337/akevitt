@@ -14,6 +14,7 @@ type Character struct {
 	MaxHealth   int
 	account     akevitt.Account
 	currentRoom *Room
+	Map         map[string]akevitt.Object
 }
 
 type CharacterParams struct {
@@ -32,6 +33,7 @@ func (character *Character) Create(engine *akevitt.Akevitt, session *akevitt.Act
 	character.MaxHealth = 10
 	character.account = *session.Account
 	character.currentRoom = engine.GetSpawnRoom().(*Room)
+	character.Map = make(map[string]akevitt.Object, 0)
 
 	key, err := engine.GetNewKey(false)
 
@@ -44,6 +46,10 @@ func (character *Character) Create(engine *akevitt.Akevitt, session *akevitt.Act
 
 func (character *Character) Save(key uint64, engine *akevitt.Akevitt) error {
 	return engine.SaveObject(character, key)
+}
+
+func (character *Character) GetMap() map[string]akevitt.Object {
+	return character.Map
 }
 
 func (character *Character) Description() string {

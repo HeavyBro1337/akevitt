@@ -14,8 +14,8 @@ type Object interface {
 type GameObject interface {
 	Object
 	Create(engine *Akevitt, session *ActiveSession, params interface{}) error
-	GetAccount() Account
 	GetRoom() Room
+	GetMap() map[string]Object
 }
 
 type Room interface {

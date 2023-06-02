@@ -157,7 +157,10 @@ func findObject[T GameObject](db *bolt.DB, account Account) (T, uint64, error) {
 			if err != nil {
 				return err
 			}
-			if account == obj.GetAccount() {
+
+			objAcc, ok := obj.GetMap()["account"].(Account)
+
+			if ok && account != objAcc {
 				return nil
 			}
 
