@@ -20,13 +20,13 @@ func characterMessage(engine *akevitt.Akevitt, session *akevitt.ActiveSession, c
 	return nil
 }
 
-func lookExits(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
+func lookExits(engine *akevitt.Akevitt, session *akevitt.ActiveSession) error {
 	character, ok := session.RelatedGameObjects[currentCharacterKey].Second.(*Character)
 	if !ok {
 		return errors.New("could not cast to character")
 	}
 	for _, v := range character.currentRoom.Exits {
-		room, err := akevitt.GetObject[*Room](engine, v, true)
+		room, err := akevitt.GetObject[*Room](engine, v.GetRoom().GetKey(), true)
 
 		if err != nil {
 			return err
@@ -125,12 +125,13 @@ func look(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command strin
 	key, err := strconv.ParseUint(command, 10, 64)
 
 	if err != nil {
-		return err
-	}
+		keysAndGo := akevitt.Lookup[akevitt.GameObject](engine, character.CurrentRoomKey)
 
-	if key == 0 {
-		keysAndGo := akevitt.Lookup[*Character](engine, character.CurrentRoomKey)
+		err := lookExits(engine, session)
 
+		if err != nil {
+			return err
+		}
 		for _, v := range keysAndGo {
 			err := AppendText(*session, fmt.Sprintf("%d -> %s", v.First, v.Second.Name()))
 
@@ -139,13 +140,12 @@ func look(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command strin
 			}
 		}
 	} else {
-		obj, err := akevitt.GetObject[*Character](engine, key, false)
-
+		obj, err := akevitt.GetObject[akevitt.GameObject](engine, key, false)
 		if err != nil {
 			return err
 		}
 
-		if obj.CurrentRoomKey != character.CurrentRoomKey {
+		if obj.OnRoomLookup() != character.CurrentRoomKey {
 			return errors.New("unknown key specified")
 		}
 		return AppendText(*session, fmt.Sprintf("%s: %s", obj.Name(), obj.Description()))

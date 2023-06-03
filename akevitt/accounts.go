@@ -17,6 +17,10 @@ func (account Account) Save(key uint64, engine *Akevitt) error {
 	return overwriteObject(engine.db, key, accountBucket, account)
 }
 
+func (account Account) OnLoad(engine *Akevitt) error {
+	return nil
+}
+
 func (account Account) Name() string {
 	return account.Username
 }

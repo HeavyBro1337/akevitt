@@ -52,7 +52,9 @@ func loginScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.
 
 		character.account = *session.Account
 
-		if character.OnLoad(engine) != nil {
+		err = character.OnLoad(engine)
+
+		if err != nil {
 			fmt.Printf("err loading character: %v\n", err)
 			return
 		}

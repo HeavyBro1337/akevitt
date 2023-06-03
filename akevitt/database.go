@@ -15,7 +15,7 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-func createAccount(db *bolt.DB, username, password string) (*Account, error) {
+func createAccount(engine *Akevitt, username, password string) (*Account, error) {
 
 	if strings.TrimSpace(username) == "" || strings.TrimSpace(password) == "" {
 		return nil, errors.New("invalid data")
@@ -27,11 +27,16 @@ func createAccount(db *bolt.DB, username, password string) (*Account, error) {
 	}
 
 	account := Account{Username: username, Password: hashedPassword}
+	exists, err := doesAccountExist(strings.TrimSpace(account.Username), engine)
 
-	if doesAccountExist(strings.TrimSpace(account.Username), db) {
-		return nil, errors.New("this account already does exist")
+	if err != nil {
+		return nil, err
 	}
-	_, err = createObject(db, accountBucket, account)
+
+	if exists {
+		return nil, errors.New("this account does exist")
+	}
+	_, err = createObject(engine.db, accountBucket, account)
 
 	return &account, err
 }
@@ -123,16 +128,16 @@ func checkCurrentLogin(acc Account, sessions *map[ssh.Session]*ActiveSession) bo
 	return false
 }
 
-func findObjectByAccount[T GameObject](db *bolt.DB, account Account) (T, uint64, error) {
+func findObjectByAccount[T GameObject](engine *Akevitt, account Account) (T, uint64, error) {
 	var id uint64
 	var result T
-	err := db.Update(func(tx *bolt.Tx) error {
+	err := engine.db.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(gameObjectBucket))
 		if err != nil {
 			return err
 		}
 		return bucket.ForEach(func(k, v []byte) error {
-			obj, err := deserialize[T](v)
+			obj, err := deserialize[T](v, engine)
 			if err != nil {
 				return err
 			}
@@ -152,22 +157,25 @@ func findObjectByAccount[T GameObject](db *bolt.DB, account Account) (T, uint64,
 			return nil
 		})
 	})
+
 	return result, id, err
 }
 
-func findObjectByKey[T Object](db *bolt.DB, key uint64, bucket string) (T, error) {
+func findObjectByKey[T Object](engine *Akevitt, key uint64, bucket string) (T, error) {
 	var result *T
-	err := db.Update(func(tx *bolt.Tx) error {
+	var empty T
+	err := engine.db.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(bucket))
 		if err != nil {
 			return err
 		}
 		return bucket.ForEach(func(k, v []byte) error {
-			obj, err := deserialize[T](v)
+			obj, err := deserialize[T](v, engine)
 			if err != nil {
 				return err
 			}
 			if byteToInt(k) == key {
+				obj.OnLoad(engine)
 				result = &obj
 			}
 			return nil
@@ -176,21 +184,24 @@ func findObjectByKey[T Object](db *bolt.DB, key uint64, bucket string) (T, error
 
 	if result == nil {
 		err = errors.Join(err, errors.New("could not find anything in database"))
+		return empty, err
 	}
+
+	fmt.Printf("database result: %v\n", result)
 
 	return *result, err
 }
 
 // Checks that user exists in the database by username.
-func doesAccountExist(username string, db *bolt.DB) bool {
+func doesAccountExist(username string, engine *Akevitt) (bool, error) {
 	result := false
-	db.Update(func(tx *bolt.Tx) error {
+	return result, engine.db.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(accountBucket))
 		if err != nil {
 			return err
 		}
 		bucket.ForEach(func(k, v []byte) error {
-			acc, err := deserialize[*Account](v)
+			acc, err := deserialize[*Account](v, engine)
 			if err != nil {
 				return err
 			}
@@ -202,10 +213,9 @@ func doesAccountExist(username string, db *bolt.DB) bool {
 		})
 		return nil
 	})
-	return result
 }
 
-func login(username string, password string, db *bolt.DB) (*Account, error) {
+func login(username string, password string, engine *Akevitt) (*Account, error) {
 	var accref *Account = nil
 	hashedPassword, err := hashString(password)
 
@@ -213,13 +223,13 @@ func login(username string, password string, db *bolt.DB) (*Account, error) {
 		return nil, err
 	}
 
-	err = db.Update(func(tx *bolt.Tx) error {
+	err = engine.db.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(accountBucket))
 		if err != nil {
 			return err
 		}
 		bucket.ForEach(func(k, v []byte) error {
-			acc, err := deserialize[Account](v)
+			acc, err := deserialize[Account](v, engine)
 			if err != nil {
 				return err
 			}

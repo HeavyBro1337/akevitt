@@ -59,10 +59,12 @@ func (character *Character) OnLoad(engine *akevitt.Akevitt) error {
 	println("Invoked on load")
 	fmt.Printf("character.CurrentRoomKey: %v\n", character.CurrentRoomKey)
 	room, err := akevitt.GetObject[*Room](engine, character.CurrentRoomKey, true)
-	fmt.Printf("room: %v\n", room)
+
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("room: %v\n", room)
 
 	character.currentRoom = room
 

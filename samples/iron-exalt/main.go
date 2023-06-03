@@ -5,16 +5,28 @@ package main
 
 import (
 	"akevitt/akevitt"
+	"encoding/gob"
 	"fmt"
 	"log"
 )
 
 func main() {
-	room := &Room{Name: "Spawn Room", DescriptionData: "Just a spawn room.", Key: 0, Exits: []uint64{1, 2}}
-	rooms := []*Room{
-		{Name: "Mine", DescriptionData: "Mine of the corporation.", Key: 1, Exits: []uint64{0, 2, 3}},
-		{Name: "Iron City", DescriptionData: "The lounge of the miners.", Key: 2, Exits: []uint64{1, 0}},
+	gob.Register(&Exit{})
+	gob.Register(Room{})
+
+	room := &Room{Name: "Spawn Room", DescriptionData: "Just a spawn room.", Key: 0}
+	rooms := []akevitt.Room{
+		&Room{Name: "Mine", DescriptionData: "Mine of the corporation.", Key: 1},
+		&Room{Name: "Iron City", DescriptionData: "The lounge of the miners.", Key: 2},
 	}
+	emptyExit := Exit{}
+	BindRooms[*Exit](room, &emptyExit, rooms...)
+	BindRooms[*Exit](rooms[0], &emptyExit, room, rooms[1])
+	BindRooms[*Exit](rooms[1], &emptyExit, room, rooms[0])
+
+	fmt.Printf("room: %v\n", room)
+	fmt.Printf("room.Exits: %v\n", room.Exits)
+	fmt.Printf("room.Exits[0]: %v\n", room.Exits[0])
 
 	engine := akevitt.Akevitt{}
 	engine.
@@ -30,7 +42,6 @@ func main() {
 		RegisterCommand("help", help).
 		RegisterCommand("look", look).
 		RegisterCommand("enter", enterRoom).
-		RegisterCommand("exits", lookExits).
 		SetSpawnRoom(room)
 
 	events := akevitt.GameEventHandler{}
@@ -68,7 +79,7 @@ func main() {
 		OnDatabaseCreate(func(engine *akevitt.Akevitt) error {
 			fmt.Println("Database didn't exist. Creating rooms...")
 			for _, v := range rooms {
-				err := v.Save(v.Key, engine)
+				err := v.Save(v.GetKey(), engine)
 				if err != nil {
 					return err
 				}

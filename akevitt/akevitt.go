@@ -79,17 +79,21 @@ func (engine *Akevitt) UseGameName(name string) *Akevitt {
 }
 
 func IsRoomReachable[T Room](engine *Akevitt, session *ActiveSession, roomKey uint64, currentRoomKey uint64) (bool, error) {
-	room, err := findObjectByKey[T](engine.db, roomKey, worldObjectsBucket)
-	exits := room.GetExits()
+	room, err := findObjectByKey[T](engine, roomKey, worldObjectsBucket)
 	if err != nil {
 		return false, err
 	}
 
+	exits := room.GetExits()
+
 	if exits == nil {
-		return false, errors.New("exits is nil")
+		return false, errors.New("array of exits is nil")
 	}
 
-	return find(exits, currentRoomKey), nil
+	return findByKey[Exit, uint64](exits, func(exit Exit) uint64 {
+		fmt.Printf("exit: %v\n", exit)
+		return exit.GetRoom().GetKey()
+	}, currentRoomKey), nil
 }
 
 // Creates database file if not exists. The custom path must be already specified, before creating.
@@ -156,7 +160,7 @@ func (engine *Akevitt) UseRootScreen(s func(engine *Akevitt, session *ActiveSess
 }
 
 func (engine *Akevitt) Login(username, password string, session *ActiveSession) error {
-	account, err := login(username, password, engine.db)
+	account, err := login(username, password, engine)
 	if err != nil {
 		return err
 	}
@@ -227,17 +231,22 @@ func (engine *Akevitt) SendRoomMessage(message string, session *ActiveSession) {
 }
 
 func (engine *Akevitt) Register(username, password string, session *ActiveSession) error {
-	if doesAccountExist(username, engine.db) {
+	exists, err := doesAccountExist(username, engine)
 
+	if err != nil {
+		return err
+	}
+
+	if exists {
 		return errors.New("account already exists")
 	}
-	account, err := createAccount(engine.db, username, password)
+	account, err := createAccount(engine, username, password)
 	session.Account = account
 	return err
 }
 
 func FindObject[T GameObject](engine *Akevitt, session *ActiveSession) (T, uint64, error) {
-	return findObjectByAccount[T](engine.db, *session.Account)
+	return findObjectByAccount[T](engine, *session.Account)
 }
 
 func (engine *Akevitt) RegisterCommand(command string, function func(e *Akevitt, session *ActiveSession, command string) error) *Akevitt {
@@ -313,10 +322,10 @@ func (engine *Akevitt) GetNewKey(isWorld bool) (uint64, error) {
 
 func GetObject[T Object](engine *Akevitt, key uint64, isWorldObject bool) (T, error) {
 	if isWorldObject {
-		return findObjectByKey[T](engine.db, key, worldObjectsBucket)
+		return findObjectByKey[T](engine, key, worldObjectsBucket)
 	}
 
-	return findObjectByKey[T](engine.db, key, gameObjectBucket)
+	return findObjectByKey[T](engine, key, gameObjectBucket)
 }
 
 func Lookup[T GameObject](engine *Akevitt, roomKey uint64) []Pair[uint64, GameObject] {
