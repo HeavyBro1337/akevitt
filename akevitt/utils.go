@@ -62,15 +62,15 @@ func hashString(input string) (string, error) {
 // 	return false
 // }
 
-func findByKey[TCollection, T comparable](collection []TCollection, selector func(key TCollection) T, value T) bool {
+func findByKey[TCollection, T comparable](collection []TCollection, selector func(key TCollection) T, value T) *TCollection {
 	if collection == nil {
 		panic(errors.New("collection is nil"))
 	}
 
 	for _, b := range collection {
 		if selector(b) == value {
-			return true
+			return &b
 		}
 	}
-	return false
+	return nil
 }

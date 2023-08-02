@@ -5,6 +5,8 @@ services:
     image: iron-exalt
     volumes:
       - ./samples/iron-exalt/data/:/app/samples/iron-exalt/data
+      - ./samples/iron-exalt/:/app/samples/iron-exalt
+      - ./akevitt/:/app/akevitt
     build:
       context: .
       dockerfile: ./Dockerfile

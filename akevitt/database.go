@@ -15,7 +15,7 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-func createAccount(engine *Akevitt, username, password string) (*Account, error) {
+func createAccount(db *bolt.DB, username, password string) (*Account, error) {
 
 	if strings.TrimSpace(username) == "" || strings.TrimSpace(password) == "" {
 		return nil, errors.New("invalid data")
@@ -27,7 +27,7 @@ func createAccount(engine *Akevitt, username, password string) (*Account, error)
 	}
 
 	account := Account{Username: username, Password: hashedPassword}
-	exists, err := doesAccountExist(strings.TrimSpace(account.Username), engine)
+	exists, err := doesAccountExist(strings.TrimSpace(account.Username), db)
 
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func createAccount(engine *Akevitt, username, password string) (*Account, error)
 	if exists {
 		return nil, errors.New("this account does exist")
 	}
-	_, err = createObject(engine.db, accountBucket, account)
+	err = overwriteObject[Account](db, 0, account.Username, account)
 
 	return &account, err
 }
@@ -65,13 +65,13 @@ func createObject[T Object](db *bolt.DB, bucket string, object T) (uint64, error
 
 	// We obtain new ID and then call overwriteObject
 	err := db.Update(func(tx *bolt.Tx) error {
-		bkt, err := tx.CreateBucketIfNotExists([]byte(bucket))
+		bucket, err := tx.CreateBucketIfNotExists([]byte(bucket))
 
 		if err != nil {
 			return err
 		}
 
-		id, err = bkt.NextSequence()
+		id, err = bucket.NextSequence()
 
 		if err != nil {
 			return err
@@ -128,16 +128,16 @@ func checkCurrentLogin(acc Account, sessions *map[ssh.Session]*ActiveSession) bo
 	return false
 }
 
-func findObjectByAccount[T GameObject](engine *Akevitt, account Account) (T, uint64, error) {
+func findObjectByAccount[T GameObject](db *bolt.DB, account Account) (T, uint64, error) {
 	var id uint64
 	var result T
-	err := engine.db.Update(func(tx *bolt.Tx) error {
+	err := db.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(gameObjectBucket))
 		if err != nil {
 			return err
 		}
 		return bucket.ForEach(func(k, v []byte) error {
-			obj, err := deserialize[T](v, engine)
+			obj, err := deserialize[T](v)
 			if err != nil {
 				return err
 			}
@@ -161,47 +161,68 @@ func findObjectByAccount[T GameObject](engine *Akevitt, account Account) (T, uin
 	return result, id, err
 }
 
-func findObjectByKey[T Object](engine *Akevitt, key uint64, bucket string) (T, error) {
-	var result *T
-	var empty T
-	err := engine.db.Update(func(tx *bolt.Tx) error {
+func getAllObjects(db *bolt.DB, bucket string) (map[uint64]Object, error) {
+	result := make(map[uint64]Object, 0)
+
+	err := db.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(bucket))
 		if err != nil {
 			return err
 		}
+
 		return bucket.ForEach(func(k, v []byte) error {
-			obj, err := deserialize[T](v, engine)
+			obj, err := deserialize[Object](v)
+			if err != nil {
+				return err
+			}
+			result[byteToInt(k)] = obj
+			return nil
+		})
+	})
+	return result, err
+}
+
+func findObjectByKey[T Object](db *bolt.DB, key uint64, bucket string) (T, error) {
+	var result *T
+	var empty T
+	err := db.Update(func(tx *bolt.Tx) error {
+		bucket, err := tx.CreateBucketIfNotExists([]byte(bucket))
+		if err != nil {
+			return err
+		}
+
+		return bucket.ForEach(func(k, v []byte) error {
+			obj, err := deserialize[T](v)
 			if err != nil {
 				return err
 			}
 			if byteToInt(k) == key {
-				obj.OnLoad(engine)
 				result = &obj
 			}
 			return nil
 		})
 	})
 
+	fmt.Printf("database result: %v\n", result)
+
 	if result == nil {
 		err = errors.Join(err, errors.New("could not find anything in database"))
 		return empty, err
 	}
 
-	fmt.Printf("database result: %v\n", result)
-
 	return *result, err
 }
 
 // Checks that user exists in the database by username.
-func doesAccountExist(username string, engine *Akevitt) (bool, error) {
+func doesAccountExist(username string, db *bolt.DB) (bool, error) {
 	result := false
-	return result, engine.db.Update(func(tx *bolt.Tx) error {
+	return result, db.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(accountBucket))
 		if err != nil {
 			return err
 		}
 		bucket.ForEach(func(k, v []byte) error {
-			acc, err := deserialize[*Account](v, engine)
+			acc, err := deserialize[*Account](v)
 			if err != nil {
 				return err
 			}
@@ -215,7 +236,7 @@ func doesAccountExist(username string, engine *Akevitt) (bool, error) {
 	})
 }
 
-func login(username string, password string, engine *Akevitt) (*Account, error) {
+func login(username string, password string, db *bolt.DB) (*Account, error) {
 	var accref *Account = nil
 	hashedPassword, err := hashString(password)
 
@@ -223,23 +244,21 @@ func login(username string, password string, engine *Akevitt) (*Account, error) 
 		return nil, err
 	}
 
-	err = engine.db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(accountBucket))
+	err = db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(username))
+		if bucket == nil {
+			return errors.New("wrong name or password")
+		}
+		acc, err := deserialize[Account](bucket.Get(intToByte(0)))
+
 		if err != nil {
 			return err
 		}
-		bucket.ForEach(func(k, v []byte) error {
-			acc, err := deserialize[Account](v, engine)
-			if err != nil {
-				return err
-			}
-			fmt.Printf("acc password: %v\n", acc.Password)
-			if acc.Username == username && acc.Password == hashedPassword {
-				accref = &acc
-				return nil
-			}
-			return nil
-		})
+
+		if acc.Password == hashedPassword {
+			accref = &acc
+		}
+
 		return nil
 	})
 

@@ -48,7 +48,7 @@ func serialize[T Object](v T) ([]byte, error) {
 }
 
 // Converts byte array to T struct.
-func deserialize[T Object](b []byte, engine *Akevitt) (T, error) {
+func deserialize[T Object](b []byte) (T, error) {
 	var result T
 	var decodeBuffer bytes.Buffer
 

@@ -25,14 +25,14 @@ func lookExits(engine *akevitt.Akevitt, session *akevitt.ActiveSession) error {
 	if !ok {
 		return errors.New("could not cast to character")
 	}
-	for _, v := range character.currentRoom.Exits {
-		room, err := akevitt.GetObject[*Room](engine, v.GetRoom().GetKey(), true)
+	for _, v := range character.currentRoom.GetExits() {
+		room, err := akevitt.GetStaticObject[*Room](engine, v.GetKey())
 
 		if err != nil {
 			return err
 		}
 
-		err = AppendText(*session, fmt.Sprintf("Room %s (%d)", room.Name, v))
+		err = AppendText(*session, fmt.Sprintf("Room %s (%d)", room.Name, v.GetKey()))
 
 		if err != nil {
 			return err
@@ -52,28 +52,13 @@ func enterRoom(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command 
 		return err
 	}
 
-	reachable, err := akevitt.IsRoomReachable[*Room](engine, session, roomKey, character.CurrentRoomKey)
+	exit, err := akevitt.IsRoomReachable[*Room](engine, session, roomKey, character.CurrentRoomKey)
 
 	if err != nil {
 		return err
 	}
 
-	if reachable {
-		character.CurrentRoomKey = roomKey
-		actualRoom, err := akevitt.GetObject[*Room](engine, roomKey, true)
-
-		if err != nil {
-			return err
-		}
-
-		character.currentRoom = actualRoom
-
-		engine.SendRoomMessage("Entered room", session)
-
-		return character.Save(session.RelatedGameObjects[currentCharacterKey].First, engine)
-	} else {
-		return errors.New("room is unreachable")
-	}
+	return exit.Enter(engine, session)
 }
 
 func characterStats(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
@@ -91,7 +76,7 @@ func characterStats(engine *akevitt.Akevitt, session *akevitt.ActiveSession, com
 		character.account.Username,
 		character.Health,
 		character.MaxHealth,
-		character.currentRoom.Name)
+		character.currentRoom.Description())
 	sepLines := strings.Split(statsString, "\n")
 
 	for _, v := range sepLines {

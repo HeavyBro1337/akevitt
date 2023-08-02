@@ -3,6 +3,7 @@ package main
 import (
 	"akevitt/akevitt"
 	"errors"
+	"fmt"
 )
 
 type Room struct {
@@ -12,36 +13,16 @@ type Room struct {
 	Key             uint64
 }
 
-type RoomParams struct {
-	name  string
-	exits []akevitt.Exit
-}
-
 func (room *Room) GetKey() uint64 {
 	return room.Key
 }
 
 func (room *Room) Create(engine *akevitt.Akevitt, session *akevitt.ActiveSession, params interface{}) error {
-	roomParams, ok := params.(RoomParams)
-
-	if !ok {
-		return errors.New("invalid params given")
-	}
-
-	room.Name = roomParams.name
-	room.Exits = roomParams.exits
-	key, err := engine.GetNewKey(true)
-	if err != nil {
-		return err
-	}
-
-	room.Key = key
-
-	return room.Save(key, engine)
+	return errors.New("room create is unused")
 }
 
 func (room *Room) Description() string {
-	return room.DescriptionData
+	return fmt.Sprintf("%s: %s", room.Name, room.DescriptionData)
 }
 
 func (room *Room) GetExits() []akevitt.Exit {
@@ -53,7 +34,7 @@ func (room *Room) SetExits(exits ...akevitt.Exit) {
 }
 
 func (room *Room) Save(key uint64, engine *akevitt.Akevitt) error {
-	return engine.SaveWorldObject(room, key)
+	return errors.New("must not save room in database")
 }
 
 func (exit *Exit) Description() string {
@@ -70,7 +51,23 @@ type Exit struct {
 }
 
 func (exit *Exit) Enter(engine *akevitt.Akevitt, session *akevitt.ActiveSession) error {
-	return nil
+	character, ok := session.RelatedGameObjects[currentCharacterKey].Second.(*Character)
+	if !ok {
+		return errors.New("could not cast to character")
+	}
+
+	character.CurrentRoomKey = exit.Key
+	actualRoom, err := akevitt.GetStaticObject[akevitt.Room](engine, exit.Key)
+
+	if err != nil {
+		return err
+	}
+
+	character.currentRoom = actualRoom
+
+	engine.SendRoomMessage("Entered room", session)
+
+	return character.Save(session.RelatedGameObjects[currentCharacterKey].First, engine)
 }
 
 func (exit *Exit) GetRoom() akevitt.Room {
@@ -80,7 +77,7 @@ func (exit *Exit) GetRoom() akevitt.Room {
 func (room *Room) OnLoad(engine *akevitt.Akevitt) error {
 	println("Invoked OnLoad in room")
 	for _, v := range room.Exits {
-		otherRoom, err := akevitt.GetObject[akevitt.Room](engine, v.GetKey(), true)
+		otherRoom, err := akevitt.GetStaticObject[akevitt.Room](engine, v.GetKey())
 
 		if err != nil {
 			return err

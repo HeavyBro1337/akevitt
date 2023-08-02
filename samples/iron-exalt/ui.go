@@ -19,6 +19,7 @@ func AppendText(currentSession akevitt.ActiveSession, message string) error {
 		return errors.New("chat log element is nil")
 	}
 	currentSession.Chat.AddItem(message, "", 0, nil)
+	currentSession.Chat.SetCurrentItem(-1)
 	currentSession.Chat.SetWrapAround(true)
 	currentSession.Chat.ShowSecondaryText(false)
 	return nil
@@ -78,10 +79,21 @@ func ErrorBox(message string, app *tview.Application, back *tview.Primitive) {
 	app.SetRoot(result, true)
 }
 
+func stats(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {
+	character, ok := session.RelatedGameObjects[currentCharacterKey].Second.(*Character)
+	fmt.Printf("session.RelatedGameObjects[currentCharacterKey].Second: %v\n", session.RelatedGameObjects[currentCharacterKey].Second)
+	if !ok {
+		return tview.NewTextView().SetText("YOU'RE NOT CHARACTER")
+	}
+	format := fmt.Sprintf("HEALTH: %d/%d, NAME: %s", character.Health, character.MaxHealth, character.CharacterName)
+	return tview.NewTextView().SetText(format)
+}
+
 func gameScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {
 	fmt.Printf("session: %v\n", session.Account)
 	var playerMessage string
 	const LABEL string = "Message: "
+
 	session.Chat = tview.NewList()
 	inputField := tview.NewForm().AddInputField(LABEL, "", 32, nil, func(text string) {
 		playerMessage = text
@@ -92,7 +104,8 @@ func gameScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.P
 		SetColumns(30).
 		AddItem(session.Chat, 1, 0, 3, 3, 0, 0, false).
 		SetBorders(true).
-		AddItem(inputField, 0, 0, 1, 3, 0, 0, true)
+		AddItem(inputField, 0, 0, 1, 3, 0, 0, true).
+		AddItem(stats(engine, session), 2, 0, 2, 2, 0, 0, false)
 	inputField.GetFormItemByLabel(LABEL).(*tview.InputField).SetDoneFunc(func(key tcell.Key) {
 		if key == tcell.KeyEnter {
 			playerMessage = strings.TrimSpace(playerMessage)

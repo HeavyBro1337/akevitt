@@ -13,7 +13,7 @@ type Character struct {
 	Health         int
 	MaxHealth      int
 	account        akevitt.Account
-	currentRoom    *Room
+	currentRoom    akevitt.Room
 	Map            map[string]akevitt.Object
 	CurrentRoomKey uint64
 }
@@ -31,11 +31,11 @@ func (character *Character) Create(engine *akevitt.Akevitt, session *akevitt.Act
 	character.CharacterName = characterParams.name
 	character.Health = 10
 	character.MaxHealth = 10
-	character.currentRoom = engine.GetSpawnRoom().(*Room)
+	character.currentRoom = engine.GetSpawnRoom()
 	character.Map = make(map[string]akevitt.Object, 0)
 	character.account = *session.Account
 	character.Map["account"] = character.account
-	character.CurrentRoomKey = character.currentRoom.Key
+	character.CurrentRoomKey = character.currentRoom.GetKey()
 	key, err := engine.GetNewKey(false)
 
 	session.RelatedGameObjects[currentCharacterKey] = akevitt.Pair[uint64, akevitt.GameObject]{First: key, Second: character}
@@ -57,12 +57,12 @@ func (character *Character) GetMap() map[string]akevitt.Object {
 
 func (character *Character) OnLoad(engine *akevitt.Akevitt) error {
 	println("Invoked on load")
-	fmt.Printf("character.CurrentRoomKey: %v\n", character.CurrentRoomKey)
-	room, err := akevitt.GetObject[*Room](engine, character.CurrentRoomKey, true)
-
+	room, err := akevitt.GetStaticObject[*Room](engine, character.CurrentRoomKey)
 	if err != nil {
 		return err
 	}
+
+	room.OnLoad(engine)
 
 	fmt.Printf("room: %v\n", room)
 

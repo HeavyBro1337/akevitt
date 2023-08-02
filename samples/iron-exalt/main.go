@@ -12,10 +12,11 @@ import (
 
 func main() {
 	gob.Register(&Exit{})
-	gob.Register(Room{})
+	gob.Register(&Room{})
 
 	room := &Room{Name: "Spawn Room", DescriptionData: "Just a spawn room.", Key: 0}
 	rooms := []akevitt.Room{
+		room,
 		&Room{Name: "Mine", DescriptionData: "Mine of the corporation.", Key: 1},
 		&Room{Name: "Iron City", DescriptionData: "The lounge of the miners.", Key: 2},
 	}
@@ -23,10 +24,6 @@ func main() {
 	BindRooms[*Exit](room, &emptyExit, rooms...)
 	BindRooms[*Exit](rooms[0], &emptyExit, room, rooms[1])
 	BindRooms[*Exit](rooms[1], &emptyExit, room, rooms[0])
-
-	fmt.Printf("room: %v\n", room)
-	fmt.Printf("room.Exits: %v\n", room.Exits)
-	fmt.Printf("room.Exits[0]: %v\n", room.Exits[0])
 
 	engine := akevitt.Akevitt{}
 	engine.
@@ -42,7 +39,12 @@ func main() {
 		RegisterCommand("help", help).
 		RegisterCommand("look", look).
 		RegisterCommand("enter", enterRoom).
-		SetSpawnRoom(room)
+		SetSpawnRoom(room).
+		SetStaticObjects(func(static map[uint64]akevitt.Object) {
+			for _, v := range rooms {
+				static[v.GetKey()] = v
+			}
+		})
 
 	events := akevitt.GameEventHandler{}
 
@@ -66,7 +68,7 @@ func main() {
 				return
 			}
 
-			if sessionChacter.currentRoom.Name != senderCharacter.currentRoom.Name {
+			if sessionChacter.currentRoom.GetKey() != senderCharacter.currentRoom.GetKey() {
 				return
 			}
 
@@ -77,13 +79,6 @@ func main() {
 
 		}).
 		OnDatabaseCreate(func(engine *akevitt.Akevitt) error {
-			fmt.Println("Database didn't exist. Creating rooms...")
-			for _, v := range rooms {
-				err := v.Save(v.GetKey(), engine)
-				if err != nil {
-					return err
-				}
-			}
 			return nil
 		}).
 		Finish()

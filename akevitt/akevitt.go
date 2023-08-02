@@ -33,6 +33,8 @@ type Akevitt struct {
 	defaultRoom    Room                                                                           // Default room where new players will spawn.
 	commands       map[string]func(engine *Akevitt, session *ActiveSession, command string) error // Registered commands
 	dbNoExists     bool
+	staticObjects  map[uint64]Object
+	rooms          map[Room]GameObject
 }
 type GameEventHandler struct {
 	oocMessage  func(engine *Akevitt, session *ActiveSession, sender *ActiveSession, message string)
@@ -43,12 +45,39 @@ type GameEventHandler struct {
 
 // Creates new instance of engine with provided defaults.
 func (engine *Akevitt) UseDefaults() *Akevitt {
+	engine.staticObjects = make(map[uint64]Object)
+	engine.rooms = make(map[Room]GameObject)
 	engine.activeSessions = make(map[ssh.Session]*ActiveSession)
 	engine.bind = ":2222"
 	engine.dbPath = "data/database.db"
-	engine.gameName = "Change Me!"
+	engine.gameName = "Change me!"
 	engine.commands = make(map[string]func(engine *Akevitt, session *ActiveSession, command string) error)
 	return engine
+}
+
+func (engine *Akevitt) SetStaticObjects(f func(static map[uint64]Object)) *Akevitt {
+	staticObjects, err := getAllObjects(engine.db, worldObjectsBucket)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	engine.staticObjects = staticObjects
+
+	if f != nil {
+		f(engine.staticObjects)
+	}
+
+	return engine
+}
+
+func GetStaticObject[T Object](engine *Akevitt, key uint64) (T, error) {
+	res, ok := engine.staticObjects[key].(T)
+	if !ok {
+		return res, fmt.Errorf("could not cast to %s", reflect.TypeOf(new(T)).String())
+	}
+
+	return res, nil
 }
 
 // Listen to specific address and/or port
@@ -78,22 +107,32 @@ func (engine *Akevitt) UseGameName(name string) *Akevitt {
 	return engine
 }
 
-func IsRoomReachable[T Room](engine *Akevitt, session *ActiveSession, roomKey uint64, currentRoomKey uint64) (bool, error) {
-	room, err := findObjectByKey[T](engine, roomKey, worldObjectsBucket)
+func IsRoomReachable[T Room](engine *Akevitt, session *ActiveSession, roomKey uint64, currentRoomKey uint64) (Exit, error) {
+	room, err := GetStaticObject[T](engine, roomKey)
 	if err != nil {
-		return false, err
+		return nil, err
+	}
+
+	err = room.OnLoad(engine)
+
+	if err != nil {
+		return nil, err
 	}
 
 	exits := room.GetExits()
 
 	if exits == nil {
-		return false, errors.New("array of exits is nil")
+		return nil, errors.New("array of exits is nil")
+	}
+	exit := findByKey[Exit, uint64](exits, func(key Exit) uint64 {
+		return key.GetKey()
+	}, currentRoomKey)
+
+	if exit == nil {
+		return nil, errors.New("unreachable")
 	}
 
-	return findByKey[Exit, uint64](exits, func(exit Exit) uint64 {
-		fmt.Printf("exit: %v\n", exit)
-		return exit.GetRoom().GetKey()
-	}, currentRoomKey), nil
+	return *exit, nil
 }
 
 // Creates database file if not exists. The custom path must be already specified, before creating.
@@ -160,7 +199,7 @@ func (engine *Akevitt) UseRootScreen(s func(engine *Akevitt, session *ActiveSess
 }
 
 func (engine *Akevitt) Login(username, password string, session *ActiveSession) error {
-	account, err := login(username, password, engine)
+	account, err := login(username, password, engine.db)
 	if err != nil {
 		return err
 	}
@@ -169,6 +208,10 @@ func (engine *Akevitt) Login(username, password string, session *ActiveSession) 
 	}
 	session.Account = account
 	return nil
+}
+
+func (engine *Akevitt) GetStaticObjects() map[uint64]Object {
+	return engine.staticObjects
 }
 
 // Retreives the game's name
@@ -231,7 +274,7 @@ func (engine *Akevitt) SendRoomMessage(message string, session *ActiveSession) {
 }
 
 func (engine *Akevitt) Register(username, password string, session *ActiveSession) error {
-	exists, err := doesAccountExist(username, engine)
+	exists, err := doesAccountExist(username, engine.db)
 
 	if err != nil {
 		return err
@@ -240,13 +283,13 @@ func (engine *Akevitt) Register(username, password string, session *ActiveSessio
 	if exists {
 		return errors.New("account already exists")
 	}
-	account, err := createAccount(engine, username, password)
+	account, err := createAccount(engine.db, username, password)
 	session.Account = account
 	return err
 }
 
 func FindObject[T GameObject](engine *Akevitt, session *ActiveSession) (T, uint64, error) {
-	return findObjectByAccount[T](engine, *session.Account)
+	return findObjectByAccount[T](engine.db, *session.Account)
 }
 
 func (engine *Akevitt) RegisterCommand(command string, function func(e *Akevitt, session *ActiveSession, command string) error) *Akevitt {
@@ -322,10 +365,10 @@ func (engine *Akevitt) GetNewKey(isWorld bool) (uint64, error) {
 
 func GetObject[T Object](engine *Akevitt, key uint64, isWorldObject bool) (T, error) {
 	if isWorldObject {
-		return findObjectByKey[T](engine, key, worldObjectsBucket)
+		return findObjectByKey[T](engine.db, key, worldObjectsBucket)
 	}
 
-	return findObjectByKey[T](engine, key, gameObjectBucket)
+	return findObjectByKey[T](engine.db, key, gameObjectBucket)
 }
 
 func Lookup[T GameObject](engine *Akevitt, roomKey uint64) []Pair[uint64, GameObject] {
