@@ -35,7 +35,6 @@ func main() {
 		UseCreateDatabaseIfNotExists().
 		RegisterCommand("ooc", ooc).
 		RegisterCommand("say", characterMessage).
-		RegisterCommand("stats", characterStats).
 		RegisterCommand("help", help).
 		RegisterCommand("look", look).
 		RegisterCommand("enter", enterRoom).

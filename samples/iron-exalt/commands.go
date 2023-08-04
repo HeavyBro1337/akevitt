@@ -61,31 +61,6 @@ func enterRoom(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command 
 	return exit.Enter(engine, session)
 }
 
-func characterStats(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
-	character, ok := session.RelatedGameObjects[currentCharacterKey].Second.(*Character)
-	if !ok {
-		return errors.New("could not cast to character")
-	}
-
-	statsString := fmt.Sprintf(
-		`===  %s (%s) ===
-  		  Health: %d/%d
-  			Room: %s
-		================`,
-		character.CharacterName,
-		character.account.Username,
-		character.Health,
-		character.MaxHealth,
-		character.currentRoom.Description())
-	sepLines := strings.Split(statsString, "\n")
-
-	for _, v := range sepLines {
-
-		AppendText(*session, v)
-	}
-	return nil
-}
-
 func help(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
 
 	helpString := `ooc <message> - Out-of-character Chat
