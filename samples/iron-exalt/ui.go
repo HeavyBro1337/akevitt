@@ -44,7 +44,7 @@ func loginScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.
 		}
 
 		character, key, err := akevitt.FindObject[*Character](engine, session)
-
+		fmt.Printf("possible error character: %v\n", character)
 		if err != nil {
 			fmt.Printf("err: %v\n", err)
 			session.SetRoot(characterCreationWizard(engine, session))
@@ -59,9 +59,9 @@ func loginScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.
 			fmt.Printf("err loading character: %v\n", err)
 			return
 		}
+		session.RelatedGameObjects[currentCharacterKey] = akevitt.Pair[uint64, akevitt.GameObject]{First: key, Second: character}
 
 		session.SetRoot(gameScreen(engine, session))
-		session.RelatedGameObjects[currentCharacterKey] = akevitt.Pair[uint64, akevitt.GameObject]{First: key, Second: character}
 
 	})
 	return loginScreen
@@ -104,8 +104,8 @@ func gameScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.P
 		SetColumns(30).
 		AddItem(session.Chat, 1, 0, 3, 3, 0, 0, false).
 		SetBorders(true).
-		AddItem(inputField, 0, 0, 1, 3, 0, 0, true).
-		AddItem(stats(engine, session), 2, 0, 2, 2, 0, 0, false)
+		AddItem(inputField, 0, 0, 1, 1, 0, 0, true).
+		AddItem(stats(engine, session), 0, 1, 1, 2, 0, 0, false)
 	inputField.GetFormItemByLabel(LABEL).(*tview.InputField).SetDoneFunc(func(key tcell.Key) {
 		if key == tcell.KeyEnter {
 			playerMessage = strings.TrimSpace(playerMessage)
