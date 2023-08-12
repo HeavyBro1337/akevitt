@@ -10,13 +10,14 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/boltdb/bolt"
 	"github.com/gliderlabs/ssh"
 	"github.com/rivo/tview"
 )
 
-type akevitt struct {
+type Akevitt struct {
 	sessions Sessions
 	root     UIFunc
 	bind     string
@@ -26,35 +27,56 @@ type akevitt struct {
 }
 
 // Engine default constructor
-func NewEngine() *akevitt {
-	engine := &akevitt{}
+func NewEngine() *Akevitt {
+	engine := &Akevitt{}
+	engine.bind = ":2222"
 	engine.sessions = make(Sessions)
 	engine.dbPath = "data/database.db"
 	engine.mouse = false
 	return engine
 }
 
-func (engine *akevitt) UseBind(bindAddress string) *akevitt {
+func (engine *Akevitt) UseBind(bindAddress string) *Akevitt {
 	engine.bind = bindAddress
 
 	return engine
 }
 
-func (engine *akevitt) UseMouse() *akevitt {
+func (engine *Akevitt) UseRootUI(uiFunc UIFunc) *Akevitt {
+	engine.root = uiFunc
+
+	return engine
+}
+
+func (engine *Akevitt) UseDBPath(path string) *Akevitt {
+	engine.dbPath = path
+
+	return engine
+}
+
+func (engine *Akevitt) UseMouse() *Akevitt {
 	engine.mouse = true
 
 	return engine
 }
 
-func (engine *akevitt) Run() error {
-	gob.Register(Account{})
+func (engine *Akevitt) Run() error {
+	fmt.Println("Running Akevitt")
+
+	err := createDatabase(engine)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	defer engine.db.Close()
+
+	gob.Register(Account{})
+
 	if engine.root == nil {
 		return errors.New("base screen is not provided")
 	}
-	if engine.db == nil {
-		return errors.New("database is unused")
-	}
+
 	ssh.Handle(func(sesh ssh.Session) {
 		screen, err := newSessionScreen(sesh)
 		if err != nil {
