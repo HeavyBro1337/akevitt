@@ -74,7 +74,7 @@ func (engine *Akevitt) Login(username, password string, session *ActiveSession) 
 	if err != nil {
 		return err
 	}
-	if checkCurrentLogin(*account, &engine.sessions) {
+	if isSessionAlreadyActive(*account, &engine.sessions) {
 		return errors.New("the session is already active")
 	}
 	session.Account = account

@@ -2,7 +2,6 @@ package akevitt
 
 type Object interface {
 	Save(engine *Akevitt) error // Save object into database
-	GetKey() uint64
 }
 
 type GameObject interface {

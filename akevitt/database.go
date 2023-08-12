@@ -14,7 +14,7 @@ func createDatabase(engine *Akevitt) error {
 	return err
 }
 
-func checkCurrentLogin(acc Account, sessions *Sessions) bool {
+func isSessionAlreadyActive(acc Account, sessions *Sessions) bool {
 	// We want make sure we purge dead sessions before looking for active.
 	purgeDeadSessions(sessions)
 	for _, v := range *sessions {
