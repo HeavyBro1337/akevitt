@@ -1,6 +1,7 @@
 package main
 
 import (
+	"akevitt/akevitt"
 	"strings"
 
 	"github.com/rivo/tview"
@@ -13,7 +14,7 @@ func characterCreationWizard(engine *akevitt.Akevitt, session *akevitt.ActiveSes
 	})
 	characterCreator.AddButton("Done", func() {
 		if strings.TrimSpace(name) == "" {
-			ErrorBox("character name must not be empty!", session.UI, session.UIPrimitive)
+			ErrorBox("character name must not be empty!", session.UI, session.GetPreviousUI())
 			return
 		}
 		characterParams := CharacterParams{}
@@ -21,7 +22,7 @@ func characterCreationWizard(engine *akevitt.Akevitt, session *akevitt.ActiveSes
 		emptychar := &Character{}
 		_, err := akevitt.CreateObject(engine, session, emptychar, characterParams)
 		if err != nil {
-			ErrorBox(err.Error(), session.UI, session.UIPrimitive)
+			ErrorBox(err.Error(), session.UI, session.GetPreviousUI())
 			return
 		}
 		session.SetRoot(gameScreen(engine, session))
