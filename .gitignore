@@ -1,9 +1,9 @@
 # executables
 *.exe
-*/iron-exalt
+iron-exalt
 # database files
 *.db
 *.db.lock
 
 # Un-ignore sample directory
-!iron-exalt/*
+!iron-exalt/
