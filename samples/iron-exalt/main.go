@@ -22,8 +22,8 @@ func main() {
 	}
 	emptyExit := Exit{}
 	BindRooms[*Exit](room, &emptyExit, rooms...)
-	BindRooms[*Exit](rooms[0], &emptyExit, room, rooms[1])
-	BindRooms[*Exit](rooms[1], &emptyExit, room, rooms[0])
+	BindRooms[*Exit](rooms[1], &emptyExit, rooms...)
+	BindRooms[*Exit](rooms[2], &emptyExit, rooms...)
 
 	engine := akevitt.Akevitt{}
 	engine.

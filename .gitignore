@@ -1,6 +1,6 @@
 # executables
 *.exe
-iron-exalt
+*/iron-exalt
 # database files
 *.db
 *.db.lock

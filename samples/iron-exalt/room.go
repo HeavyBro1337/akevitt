@@ -21,6 +21,10 @@ func (room *Room) Create(engine *akevitt.Akevitt, session *akevitt.ActiveSession
 	return errors.New("room create is unused")
 }
 
+func (room *Room) GetName() string {
+	return room.Name
+}
+
 func (room *Room) Description() string {
 	return fmt.Sprintf("%s: %s", room.Name, room.DescriptionData)
 }
@@ -48,6 +52,14 @@ func (exit *Exit) Save(key uint64, engine *akevitt.Akevitt) error {
 type Exit struct {
 	Key  uint64
 	room akevitt.Room
+}
+
+func (exit *Exit) GetName() string {
+	if exit.room == nil {
+		return "Nowhere"
+	}
+
+	return exit.room.GetName()
 }
 
 func (exit *Exit) Enter(engine *akevitt.Akevitt, session *akevitt.ActiveSession) error {
@@ -105,7 +117,14 @@ func BindRooms[T akevitt.Exit](room akevitt.Room, sampleExit T, otherRooms ...ak
 	var exits []akevitt.Exit = make([]akevitt.Exit, 0)
 
 	for _, v := range otherRooms {
+		if v == room {
+			continue
+		}
 		exit := sampleExit
+
+		fmt.Printf("v.GetName(): %v\n", v.GetName())
+		fmt.Printf("room.GetName(): %v\n", room.GetName())
+
 		exit.SetRoom(v)
 		exits = append(exits, exit)
 	}

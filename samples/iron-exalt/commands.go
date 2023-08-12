@@ -22,17 +22,19 @@ func characterMessage(engine *akevitt.Akevitt, session *akevitt.ActiveSession, c
 
 func lookExits(engine *akevitt.Akevitt, session *akevitt.ActiveSession) error {
 	character, ok := session.RelatedGameObjects[currentCharacterKey].Second.(*Character)
+
 	if !ok {
 		return errors.New("could not cast to character")
 	}
+
 	for _, v := range character.currentRoom.GetExits() {
-		room, err := akevitt.GetStaticObject[*Room](engine, v.GetKey())
+		room, err := akevitt.GetStaticObject[akevitt.Room](engine, v.GetKey())
 
 		if err != nil {
 			return err
 		}
 
-		err = AppendText(*session, fmt.Sprintf("Room %s (%d)", room.Name, v.GetKey()))
+		err = AppendText(*session, fmt.Sprintf("Room %s (%d)", room.GetName(), v.GetKey()))
 
 		if err != nil {
 			return err
@@ -93,7 +95,7 @@ func look(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command strin
 			return err
 		}
 		for _, v := range keysAndGo {
-			err := AppendText(*session, fmt.Sprintf("%d -> %s", v.First, v.Second.Name()))
+			err := AppendText(*session, fmt.Sprintf("%d -> %s", v.First, v.Second.GetName()))
 
 			if err != nil {
 				return err
@@ -108,7 +110,7 @@ func look(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command strin
 		if obj.OnRoomLookup() != character.CurrentRoomKey {
 			return errors.New("unknown key specified")
 		}
-		return AppendText(*session, fmt.Sprintf("%s: %s", obj.Name(), obj.Description()))
+		return AppendText(*session, fmt.Sprintf("%s: %s", obj.GetName(), obj.Description()))
 	}
 
 	return nil

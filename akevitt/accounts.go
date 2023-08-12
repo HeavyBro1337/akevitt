@@ -21,7 +21,7 @@ func (account Account) OnLoad(engine *Akevitt) error {
 	return nil
 }
 
-func (account Account) Name() string {
+func (account Account) GetName() string {
 	return account.Username
 }
 

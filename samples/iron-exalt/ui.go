@@ -85,7 +85,7 @@ func stats(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primit
 	if !ok {
 		return tview.NewTextView().SetText("YOU'RE NOT CHARACTER")
 	}
-	format := fmt.Sprintf("HEALTH: %d/%d, NAME: %s", character.Health, character.MaxHealth, character.CharacterName)
+	format := fmt.Sprintf("HEALTH: %d/%d, NAME: %s (%s)", character.Health, character.MaxHealth, character.CharacterName, character.currentRoom.GetName())
 	return tview.NewTextView().SetText(format)
 }
 

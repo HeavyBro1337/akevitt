@@ -75,7 +75,7 @@ func (character *Character) Description() string {
 	return fmt.Sprintf("%s, HP: %d/%d", character.CharacterName, character.Health, character.MaxHealth)
 }
 
-func (character *Character) Name() string {
+func (character *Character) GetName() string {
 	return character.CharacterName
 }
 
