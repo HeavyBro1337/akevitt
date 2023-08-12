@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/boltdb/bolt"
 	"github.com/gliderlabs/ssh"
@@ -18,12 +19,14 @@ import (
 )
 
 type Akevitt struct {
-	sessions Sessions
-	root     UIFunc
-	bind     string
-	mouse    bool
-	dbPath   string
-	db       *bolt.DB
+	sessions  Sessions
+	root      UIFunc
+	bind      string
+	mouse     bool
+	dbPath    string
+	commands  map[string]CommandFunc
+	db        *bolt.DB
+	onMessage MessageFunc
 }
 
 // Engine default constructor
@@ -56,6 +59,53 @@ func (engine *Akevitt) UseDBPath(path string) *Akevitt {
 
 func (engine *Akevitt) UseMouse() *Akevitt {
 	engine.mouse = true
+
+	return engine
+}
+
+func (engine *Akevitt) RegisterCommand(command string, function CommandFunc) *Akevitt {
+	command = strings.TrimSpace(command)
+	engine.commands[command] = function
+	return engine
+}
+
+func (engine *Akevitt) Login(username, password string, session *ActiveSession) error {
+	account, err := login(username, password, engine.db)
+	if err != nil {
+		return err
+	}
+	if checkCurrentLogin(*account, &engine.sessions) {
+		return errors.New("the session is already active")
+	}
+	session.Account = account
+	return nil
+}
+
+func (engine *Akevitt) Register(username, password string, session *ActiveSession) error {
+	exists := isAccountExists(username, engine.db)
+
+	if exists {
+		return errors.New("account already exists")
+	}
+	account, err := createAccount(engine.db, username, password)
+	session.Account = account
+	return err
+}
+
+func (engine *Akevitt) ProcessCommand(command string, session *ActiveSession) error {
+	zeroArg := strings.Fields(command)[0]
+	noZeroArgArray := strings.Fields(command)[1:]
+	noZeroArg := strings.Join(noZeroArgArray, " ")
+	commandFunc, ok := engine.commands[zeroArg]
+	if !ok {
+		return errors.New("command not found")
+	}
+
+	return commandFunc(engine, session, noZeroArg)
+}
+
+func (engine *Akevitt) UseOnMessage(f MessageFunc) *Akevitt {
+	engine.onMessage = f
 
 	return engine
 }

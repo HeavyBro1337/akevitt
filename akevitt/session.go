@@ -9,6 +9,16 @@ import (
 type ActiveSession struct {
 	Account *Account
 	UI      *tview.Application
+	prevUI  *tview.Primitive
+}
+
+func (session *ActiveSession) SetRoot(primitive tview.Primitive) {
+	session.prevUI = &primitive
+	session.UI.SetRoot(primitive, false)
+}
+
+func (session *ActiveSession) GetPreviousUI() *tview.Primitive {
+	return session.prevUI
 }
 
 func purgeDeadSessions(sessions *Sessions) {

@@ -1,10 +1,8 @@
 package akevitt
 
 type Object interface {
-	GetName() string
-	Description() string                    // Retrieve description about that object
-	Save(key uint64, engine *Akevitt) error // Save object into database
-	OnLoad(engine *Akevitt) error
+	Save(engine *Akevitt) error // Save object into database
+	GetKey() uint64
 }
 
 type GameObject interface {

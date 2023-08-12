@@ -7,7 +7,9 @@ require (
 	github.com/gliderlabs/ssh v0.3.5
 )
 
-require golang.org/x/term v0.10.0 // indirect
+require (
+	golang.org/x/term v0.10.0 // indirect
+)
 
 require (
 	github.com/gdamore/encoding v1.0.0 // indirect
@@ -21,6 +23,6 @@ require (
 
 require (
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
-	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/crypto v0.11.0
 	golang.org/x/sys v0.10.0 // indirect
 )
