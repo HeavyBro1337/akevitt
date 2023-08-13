@@ -10,10 +10,16 @@ import (
 	"github.com/rivo/tview"
 )
 
-func rootScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {
+func rootScreen(engine *akevitt.Akevitt, session akevitt.ActiveSession) tview.Primitive {
+	sess, ok := session.(*ActiveSession)
+
+	if !ok {
+		panic("could not cast to custom session")
+	}
+
 	b, err := os.ReadFile("./data/logo.png")
 	if err != nil {
-		panic("Cannot find image!!!")
+		panic("Cannot find the image!")
 	}
 	pngLogo, err := png.Decode(bytes.NewReader(b))
 	if err != nil {
@@ -25,7 +31,9 @@ func rootScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.P
 		AddButtons([]string{"Register", "Login"}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 			if buttonLabel == "Login" {
+				sess.SetRoot(loginScreen(engine, sess))
 			} else if buttonLabel == "Register" {
+				sess.SetRoot(registerScreen(engine, sess))
 			}
 		})
 	welcome := tview.NewGrid().

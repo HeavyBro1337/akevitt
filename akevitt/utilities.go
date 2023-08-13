@@ -22,9 +22,9 @@ func compareHash(password, hash string) bool {
 }
 
 // Converts byte array to `Uint64`
-func byteToInt(source []byte) uint64 {
-	return binary.LittleEndian.Uint64(source)
-}
+// func byteToInt(source []byte) uint64 {
+// 	return binary.LittleEndian.Uint64(source)
+// }
 
 // Converts `Uint64` to byte array
 func intToByte(value uint64) []byte {

@@ -6,7 +6,7 @@ import (
 	"github.com/rivo/tview"
 )
 
-func registerScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {
+func registerScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive {
 	var username string
 	var password string
 	var repeatPassword string
@@ -23,12 +23,12 @@ func registerScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tvi
 	registerScreen.
 		AddButton("Create account", func() {
 			if password != repeatPassword {
-				ErrorBox("Passwords don't match!", session.UI, session.GetPreviousUI())
+				ErrorBox("Passwords don't match!", session.GetApplication(), session.GetPreviousUI())
 				return
 			}
 			err := engine.Register(username, password, session)
 			if err != nil {
-				ErrorBox(err.Error(), session.UI, session.GetPreviousUI())
+				ErrorBox(err.Error(), session.app, session.GetPreviousUI())
 				return
 			}
 			session.SetRoot(characterCreationWizard(engine, session))

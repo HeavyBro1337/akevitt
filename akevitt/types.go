@@ -10,10 +10,10 @@ type Pair[TFirst any, TSecond any] struct {
 	Second TSecond
 }
 
-type Sessions = map[ssh.Session]*ActiveSession
+type Sessions = map[ssh.Session]ActiveSession
 
-type UIFunc = func(engine *Akevitt, session *ActiveSession) tview.Primitive
+type UIFunc = func(engine *Akevitt, session ActiveSession) tview.Primitive
 
-type CommandFunc = func(engine *Akevitt, session *ActiveSession, command string) error
+type CommandFunc = func(engine *Akevitt, session ActiveSession, command string) error
 
-type MessageFunc = func(engine *Akevitt, currentSession, senderSession *ActiveSession, channel, message string)
+type MessageFunc = func(engine *Akevitt, session ActiveSession, channel, message string) error

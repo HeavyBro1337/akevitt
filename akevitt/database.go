@@ -2,6 +2,7 @@ package akevitt
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/boltdb/bolt"
@@ -18,14 +19,19 @@ func isSessionAlreadyActive(acc Account, sessions *Sessions) bool {
 	// We want make sure we purge dead sessions before looking for active.
 	purgeDeadSessions(sessions)
 	for _, v := range *sessions {
-		if v.Account == nil {
+		fmt.Printf("v: %v\n", v)
+		if v.GetAccount() == nil {
 			continue
 		}
-		if *v.Account == acc {
+		if *v.GetAccount() == acc {
 			return true
 		}
 	}
 	return false
+}
+
+func CreateObject[T GameObject](engine *Akevitt, session ActiveSession, object T, params interface{}) (T, error) {
+	return object, object.Create(engine, session, params)
 }
 
 func login(username string, password string, db *bolt.DB) (*Account, error) {
@@ -36,7 +42,8 @@ func login(username string, password string, db *bolt.DB) (*Account, error) {
 		if bucket == nil {
 			return errors.New("wrong name or password")
 		}
-		acc, err := deserialize[*Account](bucket.Get(intToByte(0)))
+		acc, err := deserialize[*Account](bucket.Bucket(intToByte(0)).Get(intToByte(0)))
+		fmt.Printf("err: %v\n", err)
 		if err != nil {
 			return err
 		}
@@ -64,8 +71,13 @@ func overwriteObject[T Object](db *bolt.DB, key uint64, bucket string, object T)
 		if err != nil {
 			return err
 		}
-		bkt.Put(intToByte(key), serialized)
-		return nil
+		dataBucket, err := bkt.CreateBucketIfNotExists(intToByte(key))
+
+		if err != nil {
+			return err
+		}
+
+		return dataBucket.Put(intToByte(0), serialized)
 	})
 }
 
@@ -97,4 +109,24 @@ func isAccountExists(username string, db *bolt.DB) bool {
 		}
 		return nil
 	}) != nil
+}
+
+func findObject[T GameObject](db *bolt.DB, account Account, key uint64) (T, error) {
+	var result T
+	err := db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(account.Username))
+		if bucket == nil {
+			return errors.New("account does not exist")
+		}
+		dataBucket := bucket.Bucket(intToByte(key))
+
+		if dataBucket == nil {
+			return errors.New("object not found")
+		}
+
+		r, err := deserialize[T](dataBucket.Get(intToByte(key)))
+		result = r
+		return err
+	})
+	return result, err
 }

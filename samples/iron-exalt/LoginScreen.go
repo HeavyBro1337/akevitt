@@ -2,12 +2,11 @@ package main
 
 import (
 	"akevitt/akevitt"
-	"fmt"
 
 	"github.com/rivo/tview"
 )
 
-func loginScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {
+func loginScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive {
 	var username string
 	var password string
 	loginScreen := tview.NewForm().
@@ -19,7 +18,11 @@ func loginScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.
 		})
 	loginScreen.AddButton("Login", func() {
 		err := engine.Login(username, password, session)
-		fmt.Printf("err: %v\n", err)
+		if err != nil {
+			ErrorBox(err.Error(), session.app, session.previousUI)
+			return
+		}
+		session.SetRoot(gameScreen(engine, session))
 	})
 	return loginScreen
 }
