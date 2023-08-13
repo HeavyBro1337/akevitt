@@ -6,19 +6,11 @@ import (
 	"github.com/rivo/tview"
 )
 
-type ActiveSession struct {
-	Account *Account
-	UI      *tview.Application
-	prevUI  *tview.Primitive
-}
-
-func (session *ActiveSession) SetRoot(primitive tview.Primitive) {
-	session.prevUI = &primitive
-	session.UI.SetRoot(primitive, false)
-}
-
-func (session *ActiveSession) GetPreviousUI() *tview.Primitive {
-	return session.prevUI
+type ActiveSession interface {
+	GetAccount() *Account
+	SetAccount(acc *Account)
+	GetApplication() *tview.Application
+	SetApplication(app *tview.Application)
 }
 
 func purgeDeadSessions(sessions *Sessions) {

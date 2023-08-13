@@ -19,14 +19,15 @@ import (
 )
 
 type Akevitt struct {
-	sessions  Sessions
-	root      UIFunc
-	bind      string
-	mouse     bool
-	dbPath    string
-	commands  map[string]CommandFunc
-	db        *bolt.DB
-	onMessage MessageFunc
+	sessions    Sessions
+	root        UIFunc
+	bind        string
+	mouse       bool
+	dbPath      string
+	commands    map[string]CommandFunc
+	db          *bolt.DB
+	onMessage   MessageFunc
+	defaultRoom Room
 }
 
 // Engine default constructor
@@ -69,7 +70,7 @@ func (engine *Akevitt) RegisterCommand(command string, function CommandFunc) *Ak
 	return engine
 }
 
-func (engine *Akevitt) Login(username, password string, session *ActiveSession) error {
+func (engine *Akevitt) Login(username, password string, session ActiveSession) error {
 	account, err := login(username, password, engine.db)
 	if err != nil {
 		return err
@@ -77,22 +78,24 @@ func (engine *Akevitt) Login(username, password string, session *ActiveSession) 
 	if isSessionAlreadyActive(*account, &engine.sessions) {
 		return errors.New("the session is already active")
 	}
-	session.Account = account
+	session.SetAccount(account)
+
 	return nil
 }
 
-func (engine *Akevitt) Register(username, password string, session *ActiveSession) error {
+func (engine *Akevitt) Register(username, password string, session ActiveSession) error {
 	exists := isAccountExists(username, engine.db)
 
 	if exists {
 		return errors.New("account already exists")
 	}
 	account, err := createAccount(engine.db, username, password)
-	session.Account = account
+	session.SetAccount(account)
+
 	return err
 }
 
-func (engine *Akevitt) ProcessCommand(command string, session *ActiveSession) error {
+func (engine *Akevitt) ProcessCommand(command string, session ActiveSession) error {
 	zeroArg := strings.Fields(command)[0]
 	noZeroArgArray := strings.Fields(command)[1:]
 	noZeroArg := strings.Join(noZeroArgArray, " ")
@@ -110,7 +113,28 @@ func (engine *Akevitt) UseOnMessage(f MessageFunc) *Akevitt {
 	return engine
 }
 
-func (engine *Akevitt) Run() error {
+func (engine *Akevitt) UseSpawnRoom(r Room) *Akevitt {
+	engine.defaultRoom = r
+
+	return engine
+}
+
+func (engine *Akevitt) GetSpawnRoom() Room {
+	return engine.defaultRoom
+}
+
+func (engine *Akevitt) SaveGameObject(gameObject GameObject, key uint64, account *Account) error {
+	return overwriteObject(engine.db, key, account.Username, gameObject)
+}
+
+func (engine *Akevitt) OnMessage(channel, message string, session ActiveSession) error {
+	if engine.onMessage == nil {
+		return errors.New("onMessage func is nil")
+	}
+	return engine.onMessage(engine, session, channel, message)
+}
+
+func (engine *Akevitt) Run(sessionTemplate ActiveSession) error {
 	fmt.Println("Running Akevitt")
 
 	err := createDatabase(engine)
@@ -135,8 +159,9 @@ func (engine *Akevitt) Run() error {
 		}
 		purgeDeadSessions(&engine.sessions)
 		app := tview.NewApplication().SetScreen(screen).EnableMouse(engine.mouse)
-		engine.sessions[sesh] = &ActiveSession{Account: nil, UI: app}
-		engine.sessions[sesh].UI.SetRoot(engine.root(engine, engine.sessions[sesh]), true)
+		engine.sessions[sesh] = sessionTemplate
+		engine.sessions[sesh].SetApplication(app)
+		engine.sessions[sesh].GetApplication().SetRoot(engine.root(engine, engine.sessions[sesh]), true)
 		if err := app.Run(); err != nil {
 			fmt.Fprintln(sesh.Stderr(), err)
 			return
