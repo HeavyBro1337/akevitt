@@ -16,21 +16,25 @@ func loginScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitiv
 		AddPasswordField("Password: ", "", 32, '*', func(text string) {
 			password = text
 		})
-	loginScreen.AddButton("Login", func() {
-		err := engine.Login(username, password, session)
-		if err != nil {
-			ErrorBox(err.Error(), session.app, session.previousUI)
-			return
-		}
-		character, err := akevitt.FindObject[*Character](engine, session, CharacterKey)
+	loginScreen.
+		AddButton("Login", func() {
+			err := engine.Login(username, password, session)
+			if err != nil {
+				ErrorBox(err.Error(), session.app, session.previousUI)
+				return
+			}
+			character, err := akevitt.FindObject[*Character](engine, session, CharacterKey)
 
-		if err != nil {
-			ErrorBox(err.Error(), session.app, session.previousUI)
-			return
-		}
-		session.character = character
-
-		session.SetRoot(gameScreen(engine, session))
-	})
+			if err != nil {
+				ErrorBox(err.Error(), session.app, session.previousUI)
+				return
+			}
+			session.character = character
+			session.character.currentRoom = engine.GetRoom(session.character.CurrentRoomKey)
+			session.SetRoot(gameScreen(engine, session))
+		}).
+		AddButton("Back", func() {
+			session.app.SetRoot(rootScreen(engine, session), true)
+		})
 	return loginScreen
 }

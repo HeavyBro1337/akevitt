@@ -6,26 +6,39 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/uaraven/logview"
 )
 
 func gameScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive {
 	var playerMessage string
-	const LABEL string = "Message: "
-	chatlog := tview.NewList()
+	chatlog := logview.NewLogView()
+	chatlog.SetLevelHighlighting(true)
 	session.subscribedChannels = append(session.subscribedChannels, "ooc")
 	session.chat = chatlog
 
-	inputField := tview.NewForm().AddInputField(LABEL, "", 32, nil, func(text string) {
+	inputField := tview.NewInputField().SetAutocompleteFunc(func(currentText string) (entries []string) {
+		if len(currentText) == 0 {
+			return
+		}
+		for _, word := range engine.GetCommands() {
+			if strings.HasPrefix(strings.ToLower(word), strings.ToLower(currentText)) {
+				entries = append(entries, word)
+			}
+		}
+		return entries
+	}).SetChangedFunc(func(text string) {
 		playerMessage = text
 	})
 	gameScreen := tview.NewGrid().
 		SetRows(3).
 		SetColumns(30).
-		AddItem(chatlog, 1, 0, 3, 3, 0, 0, false).
 		SetBorders(true).
 		AddItem(inputField, 0, 0, 1, 1, 0, 0, true).
-		AddItem(stats(engine, session), 0, 1, 1, 2, 0, 0, false)
-	inputField.GetFormItemByLabel(LABEL).(*tview.InputField).SetDoneFunc(func(key tcell.Key) {
+		AddItem(visibleObjects(engine, session), 1, 0, 1, 1, 0, 0, false).
+		AddItem(stats(engine, session), 0, 1, 1, 2, 0, 0, false).
+		AddItem(chatlog, 1, 1, 1, 2, 0, 0, false)
+
+	inputField.SetFinishedFunc(func(key tcell.Key) {
 		if key == tcell.KeyEnter {
 			playerMessage = strings.TrimSpace(playerMessage)
 			if playerMessage == "" {
@@ -34,20 +47,26 @@ func gameScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive
 			err := AppendText(session, playerMessage, session.chat)
 			if err != nil {
 				ErrorBox(err.Error(), session.app, session.GetPreviousUI())
-				playerMessage = ""
-				inputField.GetFormItemByLabel(LABEL).(*tview.InputField).SetText("")
-				session.app.SetFocus(inputField.GetFormItemByLabel(LABEL))
+				inputField.Blur()
 				return
 			}
 			err = engine.ProcessCommand(playerMessage, session)
 			if err != nil {
 				ErrorBox(err.Error(), session.app, session.GetPreviousUI())
+				inputField.Blur()
 				return
 			}
 			playerMessage = ""
-			inputField.GetFormItemByLabel(LABEL).(*tview.InputField).SetText("")
-			session.app.SetFocus(inputField.GetFormItemByLabel(LABEL))
+			inputField.SetText("")
+			session.app.SetFocus(inputField)
 		}
 	})
+	inputField.SetAutocompletedFunc(func(text string, index, source int) bool {
+		if source != tview.AutocompletedNavigate {
+			inputField.SetText(text)
+		}
+		return source == tview.AutocompletedEnter || source == tview.AutocompletedClick
+	})
+
 	return gameScreen
 }

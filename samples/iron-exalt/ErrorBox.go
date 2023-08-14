@@ -10,8 +10,7 @@ func ErrorBox(message string, app *tview.Application, back *tview.Primitive) {
 		SetBackgroundColor(tcell.ColorBlack).
 		AddButtons([]string{"Close"}).SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 		app.SetRoot(*back, true)
-	}).SetFocus(0)
-	result.SetBorderColor(tcell.ColorDarkRed)
-	result.SetBorder(true)
+	})
+	result.SetBorder(true).SetBorderColor(tcell.ColorDarkRed)
 	app.SetRoot(result, true)
 }

@@ -32,6 +32,9 @@ func registerScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primi
 				return
 			}
 			session.SetRoot(characterCreationWizard(engine, session))
+		}).
+		AddButton("Back", func() {
+			session.app.SetRoot(rootScreen(engine, session), true)
 		})
 	registerScreen.SetBorder(true).SetTitle(" Register ")
 	return registerScreen

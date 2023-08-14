@@ -21,6 +21,15 @@ func compareHash(password, hash string) bool {
 	return err == nil
 }
 
+func Find[T comparable](collection []T, value T) bool {
+	for _, b := range collection {
+		if b == value {
+			return true
+		}
+	}
+	return false
+}
+
 // Converts byte array to `Uint64`
 // func byteToInt(source []byte) uint64 {
 // 	return binary.BigEndian.Uint64(source)

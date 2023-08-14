@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/rivo/tview"
+	"github.com/uaraven/logview"
 )
 
 const (
@@ -22,21 +22,19 @@ func main() {
 		&Room{Name: "Mine", DescriptionData: "Mine of the corporation.", Key: 1},
 		&Room{Name: "Iron City", DescriptionData: "The lounge of the miners.", Key: 2},
 	}
-	emptyExit := Exit{}
-	akevitt.BindRooms[*Exit](room, &emptyExit, rooms...)
-	akevitt.BindRooms[*Exit](rooms[1], &emptyExit, rooms...)
-	akevitt.BindRooms[*Exit](rooms[2], &emptyExit, rooms...)
+	akevitt.BindRooms[*Exit](room, rooms...)
+	akevitt.BindRooms[*Exit](rooms[1], rooms...)
+	akevitt.BindRooms[*Exit](rooms[2], rooms...)
 
 	engine := akevitt.NewEngine().
-		UseMouse().
 		UseDBPath("data/iron-exalt.db").
 		UseMessage(func(engine *akevitt.Akevitt, session akevitt.ActiveSession, channel, message, username string) error {
 			sess, ok := session.(*ActiveSession)
 
-			st := fmt.Sprintf("[black:red]%s (%s) [black:white]%s", username, channel, message)
+			st := fmt.Sprintf("%s (%s): %s", username, channel, message)
 
 			if ok && sess.subscribedChannels != nil {
-				if find[string](sess.subscribedChannels, channel) {
+				if akevitt.Find[string](sess.subscribedChannels, channel) {
 					return AppendText(sess, st, sess.chat)
 				}
 			} else if !ok {
@@ -49,25 +47,18 @@ func main() {
 		}).
 		RegisterCommand("say", say).
 		RegisterCommand("ooc", ooc).
+		UseSpawnRoom(room).
 		UseRootUI(rootScreen)
 
 	log.Fatal(akevitt.Run[*ActiveSession](engine))
 }
 
-func find[T comparable](collection []T, value T) bool {
-	for _, b := range collection {
-		fmt.Printf("b: %v\n", b)
-		if b == value {
-			return true
-		}
-	}
-	return false
-}
-
-func AppendText(currentSession *ActiveSession, message string, chatlog *tview.List) error {
-	chatlog.AddItem(message, "", 0, nil)
-	chatlog.SetCurrentItem(-1)
-	chatlog.SetWrapAround(true)
-	chatlog.ShowSecondaryText(false)
+func AppendText(currentSession *ActiveSession, message string, chatlog *logview.LogView) error {
+	ev := logview.NewLogEvent("message", message)
+	ev.Level = logview.LogLevelInfo
+	chatlog.AppendEvent(ev)
+	chatlog.SetFocusFunc(func() {
+		chatlog.Blur()
+	})
 	return nil
 }

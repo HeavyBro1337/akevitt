@@ -4,6 +4,7 @@ import (
 	"akevitt/akevitt"
 
 	"github.com/rivo/tview"
+	"github.com/uaraven/logview"
 )
 
 type ActiveSession struct {
@@ -11,7 +12,7 @@ type ActiveSession struct {
 	app                *tview.Application
 	previousUI         *tview.Primitive
 	subscribedChannels []string
-	chat               *tview.List
+	chat               *logview.LogView
 	character          *Character
 }
 

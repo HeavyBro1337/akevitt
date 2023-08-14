@@ -34,6 +34,7 @@ type Akevitt struct {
 // Engine default constructor
 func NewEngine() *Akevitt {
 	engine := &Akevitt{}
+	engine.rooms = make(map[uint64]Room)
 	engine.bind = ":2222"
 	engine.sessions = make(Sessions)
 	engine.dbPath = "data/database.db"
@@ -122,6 +123,47 @@ func (engine *Akevitt) UseSpawnRoom(r Room) *Akevitt {
 	return engine
 }
 
+func saveRoomsRecursively(engine *Akevitt, room Room, visited []string) error {
+	if visited == nil {
+		visited = make([]string, 0)
+	}
+
+	if room == nil {
+		return errors.New("room is nil")
+	}
+
+	fmt.Printf("Saving Room: %s\n", room.GetName())
+
+	engine.rooms[room.GetKey()] = room
+
+	visited = append(visited, room.GetName())
+
+	for _, v := range room.GetExits() {
+		r := v.GetRoom()
+
+		if Find[string](visited, r.GetName()) {
+			continue
+		}
+
+		err := saveRoomsRecursively(engine, r, visited)
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (engine *Akevitt) GetCommands() []string {
+	result := make([]string, 0)
+
+	for k := range engine.commands {
+		result = append(result, k)
+	}
+
+	return result
+}
+
 func (engine *Akevitt) GetSpawnRoom() Room {
 	return engine.defaultRoom
 }
@@ -175,6 +217,14 @@ func Run[TSession ActiveSession](engine *Akevitt) error {
 	fmt.Println("Opened database")
 
 	fmt.Println("Saving rooms recursively...")
+
+	err = saveRoomsRecursively(engine, engine.defaultRoom, nil)
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Done!")
 
 	defer engine.db.Close()
 
