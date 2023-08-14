@@ -173,6 +173,7 @@ func (engine *Akevitt) GetRoom(key uint64) (Room, error) {
 	if !ok {
 		return nil, errors.New("room not found")
 	}
+
 	return room, nil
 }
 

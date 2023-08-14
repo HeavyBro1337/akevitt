@@ -2,6 +2,7 @@ package main
 
 import (
 	"akevitt/akevitt"
+	"errors"
 )
 
 type Exit struct {
@@ -21,8 +22,18 @@ func (exit *Exit) GetKey() uint64 {
 }
 
 func (exit *Exit) Enter(engine *akevitt.Akevitt, session akevitt.ActiveSession) error {
-	panic("unimplemented")
+	sess, ok := session.(*ActiveSession)
+	if !ok {
+		return errors.New("invalid session type")
+	}
+	character := sess.character
+
+	character.currentRoom = exit.GetRoom()
+	character.CurrentRoomKey = exit.Key
+
+	return character.Save(engine)
 }
+
 func (exit *Exit) GetRoom() akevitt.Room {
 	return exit.room
 }

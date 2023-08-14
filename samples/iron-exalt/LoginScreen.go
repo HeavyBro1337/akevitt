@@ -37,7 +37,7 @@ func loginScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitiv
 				ErrorBox(err.Error(), session.app, session.previousUI)
 				return
 			}
-
+			session.character.account = session.account
 			session.character.currentRoom = room
 			session.SetRoot(gameScreen(engine, session))
 		}).

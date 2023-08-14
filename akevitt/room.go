@@ -50,7 +50,7 @@ func IsRoomReachable[T Room](engine *Akevitt, session ActiveSession, roomKey uin
 		return nil, errors.New("array of exits is nil")
 	}
 
-	exit := findByKey[Exit, uint64](exits, func(key Exit) uint64 {
+	exit := findByKey(exits, func(key Exit) uint64 {
 		return key.GetKey()
 	}, currentRoomKey)
 	if exit == nil {
