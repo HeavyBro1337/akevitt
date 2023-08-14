@@ -10,7 +10,6 @@ type Room interface {
 
 type Exit interface {
 	Object
-	NamedObject
 	GetRoom() Room
 	GetKey() uint64
 	SetRoom(room Room)

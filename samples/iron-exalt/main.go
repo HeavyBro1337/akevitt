@@ -2,6 +2,7 @@ package main
 
 import (
 	"akevitt/akevitt"
+	"encoding/gob"
 	"fmt"
 	"log"
 
@@ -13,6 +14,19 @@ const (
 )
 
 func main() {
+	gob.Register(&Exit{})
+	gob.Register(&Room{})
+	room := &Room{Name: "Spawn Room", DescriptionData: "Just a spawn room.", Key: 0}
+	rooms := []akevitt.Room{
+		room,
+		&Room{Name: "Mine", DescriptionData: "Mine of the corporation.", Key: 1},
+		&Room{Name: "Iron City", DescriptionData: "The lounge of the miners.", Key: 2},
+	}
+	emptyExit := Exit{}
+	akevitt.BindRooms[*Exit](room, &emptyExit, rooms...)
+	akevitt.BindRooms[*Exit](rooms[1], &emptyExit, rooms...)
+	akevitt.BindRooms[*Exit](rooms[2], &emptyExit, rooms...)
+
 	engine := akevitt.NewEngine().
 		UseMouse().
 		UseDBPath("data/iron-exalt.db").

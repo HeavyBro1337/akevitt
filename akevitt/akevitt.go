@@ -130,6 +130,10 @@ func (engine *Akevitt) SaveGameObject(gameObject GameObject, key uint64, account
 	return overwriteObject(engine.db, key, account.Username, gameObject)
 }
 
+func SaveObject[T Object](engine *Akevitt, obj T, category string, key uint64) error {
+	return overwriteObject[T](engine.db, key, category, obj)
+}
+
 func FindObject[T GameObject](engine *Akevitt, session ActiveSession, key uint64) (T, error) {
 	return findObject[T](engine.db, *session.GetAccount(), key)
 }
