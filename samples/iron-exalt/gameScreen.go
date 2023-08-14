@@ -23,8 +23,8 @@ func gameScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive
 		SetColumns(30).
 		AddItem(chatlog, 1, 0, 3, 3, 0, 0, false).
 		SetBorders(true).
-		AddItem(inputField, 0, 0, 1, 1, 0, 0, true)
-		// AddItem(stats(engine, session), 0, 1, 1, 2, 0, 0, false)
+		AddItem(inputField, 0, 0, 1, 1, 0, 0, true).
+		AddItem(stats(engine, session), 0, 1, 1, 2, 0, 0, false)
 	inputField.GetFormItemByLabel(LABEL).(*tview.InputField).SetDoneFunc(func(key tcell.Key) {
 		if key == tcell.KeyEnter {
 			playerMessage = strings.TrimSpace(playerMessage)
