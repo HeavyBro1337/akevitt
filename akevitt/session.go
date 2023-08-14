@@ -17,6 +17,7 @@ func purgeDeadSessions(sessions *Sessions) {
 	for k := range *sessions {
 		_, err := io.WriteString(k, "\000")
 		if err != nil {
+			println("Found dead")
 			delete(*sessions, k)
 		}
 	}

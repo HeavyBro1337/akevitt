@@ -2,7 +2,6 @@ package akevitt
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/boltdb/bolt"
@@ -19,7 +18,6 @@ func isSessionAlreadyActive(acc Account, sessions *Sessions) bool {
 	// We want make sure we purge dead sessions before looking for active.
 	purgeDeadSessions(sessions)
 	for _, v := range *sessions {
-		fmt.Printf("v: %v\n", v)
 		if v.GetAccount() == nil {
 			continue
 		}
@@ -43,7 +41,6 @@ func login(username string, password string, db *bolt.DB) (*Account, error) {
 			return errors.New("wrong name or password")
 		}
 		acc, err := deserialize[*Account](bucket.Bucket(intToByte(0)).Get(intToByte(0)))
-		fmt.Printf("err: %v\n", err)
 		if err != nil {
 			return err
 		}
@@ -124,7 +121,7 @@ func findObject[T GameObject](db *bolt.DB, account Account, key uint64) (T, erro
 			return errors.New("object not found")
 		}
 
-		r, err := deserialize[T](dataBucket.Get(intToByte(key)))
+		r, err := deserialize[T](dataBucket.Get(intToByte(0)))
 		result = r
 		return err
 	})

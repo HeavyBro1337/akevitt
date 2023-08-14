@@ -22,6 +22,14 @@ func loginScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitiv
 			ErrorBox(err.Error(), session.app, session.previousUI)
 			return
 		}
+		character, err := akevitt.FindObject[*Character](engine, session, CharacterKey)
+
+		if err != nil {
+			ErrorBox(err.Error(), session.app, session.previousUI)
+			return
+		}
+		session.character = character
+
 		session.SetRoot(gameScreen(engine, session))
 	})
 	return loginScreen

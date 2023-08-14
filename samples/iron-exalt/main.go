@@ -2,7 +2,10 @@ package main
 
 import (
 	"akevitt/akevitt"
+	"fmt"
 	"log"
+
+	"github.com/rivo/tview"
 )
 
 const (
@@ -10,26 +13,36 @@ const (
 )
 
 func main() {
-	log.Fatal(akevitt.NewEngine().
+	engine := akevitt.NewEngine().
 		UseMouse().
 		UseDBPath("data/iron-exalt.db").
-		UseOnMessage(func(engine *akevitt.Akevitt, session akevitt.ActiveSession, channel, message string) error {
+		UseMessage(func(engine *akevitt.Akevitt, session akevitt.ActiveSession, channel, message, username string) error {
 			sess, ok := session.(*ActiveSession)
+
+			st := fmt.Sprintf("[black:red]%s (%s) [black:white]%s", username, channel, message)
 
 			if ok && sess.subscribedChannels != nil {
 				if find[string](sess.subscribedChannels, channel) {
-					return AppendText(sess, message)
+					return AppendText(sess, st, sess.chat)
 				}
+			} else if !ok {
+				fmt.Printf("could not cast to session")
+			} else {
+				fmt.Print("unknown error")
 			}
 
 			return nil
 		}).
-		UseRootUI(rootScreen).
-		Run(&ActiveSession{}))
+		RegisterCommand("say", say).
+		RegisterCommand("ooc", ooc).
+		UseRootUI(rootScreen)
+
+	log.Fatal(akevitt.Run[*ActiveSession](engine))
 }
 
 func find[T comparable](collection []T, value T) bool {
 	for _, b := range collection {
+		fmt.Printf("b: %v\n", b)
 		if b == value {
 			return true
 		}
@@ -37,10 +50,10 @@ func find[T comparable](collection []T, value T) bool {
 	return false
 }
 
-func AppendText(currentSession *ActiveSession, message string) error {
-	currentSession.chat.AddItem(message, "", 0, nil)
-	currentSession.chat.SetCurrentItem(-1)
-	currentSession.chat.SetWrapAround(true)
-	currentSession.chat.ShowSecondaryText(false)
+func AppendText(currentSession *ActiveSession, message string, chatlog *tview.List) error {
+	chatlog.AddItem(message, "", 0, nil)
+	chatlog.SetCurrentItem(-1)
+	chatlog.SetWrapAround(true)
+	chatlog.ShowSecondaryText(false)
 	return nil
 }

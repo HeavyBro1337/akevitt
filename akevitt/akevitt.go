@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 
 	"github.com/boltdb/bolt"
@@ -37,6 +38,7 @@ func NewEngine() *Akevitt {
 	engine.sessions = make(Sessions)
 	engine.dbPath = "data/database.db"
 	engine.mouse = false
+	engine.commands = make(map[string]CommandFunc)
 	return engine
 }
 
@@ -78,6 +80,7 @@ func (engine *Akevitt) Login(username, password string, session ActiveSession) e
 	if isSessionAlreadyActive(*account, &engine.sessions) {
 		return errors.New("the session is already active")
 	}
+
 	session.SetAccount(account)
 
 	return nil
@@ -107,7 +110,7 @@ func (engine *Akevitt) ProcessCommand(command string, session ActiveSession) err
 	return commandFunc(engine, session, noZeroArg)
 }
 
-func (engine *Akevitt) UseOnMessage(f MessageFunc) *Akevitt {
+func (engine *Akevitt) UseMessage(f MessageFunc) *Akevitt {
 	engine.onMessage = f
 
 	return engine
@@ -127,14 +130,33 @@ func (engine *Akevitt) SaveGameObject(gameObject GameObject, key uint64, account
 	return overwriteObject(engine.db, key, account.Username, gameObject)
 }
 
-func (engine *Akevitt) OnMessage(channel, message string, session ActiveSession) error {
+func FindObject[T GameObject](engine *Akevitt, session ActiveSession, key uint64) (T, error) {
+	return findObject[T](engine.db, *session.GetAccount(), key)
+}
+
+func (engine *Akevitt) Message(channel, message, username string, session ActiveSession) error {
 	if engine.onMessage == nil {
 		return errors.New("onMessage func is nil")
 	}
-	return engine.onMessage(engine, session, channel, message)
+	purgeDeadSessions(&engine.sessions)
+
+	for _, v := range engine.sessions {
+
+		err := engine.onMessage(engine, v, channel, message, username)
+
+		if session != v {
+			v.GetApplication().Draw()
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-func (engine *Akevitt) Run(sessionTemplate ActiveSession) error {
+func Run[TSession ActiveSession](engine *Akevitt) error {
 	fmt.Println("Running Akevitt")
 
 	err := createDatabase(engine)
@@ -152,6 +174,8 @@ func (engine *Akevitt) Run(sessionTemplate ActiveSession) error {
 	}
 
 	ssh.Handle(func(sesh ssh.Session) {
+		var emptySession TSession
+
 		screen, err := newSessionScreen(sesh)
 		if err != nil {
 			fmt.Fprintln(sesh.Stderr(), "unable to create screen:", err)
@@ -159,7 +183,9 @@ func (engine *Akevitt) Run(sessionTemplate ActiveSession) error {
 		}
 		purgeDeadSessions(&engine.sessions)
 		app := tview.NewApplication().SetScreen(screen).EnableMouse(engine.mouse)
-		engine.sessions[sesh] = sessionTemplate
+
+		engine.sessions[sesh] = reflect.New(reflect.TypeOf(emptySession).Elem()).Interface().(TSession)
+
 		engine.sessions[sesh].SetApplication(app)
 		engine.sessions[sesh].GetApplication().SetRoot(engine.root(engine, engine.sessions[sesh]), true)
 		if err := app.Run(); err != nil {

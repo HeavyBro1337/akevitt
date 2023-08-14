@@ -19,11 +19,19 @@ func (character *Character) Create(engine *akevitt.Akevitt, session akevitt.Acti
 	if !ok {
 		return errors.New("invalid params given")
 	}
+	sess, ok := session.(*ActiveSession)
+
+	if !ok {
+		return errors.New("invalid session type")
+	}
+
 	character.Name = characterParams.name
 	character.Health = 10
 	character.MaxHealth = 10
 	character.currentRoom = engine.GetSpawnRoom()
-	character.account = session.GetAccount()
+	character.account = sess.account
+	sess.character = character
+
 	// character.CurrentRoomKey = character.currentRoom.GetKey()
 
 	return character.Save(engine)

@@ -16,4 +16,4 @@ type UIFunc = func(engine *Akevitt, session ActiveSession) tview.Primitive
 
 type CommandFunc = func(engine *Akevitt, session ActiveSession, command string) error
 
-type MessageFunc = func(engine *Akevitt, session ActiveSession, channel, message string) error
+type MessageFunc = func(engine *Akevitt, session ActiveSession, channel, message, username string) error

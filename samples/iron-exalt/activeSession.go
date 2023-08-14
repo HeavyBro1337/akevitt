@@ -12,6 +12,7 @@ type ActiveSession struct {
 	previousUI         *tview.Primitive
 	subscribedChannels []string
 	chat               *tview.List
+	character          *Character
 }
 
 func (sess *ActiveSession) GetAccount() *akevitt.Account {

@@ -23,13 +23,13 @@ func compareHash(password, hash string) bool {
 
 // Converts byte array to `Uint64`
 // func byteToInt(source []byte) uint64 {
-// 	return binary.LittleEndian.Uint64(source)
+// 	return binary.BigEndian.Uint64(source)
 // }
 
 // Converts `Uint64` to byte array
 func intToByte(value uint64) []byte {
 	binaryId := make([]byte, 8)
-	binary.LittleEndian.PutUint64(binaryId, uint64(value))
+	binary.BigEndian.PutUint64(binaryId, uint64(value))
 	return binaryId
 }
 

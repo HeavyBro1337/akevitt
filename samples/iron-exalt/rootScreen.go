@@ -41,6 +41,8 @@ func rootScreen(engine *akevitt.Akevitt, session akevitt.ActiveSession) tview.Pr
 		SetRows(3, 0, 3).
 		SetColumns(30, 0, 30).
 		AddItem(image, 0, 0, 3, 27, 0, 0, false).
-		AddItem(wizard, 2, 2, 3, 3, 0, 0, false)
+		AddItem(wizard, 2, 2, 3, 3, 0, 0, true)
+
+	sess.app.SetFocus(wizard)
 	return welcome
 }
