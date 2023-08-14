@@ -10,7 +10,6 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 
@@ -29,6 +28,7 @@ type Akevitt struct {
 	db          *bolt.DB
 	onMessage   MessageFunc
 	defaultRoom Room
+	rooms       map[uint64]Room
 }
 
 // Engine default constructor
@@ -126,6 +126,10 @@ func (engine *Akevitt) GetSpawnRoom() Room {
 	return engine.defaultRoom
 }
 
+func (engine *Akevitt) GetRoom(key uint64) Room {
+	return engine.rooms[key]
+}
+
 func (engine *Akevitt) SaveGameObject(gameObject GameObject, key uint64, account *Account) error {
 	return overwriteObject(engine.db, key, account.Username, gameObject)
 }
@@ -162,12 +166,15 @@ func (engine *Akevitt) Message(channel, message, username string, session Active
 
 func Run[TSession ActiveSession](engine *Akevitt) error {
 	fmt.Println("Running Akevitt")
-
 	err := createDatabase(engine)
 
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+
+	fmt.Println("Opened database")
+
+	fmt.Println("Saving rooms recursively...")
 
 	defer engine.db.Close()
 
