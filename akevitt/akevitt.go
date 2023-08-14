@@ -132,7 +132,7 @@ func saveRoomsRecursively(engine *Akevitt, room Room, visited []string) error {
 		return errors.New("room is nil")
 	}
 
-	fmt.Printf("Saving Room: %s\n", room.GetName())
+	fmt.Printf("Loading Room: %s\n", room.GetName())
 
 	engine.rooms[room.GetKey()] = room
 
@@ -168,8 +168,12 @@ func (engine *Akevitt) GetSpawnRoom() Room {
 	return engine.defaultRoom
 }
 
-func (engine *Akevitt) GetRoom(key uint64) Room {
-	return engine.rooms[key]
+func (engine *Akevitt) GetRoom(key uint64) (Room, error) {
+	room, ok := engine.rooms[key]
+	if !ok {
+		return nil, errors.New("room not found")
+	}
+	return room, nil
 }
 
 func (engine *Akevitt) SaveGameObject(gameObject GameObject, key uint64, account *Account) error {
@@ -216,7 +220,7 @@ func Run[TSession ActiveSession](engine *Akevitt) error {
 
 	fmt.Println("Opened database")
 
-	fmt.Println("Saving rooms recursively...")
+	fmt.Println("Loading rooms recursively...")
 
 	err = saveRoomsRecursively(engine, engine.defaultRoom, nil)
 

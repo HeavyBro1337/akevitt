@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/gob"
+	"errors"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -64,4 +65,16 @@ func deserialize[T Object](b []byte) (T, error) {
 		return result, err
 	}
 	return result, err
+}
+
+func findByKey[TCollection, T comparable](collection []TCollection, selector func(key TCollection) T, value T) *TCollection {
+	if collection == nil {
+		panic(errors.New("collection is nil"))
+	}
+	for _, b := range collection {
+		if selector(b) == value {
+			return &b
+		}
+	}
+	return nil
 }

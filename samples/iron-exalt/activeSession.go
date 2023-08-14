@@ -13,6 +13,7 @@ type ActiveSession struct {
 	previousUI         *tview.Primitive
 	subscribedChannels []string
 	chat               *logview.LogView
+	lookList           *tview.List
 	character          *Character
 }
 
@@ -22,6 +23,20 @@ func (sess *ActiveSession) GetAccount() *akevitt.Account {
 
 func (sess *ActiveSession) SetAccount(acc *akevitt.Account) {
 	sess.account = acc
+}
+
+func (sess *ActiveSession) AppendLook(gameObject akevitt.GameObject) {
+	if sess.lookList == nil {
+		return
+	}
+	sess.lookList.AddItem(gameObject.GetName(), gameObject.Description(), 0, nil)
+}
+
+func (sess *ActiveSession) ClearLook() {
+	if sess.lookList == nil {
+		return
+	}
+	sess.lookList.Clear()
 }
 
 func (sess *ActiveSession) GetApplication() *tview.Application {

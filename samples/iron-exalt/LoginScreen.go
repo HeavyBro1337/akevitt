@@ -30,7 +30,15 @@ func loginScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitiv
 				return
 			}
 			session.character = character
-			session.character.currentRoom = engine.GetRoom(session.character.CurrentRoomKey)
+
+			room, err := engine.GetRoom(session.character.CurrentRoomKey)
+
+			if err != nil {
+				ErrorBox(err.Error(), session.app, session.previousUI)
+				return
+			}
+
+			session.character.currentRoom = room
 			session.SetRoot(gameScreen(engine, session))
 		}).
 		AddButton("Back", func() {

@@ -11,5 +11,6 @@ type NamedObject interface {
 
 type GameObject interface {
 	Object
+	NamedObject
 	Create(engine *Akevitt, session ActiveSession, params interface{}) error
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"akevitt/akevitt"
 	"errors"
+	"fmt"
 )
 
 type Character struct {
@@ -39,6 +40,17 @@ func (character *Character) Create(engine *akevitt.Akevitt, session akevitt.Acti
 
 func (character *Character) Save(engine *akevitt.Akevitt) error {
 	return engine.SaveGameObject(character, CharacterKey, character.account)
+}
+
+func (character *Character) Description() string {
+	format := `
+	Health %d/%d
+	`
+	return fmt.Sprintf(format, character.Health, character.MaxHealth)
+}
+
+func (character *Character) GetName() string {
+	return character.Name
 }
 
 type CharacterParams struct {

@@ -47,6 +47,7 @@ func main() {
 		}).
 		RegisterCommand("say", say).
 		RegisterCommand("ooc", ooc).
+		RegisterCommand("enter", enter).
 		UseSpawnRoom(room).
 		UseRootUI(rootScreen)
 
