@@ -12,7 +12,7 @@ func enter(engine *akevitt.Akevitt, session akevitt.ActiveSession, command strin
 		return errors.New("invalid session type")
 	}
 	character := sess.character
-
+	prevRoom := character.currentRoom.GetName()
 	roomKey, err := strconv.ParseUint(command, 10, 64)
 	if err != nil {
 		return err
@@ -21,5 +21,12 @@ func enter(engine *akevitt.Akevitt, session akevitt.ActiveSession, command strin
 	if err != nil {
 		return err
 	}
-	return exit.Enter(engine, session)
+	err = exit.Enter(engine, session)
+
+	if err != nil {
+		return err
+	}
+	engine.Message(prevRoom, "left room", character.Name, session)
+	engine.Message(character.currentRoom.GetName(), "entered room", character.Name, session)
+	return nil
 }
