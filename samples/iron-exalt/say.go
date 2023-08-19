@@ -12,7 +12,7 @@ func say(engine *akevitt.Akevitt, session akevitt.ActiveSession, command string)
 		return errors.New("invalid session type")
 	}
 
-	return engine.Message("room", command, sess.character.Name, session)
+	return engine.Message(sess.character.currentRoom.GetName(), command, sess.character.Name, session)
 }
 
 func ooc(engine *akevitt.Akevitt, session akevitt.ActiveSession, command string) error {
