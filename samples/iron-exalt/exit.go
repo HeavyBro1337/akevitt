@@ -30,7 +30,6 @@ func (exit *Exit) Enter(engine *akevitt.Akevitt, session akevitt.ActiveSession) 
 
 	character.currentRoom = exit.GetRoom()
 	character.CurrentRoomKey = exit.Key
-
 	return character.Save(engine)
 }
 
@@ -43,5 +42,6 @@ func (exit *Exit) Save(engine *akevitt.Akevitt) error {
 }
 
 func (exit *Exit) SetRoom(room akevitt.Room) {
+	exit.Key = room.GetKey()
 	exit.room = room
 }
