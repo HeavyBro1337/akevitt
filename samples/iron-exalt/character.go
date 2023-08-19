@@ -34,7 +34,9 @@ func (character *Character) Create(engine *akevitt.Akevitt, session akevitt.Acti
 	character.currentRoom = engine.GetSpawnRoom()
 	character.account = sess.account
 	sess.character = character
-	character.currentRoom = engine.GetSpawnRoom()
+	room := engine.GetSpawnRoom()
+	room.ContainObjects(sess.character)
+	character.currentRoom = room
 	character.CurrentRoomKey = character.currentRoom.GetKey()
 
 	return character.Save(engine)

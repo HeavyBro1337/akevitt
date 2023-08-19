@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/boltdb/bolt"
 	"github.com/gliderlabs/ssh"
@@ -19,16 +20,17 @@ import (
 )
 
 type Akevitt struct {
-	sessions    Sessions
-	root        UIFunc
-	bind        string
-	mouse       bool
-	dbPath      string
-	commands    map[string]CommandFunc
-	db          *bolt.DB
-	onMessage   MessageFunc
-	defaultRoom Room
-	rooms       map[uint64]Room
+	sessions      Sessions
+	root          UIFunc
+	bind          string
+	mouse         bool
+	dbPath        string
+	commands      map[string]CommandFunc
+	db            *bolt.DB
+	onMessage     MessageFunc
+	onDeadSession DeadSessionFunc
+	defaultRoom   Room
+	rooms         map[uint64]Room
 }
 
 // Engine default constructor
@@ -78,7 +80,7 @@ func (engine *Akevitt) Login(username, password string, session ActiveSession) e
 	if err != nil {
 		return err
 	}
-	if isSessionAlreadyActive(*account, &engine.sessions) {
+	if isSessionAlreadyActive(*account, &engine.sessions, engine) {
 		return errors.New("the session is already active")
 	}
 
@@ -123,6 +125,13 @@ func (engine *Akevitt) UseSpawnRoom(r Room) *Akevitt {
 	return engine
 }
 
+// Provide some callback if session is ended. Note: Some methods are dangerious to call i.e. engine.Message,
+// because it may invoke dead session cleanup which will cause stack overflow error and crash the application.
+func (engine *Akevitt) UseOnSessionEnd(f DeadSessionFunc) *Akevitt {
+	engine.onDeadSession = f
+	return engine
+}
+
 func saveRoomsRecursively(engine *Akevitt, room Room, visited []string) error {
 	if visited == nil {
 		visited = make([]string, 0)
@@ -164,6 +173,10 @@ func (engine *Akevitt) GetCommands() []string {
 	return result
 }
 
+func (engine *Akevitt) Lookup(room Room) []GameObject {
+	return room.GetObjects()
+}
+
 func (engine *Akevitt) GetSpawnRoom() Room {
 	return engine.defaultRoom
 }
@@ -193,7 +206,7 @@ func (engine *Akevitt) Message(channel, message, username string, session Active
 	if engine.onMessage == nil {
 		return errors.New("onMessage func is nil")
 	}
-	purgeDeadSessions(&engine.sessions)
+	purgeDeadSessions(&engine.sessions, engine, engine.onDeadSession)
 
 	for _, v := range engine.sessions {
 
@@ -241,19 +254,32 @@ func Run[TSession ActiveSession](engine *Akevitt) error {
 
 	ssh.Handle(func(sesh ssh.Session) {
 		var emptySession TSession
-
 		screen, err := newSessionScreen(sesh)
 		if err != nil {
 			fmt.Fprintln(sesh.Stderr(), "unable to create screen:", err)
 			return
 		}
-		purgeDeadSessions(&engine.sessions)
+		purgeDeadSessions(&engine.sessions, engine, engine.onDeadSession)
 		app := tview.NewApplication().SetScreen(screen).EnableMouse(engine.mouse)
 
 		engine.sessions[sesh] = reflect.New(reflect.TypeOf(emptySession).Elem()).Interface().(TSession)
 
 		engine.sessions[sesh].SetApplication(app)
 		engine.sessions[sesh].GetApplication().SetRoot(engine.root(engine, engine.sessions[sesh]), true)
+		ticker := time.NewTicker(100 * time.Millisecond)
+		quit := make(chan struct{})
+		go func() {
+			for {
+				select {
+				case <-ticker.C:
+					purgeDeadSessions(&engine.sessions, engine, engine.onDeadSession)
+					app.Draw()
+				case <-quit:
+					ticker.Stop()
+					return
+				}
+			}
+		}()
 		if err := app.Run(); err != nil {
 			fmt.Fprintln(sesh.Stderr(), err)
 			return

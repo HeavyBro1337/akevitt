@@ -43,3 +43,11 @@ func (room *Room) Save(engine *akevitt.Akevitt) error {
 func (room *Room) SetExits(exits ...akevitt.Exit) {
 	room.exits = exits
 }
+
+func (room *Room) ContainObjects(objects ...akevitt.GameObject) {
+	room.containedObjects = append(room.containedObjects, objects...)
+}
+
+func (room *Room) RemoveObject(object akevitt.GameObject) {
+	room.containedObjects = akevitt.RemoveItem(room.containedObjects, object)
+}

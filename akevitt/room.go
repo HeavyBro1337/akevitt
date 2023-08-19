@@ -12,6 +12,8 @@ type Room interface {
 	SetExits(exits ...Exit)
 	GetKey() uint64
 	GetObjects() []GameObject
+	ContainObjects(objects ...GameObject)
+	RemoveObject(object GameObject)
 	OnCreate()
 }
 

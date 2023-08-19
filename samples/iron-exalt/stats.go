@@ -3,7 +3,9 @@ package main
 import (
 	"akevitt/akevitt"
 	"fmt"
+	"strconv"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -19,10 +21,27 @@ func updateStats(engine *akevitt.Akevitt, session *ActiveSession) string {
 		character.currentRoom.GetName())
 }
 
-func visibleObjects(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive {
-	return tview.NewList().
-		AddItem("AAAA", "LOOOL", 0, nil).
-		AddItem("AAAA", "LOOOL", 0, nil).
-		AddItem("AAAA", "LOOOL", 0, nil).
-		AddItem("AAAA", "LOOOL", 0, nil)
+func visibleObjects(engine *akevitt.Akevitt, session *ActiveSession) *tview.List {
+	l := tview.NewList()
+	lookupUpdate(engine, session, &l)
+	return l
+}
+
+func lookupUpdate(engine *akevitt.Akevitt, session *ActiveSession, l **tview.List) {
+	objects := engine.Lookup(session.character.currentRoom)
+	(*l).Clear()
+	for _, v := range objects {
+		if v == session.character {
+			continue
+		}
+
+		(*l).AddItem(v.GetName(), v.Description(), 0, nil)
+	}
+	(*l).AddItem("AVAILABLE ROOMS", "", 0, nil)
+	exits := session.character.currentRoom.GetExits()
+
+	for _, v := range exits {
+		(*l).AddItem(v.GetRoom().GetName(), strconv.FormatUint(v.GetKey(), 10), 0, nil)
+	}
+	(*l).SetSelectedBackgroundColor(tcell.ColorBlack).SetSelectedTextColor(tcell.ColorWhite)
 }

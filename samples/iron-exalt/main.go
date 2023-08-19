@@ -3,6 +3,7 @@ package main
 import (
 	"akevitt/akevitt"
 	"encoding/gob"
+	"errors"
 	"fmt"
 	"log"
 
@@ -29,15 +30,19 @@ func main() {
 	engine := akevitt.NewEngine().
 		UseDBPath("data/iron-exalt.db").
 		UseMessage(func(engine *akevitt.Akevitt, session akevitt.ActiveSession, channel, message, username string) error {
+			if session == nil {
+				return errors.New("session is nil. Probably the dead one")
+			}
+
 			sess, ok := session.(*ActiveSession)
 
 			st := fmt.Sprintf("%s (%s): %s", username, channel, message)
 
 			if ok && sess.subscribedChannels != nil {
 				if akevitt.Find[string](sess.subscribedChannels, channel) {
-					return AppendText(sess, st, sess.chat)
+					AppendText(sess, st, sess.chat)
 				} else if sess.character.currentRoom.GetName() == channel {
-					return AppendText(sess, st, sess.chat)
+					AppendText(sess, st, sess.chat)
 				}
 			} else if !ok {
 				fmt.Printf("could not cast to session")
@@ -46,6 +51,27 @@ func main() {
 			}
 
 			return nil
+		}).
+		UseOnSessionEnd(func(deadSession akevitt.ActiveSession, liveSessions []akevitt.ActiveSession, engine *akevitt.Akevitt) {
+			sess, ok := deadSession.(*ActiveSession)
+			if !ok {
+				fmt.Println("could not cast to session")
+				return
+			}
+			if sess.account == nil {
+				return
+			}
+
+			sess.character.currentRoom.RemoveObject(sess.character)
+			for _, v := range liveSessions {
+				lsess, ok := v.(*ActiveSession)
+
+				if !ok || lsess.chat == nil {
+					continue
+				}
+
+				AppendText(lsess, fmt.Sprintf("%s left the game", sess.account.Username), lsess.chat)
+			}
 		}).
 		RegisterCommand("say", say).
 		RegisterCommand("ooc", ooc).
@@ -56,12 +82,11 @@ func main() {
 	log.Fatal(akevitt.Run[*ActiveSession](engine))
 }
 
-func AppendText(currentSession *ActiveSession, message string, chatlog *logview.LogView) error {
+func AppendText(currentSession *ActiveSession, message string, chatlog *logview.LogView) {
 	ev := logview.NewLogEvent("message", message)
 	ev.Level = logview.LogLevelInfo
 	chatlog.AppendEvent(ev)
 	chatlog.SetFocusFunc(func() {
 		chatlog.Blur()
 	})
-	return nil
 }

@@ -27,8 +27,11 @@ func (exit *Exit) Enter(engine *akevitt.Akevitt, session akevitt.ActiveSession) 
 		return errors.New("invalid session type")
 	}
 	character := sess.character
+	character.currentRoom.RemoveObject(character)
+	room := exit.room
+	character.currentRoom = room
+	room.ContainObjects(character)
 
-	character.currentRoom = exit.GetRoom()
 	character.CurrentRoomKey = exit.Key
 	return character.Save(engine)
 }
