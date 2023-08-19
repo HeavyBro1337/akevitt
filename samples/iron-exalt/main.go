@@ -36,6 +36,8 @@ func main() {
 			if ok && sess.subscribedChannels != nil {
 				if akevitt.Find[string](sess.subscribedChannels, channel) {
 					return AppendText(sess, st, sess.chat)
+				} else if sess.character.currentRoom.GetName() == channel {
+					return AppendText(sess, st, sess.chat)
 				}
 			} else if !ok {
 				fmt.Printf("could not cast to session")
