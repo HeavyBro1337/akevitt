@@ -7,11 +7,16 @@ import (
 	"github.com/rivo/tview"
 )
 
-func stats(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive {
-	character := session.character
+func stats(engine *akevitt.Akevitt, session *ActiveSession) *tview.TextView {
+	return tview.NewTextView().SetText(updateStats(engine, session))
+}
 
-	format := fmt.Sprintf("HEALTH: %d/%d, NAME: %s (%s)", character.Health, character.MaxHealth, character.Name, character.currentRoom.GetName())
-	return tview.NewTextView().SetText(format)
+func updateStats(engine *akevitt.Akevitt, session *ActiveSession) string {
+	character := session.character
+	return fmt.Sprintf("HEALTH: %d/%d, NAME: %s (%s)", character.Health,
+		character.MaxHealth,
+		character.Name,
+		character.currentRoom.GetName())
 }
 
 func visibleObjects(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive {
