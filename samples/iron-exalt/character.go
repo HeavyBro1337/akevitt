@@ -16,6 +16,8 @@ type Character struct {
 }
 
 func (character *Character) Create(engine *akevitt.Akevitt, session akevitt.ActiveSession, params interface{}) error {
+	fmt.Println("Creating character...")
+
 	characterParams, ok := params.(CharacterParams)
 	if !ok {
 		return errors.New("invalid params given")
