@@ -1,9 +1,12 @@
 # executables
 *.exe
-*/iron-exalt
+iron-exalt
 # database files
 *.db
 *.db.lock
 
+# some useful binaries
+!boltbrowser.win64.exe
+
 # Un-ignore sample directory
-!iron-exalt/*
+!iron-exalt/

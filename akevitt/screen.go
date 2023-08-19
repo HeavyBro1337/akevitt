@@ -3,7 +3,6 @@ Program written by Ivan Korchmit (c) 2023
 Licensed under European Union Public Licence 1.2.
 For more information, view LICENCE or README
 */
-
 package akevitt
 
 import (
@@ -52,25 +51,20 @@ func (t *tty) Start() error {
 	}()
 	return nil
 }
-
 func (t *tty) Stop() error {
 	return nil
 }
-
 func (t *tty) Drain() error {
 	return nil
 }
-
 func (t *tty) WindowSize() (width int, height int, err error) {
 	return t.size.Width, t.size.Height, nil
 }
-
 func (t *tty) NotifyResize(cb func()) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	t.resizecb = cb
 }
-
 func (t *tty) notifyResize() {
 	t.mu.Lock()
 	defer t.mu.Unlock()

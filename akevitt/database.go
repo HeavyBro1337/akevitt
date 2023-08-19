@@ -1,22 +1,84 @@
-/*
-Program written by Ivan Korchmit (c) 2023
-Licensed under European Union Public Licence 1.2.
-For more information, view LICENCE or README
-*/
-
 package akevitt
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/boltdb/bolt"
-	"github.com/gliderlabs/ssh"
 )
 
-func createAccount(db *bolt.DB, username, password string) (*Account, error) {
+func createDatabase(engine *Akevitt) error {
+	db, err := bolt.Open(engine.dbPath, 0600, nil)
+	engine.db = db
 
+	return err
+}
+
+func isSessionAlreadyActive(acc Account, sessions *Sessions, engine *Akevitt) bool {
+	// We want make sure we purge dead sessions before looking for active.
+	purgeDeadSessions(sessions, engine, engine.onDeadSession)
+	for _, v := range *sessions {
+		if v.GetAccount() == nil {
+			continue
+		}
+		if *v.GetAccount() == acc {
+			return true
+		}
+	}
+	return false
+}
+
+func CreateObject[T GameObject](engine *Akevitt, session ActiveSession, object T, params interface{}) (T, error) {
+	return object, object.Create(engine, session, params)
+}
+
+func login(username string, password string, db *bolt.DB) (*Account, error) {
+	var accref *Account = nil
+
+	err := db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(username))
+		if bucket == nil {
+			return errors.New("wrong name or password")
+		}
+		acc, err := deserialize[*Account](bucket.Bucket(intToByte(0)).Get(intToByte(0)))
+		if err != nil {
+			return err
+		}
+		if compareHash(password, acc.Password) {
+			accref = acc
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if accref == nil {
+		return nil, errors.New("wrong name or password")
+	}
+	return accref, err
+}
+
+func overwriteObject[T Object](db *bolt.DB, key uint64, bucket string, object T) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		bkt, err := tx.CreateBucketIfNotExists([]byte(bucket))
+		if err != nil {
+			return err
+		}
+		serialized, err := serialize(object)
+		if err != nil {
+			return err
+		}
+		dataBucket, err := bkt.CreateBucketIfNotExists(intToByte(key))
+
+		if err != nil {
+			return err
+		}
+
+		return dataBucket.Put(intToByte(0), serialized)
+	})
+}
+
+func createAccount(db *bolt.DB, username, password string) (*Account, error) {
 	if strings.TrimSpace(username) == "" || strings.TrimSpace(password) == "" {
 		return nil, errors.New("invalid data")
 	}
@@ -26,248 +88,43 @@ func createAccount(db *bolt.DB, username, password string) (*Account, error) {
 		return nil, err
 	}
 
-	account := Account{Username: username, Password: hashedPassword}
-	exists, err := doesAccountExist(strings.TrimSpace(account.Username), db)
-
-	if err != nil {
-		return nil, err
-	}
+	account := &Account{Username: strings.TrimSpace(username), Password: hashedPassword}
+	exists := isAccountExists(account.Username, db)
 
 	if exists {
-		return nil, errors.New("this account does exist")
+		return nil, errors.New("this account does already exist")
 	}
-	err = overwriteObject[Account](db, 0, account.Username, account)
-
-	return &account, err
+	err = overwriteObject[*Account](db, 0, account.Username, account)
+	return account, err
 }
 
-func overwriteObject[T Object](db *bolt.DB, key uint64, bucket string, object T) error {
+func isAccountExists(username string, db *bolt.DB) bool {
 	return db.Update(func(tx *bolt.Tx) error {
-		bkt, err := tx.CreateBucketIfNotExists([]byte(bucket))
-
-		if err != nil {
-			return err
+		bucket := tx.Bucket([]byte(username))
+		if bucket != nil {
+			return errors.New("account exists")
 		}
-
-		serialized, err := serialize(object)
-
-		if err != nil {
-			return err
-		}
-
-		bkt.Put(intToByte(key), serialized)
 		return nil
-	})
+	}) != nil
 }
 
-func createObject[T Object](db *bolt.DB, bucket string, object T) (uint64, error) {
-	var id uint64
-
-	// We obtain new ID and then call overwriteObject
-	err := db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(bucket))
-
-		if err != nil {
-			return err
-		}
-
-		id, err = bucket.NextSequence()
-
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-	if err != nil {
-		return 0, err
-	}
-	return id, overwriteObject(db, id, bucket, object)
-}
-
-func getNewKey(db *bolt.DB, bucket string) (uint64, error) {
-	var id uint64
-
-	// We obtain new ID and then call overwriteObject
-	err := db.Update(func(tx *bolt.Tx) error {
-		bkt, err := tx.CreateBucketIfNotExists([]byte(bucket))
-
-		if err != nil {
-			return err
-		}
-
-		id, err = bkt.NextSequence()
-
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-
-	if err != nil {
-
-		return 0, err
-	}
-
-	return id, nil
-}
-
-// Checks current account for being in an active sessions. True if the account is already logged in.
-func checkCurrentLogin(acc Account, sessions *map[ssh.Session]*ActiveSession) bool {
-	// We want make sure we purge dead sessions before looking for active.
-	purgeDeadSessions(sessions)
-	for _, v := range *sessions {
-		if v.Account == nil {
-			continue
-		}
-		if *v.Account == acc {
-			return true
-		}
-	}
-	return false
-}
-
-func findObjectByAccount[T GameObject](db *bolt.DB, account Account) (T, uint64, error) {
-	var id uint64
+func findObject[T GameObject](db *bolt.DB, account Account, key uint64) (T, error) {
 	var result T
 	err := db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(gameObjectBucket))
-		if err != nil {
-			return err
+		bucket := tx.Bucket([]byte(account.Username))
+		if bucket == nil {
+			return errors.New("account does not exist")
 		}
-		return bucket.ForEach(func(k, v []byte) error {
-			obj, err := deserialize[T](v)
-			if err != nil {
-				return err
-			}
+		dataBucket := bucket.Bucket(intToByte(key))
 
-			objAcc, ok := obj.GetMap()["account"].(Account)
-
-			if !ok {
-				return errors.New("could not cast to account")
-			}
-
-			if account != objAcc {
-				return nil
-			}
-
-			result = obj
-			id = byteToInt(k)
-			return nil
-		})
-	})
-
-	return result, id, err
-}
-
-func getAllObjects(db *bolt.DB, bucket string) (map[uint64]Object, error) {
-	result := make(map[uint64]Object, 0)
-
-	err := db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(bucket))
-		if err != nil {
-			return err
+		if dataBucket == nil {
+			return errors.New("object not found")
 		}
 
-		return bucket.ForEach(func(k, v []byte) error {
-			obj, err := deserialize[Object](v)
-			if err != nil {
-				return err
-			}
-			result[byteToInt(k)] = obj
-			return nil
-		})
+		r, err := deserialize[T](dataBucket.Get(intToByte(0)))
+
+		result = r
+		return err
 	})
 	return result, err
-}
-
-func findObjectByKey[T Object](db *bolt.DB, key uint64, bucket string) (T, error) {
-	var result *T
-	var empty T
-	err := db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(bucket))
-		if err != nil {
-			return err
-		}
-
-		return bucket.ForEach(func(k, v []byte) error {
-			obj, err := deserialize[T](v)
-			if err != nil {
-				return err
-			}
-			if byteToInt(k) == key {
-				result = &obj
-			}
-			return nil
-		})
-	})
-
-	fmt.Printf("database result: %v\n", result)
-
-	if result == nil {
-		err = errors.Join(err, errors.New("could not find anything in database"))
-		return empty, err
-	}
-
-	return *result, err
-}
-
-// Checks that user exists in the database by username.
-func doesAccountExist(username string, db *bolt.DB) (bool, error) {
-	result := false
-	return result, db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(accountBucket))
-		if err != nil {
-			return err
-		}
-		bucket.ForEach(func(k, v []byte) error {
-			acc, err := deserialize[*Account](v)
-			if err != nil {
-				return err
-			}
-			if acc.Username == username {
-				result = true
-				return nil
-			}
-			return nil
-		})
-		return nil
-	})
-}
-
-func login(username string, password string, db *bolt.DB) (*Account, error) {
-	var accref *Account = nil
-	hashedPassword, err := hashString(password)
-
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.Update(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte(username))
-		if bucket == nil {
-			return errors.New("wrong name or password")
-		}
-		acc, err := deserialize[Account](bucket.Get(intToByte(0)))
-
-		if err != nil {
-			return err
-		}
-
-		if acc.Password == hashedPassword {
-			accref = &acc
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if accref == nil {
-		return nil, errors.New("wrong name or password")
-	}
-	return accref, err
 }

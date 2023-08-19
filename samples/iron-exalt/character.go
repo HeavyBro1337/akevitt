@@ -6,79 +6,57 @@ import (
 	"fmt"
 )
 
-const currentCharacterKey string = "currentCharacter"
-
 type Character struct {
-	CharacterName  string
+	Name           string
 	Health         int
 	MaxHealth      int
-	account        akevitt.Account
+	account        *akevitt.Account
 	currentRoom    akevitt.Room
-	Map            map[string]akevitt.Object
 	CurrentRoomKey uint64
+}
+
+func (character *Character) Create(engine *akevitt.Akevitt, session akevitt.ActiveSession, params interface{}) error {
+	fmt.Println("Creating character...")
+
+	characterParams, ok := params.(CharacterParams)
+	if !ok {
+		return errors.New("invalid params given")
+	}
+	sess, ok := session.(*ActiveSession)
+
+	if !ok {
+		return errors.New("invalid session type")
+	}
+
+	character.Name = characterParams.name
+	character.Health = 10
+	character.MaxHealth = 10
+	character.currentRoom = engine.GetSpawnRoom()
+	character.account = sess.account
+	sess.character = character
+	room := engine.GetSpawnRoom()
+	room.ContainObjects(sess.character)
+	character.currentRoom = room
+	character.CurrentRoomKey = character.currentRoom.GetKey()
+
+	return character.Save(engine)
+}
+
+func (character *Character) Save(engine *akevitt.Akevitt) error {
+	return engine.SaveGameObject(character, CharacterKey, character.account)
+}
+
+func (character *Character) Description() string {
+	format := `
+	Health %d/%d
+	`
+	return fmt.Sprintf(format, character.Health, character.MaxHealth)
+}
+
+func (character *Character) GetName() string {
+	return character.Name
 }
 
 type CharacterParams struct {
 	name string
-}
-
-func (character *Character) Create(engine *akevitt.Akevitt, session *akevitt.ActiveSession, params interface{}) error {
-	characterParams, ok := params.(CharacterParams)
-
-	if !ok {
-		return errors.New("invalid params given")
-	}
-	character.CharacterName = characterParams.name
-	character.Health = 10
-	character.MaxHealth = 10
-	character.currentRoom = engine.GetSpawnRoom()
-	character.Map = make(map[string]akevitt.Object, 0)
-	character.account = *session.Account
-	character.Map["account"] = character.account
-	character.CurrentRoomKey = character.currentRoom.GetKey()
-	key, err := engine.GetNewKey(false)
-
-	session.RelatedGameObjects[currentCharacterKey] = akevitt.Pair[uint64, akevitt.GameObject]{First: key, Second: character}
-
-	if err != nil {
-		return err
-	}
-
-	return character.Save(key, engine)
-}
-
-func (character *Character) Save(key uint64, engine *akevitt.Akevitt) error {
-	return engine.SaveObject(character, key)
-}
-
-func (character *Character) GetMap() map[string]akevitt.Object {
-	return character.Map
-}
-
-func (character *Character) OnLoad(engine *akevitt.Akevitt) error {
-	println("Invoked on load")
-	room, err := akevitt.GetStaticObject[*Room](engine, character.CurrentRoomKey)
-	if err != nil {
-		return err
-	}
-
-	room.OnLoad(engine)
-
-	fmt.Printf("room: %v\n", room)
-
-	character.currentRoom = room
-
-	return nil
-}
-
-func (character *Character) Description() string {
-	return fmt.Sprintf("%s, HP: %d/%d", character.CharacterName, character.Health, character.MaxHealth)
-}
-
-func (character *Character) GetName() string {
-	return character.CharacterName
-}
-
-func (character *Character) OnRoomLookup() uint64 {
-	return character.CurrentRoomKey
 }

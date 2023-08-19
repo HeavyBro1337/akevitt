@@ -1,88 +1,92 @@
 package main
 
-// This is the sample game using Akevitt
-// Written by Ivan Korchmit (c) 2023
-
 import (
 	"akevitt/akevitt"
 	"encoding/gob"
+	"errors"
 	"fmt"
 	"log"
+
+	"github.com/uaraven/logview"
+)
+
+const (
+	CharacterKey uint64 = iota + 1
 )
 
 func main() {
 	gob.Register(&Exit{})
 	gob.Register(&Room{})
-
 	room := &Room{Name: "Spawn Room", DescriptionData: "Just a spawn room.", Key: 0}
 	rooms := []akevitt.Room{
 		room,
 		&Room{Name: "Mine", DescriptionData: "Mine of the corporation.", Key: 1},
 		&Room{Name: "Iron City", DescriptionData: "The lounge of the miners.", Key: 2},
 	}
-	emptyExit := Exit{}
-	BindRooms[*Exit](room, &emptyExit, rooms...)
-	BindRooms[*Exit](rooms[1], &emptyExit, rooms...)
-	BindRooms[*Exit](rooms[2], &emptyExit, rooms...)
+	akevitt.BindRooms[*Exit](room, rooms...)
+	akevitt.BindRooms[*Exit](rooms[1], rooms...)
+	akevitt.BindRooms[*Exit](rooms[2], rooms...)
 
-	engine := akevitt.Akevitt{}
-	engine.
-		UseDefaults().
-		UseGameName("Iron Exalt").
-		UseMouse(true).
-		UseRootScreen(rootScreen).
-		UseDatabasePath("data/iron-exalt.db").
-		UseCreateDatabaseIfNotExists().
-		RegisterCommand("ooc", ooc).
-		RegisterCommand("say", characterMessage).
-		RegisterCommand("help", help).
-		RegisterCommand("look", look).
-		RegisterCommand("enter", enterRoom).
-		SetSpawnRoom(room).
-		SetStaticObjects(func(static map[uint64]akevitt.Object) {
-			for _, v := range rooms {
-				static[v.GetKey()] = v
-			}
-		})
-
-	events := akevitt.GameEventHandler{}
-
-	events.
-		OOCMessage(func(engine *akevitt.Akevitt, session *akevitt.ActiveSession, sender *akevitt.ActiveSession, message string) {
-			err := AppendText(*session, fmt.Sprintf("%s (OOC): %s", sender.Account.Username, message))
-			if err != nil {
-				fmt.Printf("err: %v\n", err)
-			}
-		}).
-		Message(func(engine *akevitt.Akevitt, session, sender *akevitt.ActiveSession, message string) {
-			senderCharacter, ok := sender.RelatedGameObjects[currentCharacterKey].Second.(*Character)
-			if !ok {
-				fmt.Println("Error: the current character turned out not to be a character struct!")
-				return
+	engine := akevitt.NewEngine().
+		UseDBPath("data/iron-exalt.db").
+		UseMessage(func(engine *akevitt.Akevitt, session akevitt.ActiveSession, channel, message, username string) error {
+			if session == nil {
+				return errors.New("session is nil. Probably the dead one")
 			}
 
-			sessionChacter, ok := session.RelatedGameObjects[currentCharacterKey].Second.(*Character)
-			if !ok {
-				fmt.Println("Error: the current character turned out not to be a character struct!")
-				return
+			sess, ok := session.(*ActiveSession)
+
+			st := fmt.Sprintf("%s (%s): %s", username, channel, message)
+
+			if ok && sess.subscribedChannels != nil {
+				if akevitt.Find[string](sess.subscribedChannels, channel) {
+					AppendText(sess, st, sess.chat)
+				} else if sess.character.currentRoom.GetName() == channel {
+					AppendText(sess, st, sess.chat)
+				}
+			} else if !ok {
+				fmt.Printf("could not cast to session")
+			} else {
+				fmt.Print("unknown error")
 			}
 
-			if sessionChacter.currentRoom.GetKey() != senderCharacter.currentRoom.GetKey() {
-				return
-			}
-
-			err := AppendText(*session, fmt.Sprintf("%s (Room): %s", senderCharacter.CharacterName, message))
-			if err != nil {
-				fmt.Printf("err: %v\n", err)
-			}
-
-		}).
-		OnDatabaseCreate(func(engine *akevitt.Akevitt) error {
 			return nil
 		}).
-		Finish()
+		UseOnSessionEnd(func(deadSession akevitt.ActiveSession, liveSessions []akevitt.ActiveSession, engine *akevitt.Akevitt) {
+			sess, ok := deadSession.(*ActiveSession)
+			if !ok {
+				fmt.Println("could not cast to session")
+				return
+			}
+			if sess.account == nil {
+				return
+			}
 
-	engine.ConfigureCallbacks(&events)
+			sess.character.currentRoom.RemoveObject(sess.character)
+			for _, v := range liveSessions {
+				lsess, ok := v.(*ActiveSession)
 
-	log.Fatal(engine.Run())
+				if !ok || lsess.chat == nil {
+					continue
+				}
+
+				AppendText(lsess, fmt.Sprintf("%s left the game", sess.account.Username), lsess.chat)
+			}
+		}).
+		RegisterCommand("say", say).
+		RegisterCommand("ooc", ooc).
+		RegisterCommand("enter", enter).
+		UseSpawnRoom(room).
+		UseRootUI(rootScreen)
+
+	log.Fatal(akevitt.Run[*ActiveSession](engine))
+}
+
+func AppendText(currentSession *ActiveSession, message string, chatlog *logview.LogView) {
+	ev := logview.NewLogEvent("message", message)
+	ev.Level = logview.LogLevelInfo
+	chatlog.AppendEvent(ev)
+	chatlog.SetFocusFunc(func() {
+		chatlog.Blur()
+	})
 }
