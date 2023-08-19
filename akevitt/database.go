@@ -122,6 +122,7 @@ func findObject[T GameObject](db *bolt.DB, account Account, key uint64) (T, erro
 		}
 
 		r, err := deserialize[T](dataBucket.Get(intToByte(0)))
+
 		result = r
 		return err
 	})
