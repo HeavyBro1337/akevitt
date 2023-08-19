@@ -2,6 +2,7 @@ package main
 
 import (
 	"akevitt/akevitt"
+	"fmt"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -29,13 +30,16 @@ func gameScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive
 	}).SetChangedFunc(func(text string) {
 		playerMessage = text
 	})
+
+	status := stats(engine, session)
+
 	gameScreen := tview.NewGrid().
 		SetRows(3).
 		SetColumns(30).
 		SetBorders(true).
 		AddItem(inputField, 0, 0, 1, 1, 0, 0, true).
 		AddItem(visibleObjects(engine, session), 1, 0, 1, 1, 0, 0, false).
-		AddItem(stats(engine, session), 0, 1, 1, 2, 0, 0, false).
+		AddItem(status, 0, 1, 1, 2, 0, 0, false).
 		AddItem(chatlog, 1, 1, 1, 2, 0, 0, false)
 
 	inputField.SetFinishedFunc(func(key tcell.Key) {
@@ -59,6 +63,7 @@ func gameScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive
 			playerMessage = ""
 			inputField.SetText("")
 			session.app.SetFocus(inputField)
+			fmt.Fprint(status.Clear(), updateStats(engine, session))
 		}
 	})
 	inputField.SetAutocompletedFunc(func(text string, index, source int) bool {
