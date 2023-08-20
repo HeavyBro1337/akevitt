@@ -6,14 +6,14 @@ import (
 	"strconv"
 )
 
-func enter(engine *akevitt.Akevitt, session akevitt.ActiveSession, command string) error {
+func enter(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
 	sess, ok := session.(*ActiveSession)
 	if !ok {
 		return errors.New("invalid session type")
 	}
 	character := sess.character
 	prevRoom := character.currentRoom.GetName()
-	roomKey, err := strconv.ParseUint(command, 10, 64)
+	roomKey, err := strconv.ParseUint(arguments, 10, 64)
 	if err != nil {
 		return err
 	}

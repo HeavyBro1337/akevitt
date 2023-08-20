@@ -2,7 +2,6 @@ package main
 
 import (
 	"akevitt/akevitt"
-	"fmt"
 
 	"github.com/rivo/tview"
 )
@@ -31,7 +30,6 @@ func loginScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitiv
 				return
 			}
 			session.character = character
-			fmt.Printf("session.character.CurrentRoomKey: %v\n", session.character.CurrentRoomKey)
 			room, err := engine.GetRoom(session.character.CurrentRoomKey)
 
 			if err != nil {

@@ -16,6 +16,14 @@ const (
 )
 
 func main() {
+	autocompletion["interact"] = func(entry string, engine *akevitt.Akevitt, session *ActiveSession) []string {
+		npcs := akevitt.LookupOfType[*NPC](session.character.currentRoom)
+
+		return akevitt.MapSlice[*NPC, string](npcs, func(v *NPC) string {
+			return "interact " + v.Name
+		})
+	}
+
 	gob.Register(&Exit{})
 	gob.Register(&Room{})
 	room := generateRooms()
@@ -69,6 +77,7 @@ func main() {
 		RegisterCommand("say", say).
 		RegisterCommand("ooc", ooc).
 		RegisterCommand("enter", enter).
+		RegisterCommand("interact", interact).
 		UseSpawnRoom(room).
 		UseRootUI(rootScreen)
 
@@ -84,7 +93,9 @@ func generateRooms() *Room {
 		Key:              0,
 		containedObjects: []akevitt.GameObject{},
 	}
-	room.ContainObjects(createNpc("Maxwell", "Jensen", 0))
+	room.ContainObjects(createNpc("Maxwell Jensen", "The tutor", 0))
+	room.ContainObjects(createNpc("Ivan Korchmit", "Depositor", 1))
+	room.ContainObjects(createNpc("John Doe", "Merchant", 2))
 
 	rooms := []akevitt.Room{
 		room,

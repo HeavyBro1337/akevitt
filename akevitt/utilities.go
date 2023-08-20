@@ -87,3 +87,13 @@ func RemoveItem[T comparable](l []T, item T) []T {
 	}
 	return l
 }
+
+func MapSlice[T comparable, TResult any](l []T, callback func(v T) TResult) []TResult {
+	result := make([]TResult, 0)
+
+	for _, v := range l {
+		result = append(result, callback(v))
+	}
+
+	return result
+}

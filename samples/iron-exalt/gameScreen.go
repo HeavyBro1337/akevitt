@@ -26,6 +26,16 @@ func gameScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive
 				entries = append(entries, word)
 			}
 		}
+
+		f, ok := autocompletion[strings.Split(currentText, " ")[0]]
+
+		if ok {
+			for _, word := range f(currentText, engine, session) {
+				if strings.HasPrefix(strings.ToLower(word), strings.ToLower(currentText)) {
+					entries = append(entries, word)
+				}
+			}
+		}
 		return entries
 	}).SetChangedFunc(func(text string) {
 		playerMessage = text

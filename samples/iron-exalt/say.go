@@ -5,14 +5,14 @@ import (
 	"errors"
 )
 
-func say(engine *akevitt.Akevitt, session akevitt.ActiveSession, command string) error {
+func say(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
 	sess, ok := session.(*ActiveSession)
 
 	if !ok {
 		return errors.New("invalid session type")
 	}
 
-	return engine.Message(sess.character.currentRoom.GetName(), command, sess.character.Name, session)
+	return engine.Message(sess.character.currentRoom.GetName(), arguments, sess.character.Name, session)
 }
 
 func ooc(engine *akevitt.Akevitt, session akevitt.ActiveSession, command string) error {
