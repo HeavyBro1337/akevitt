@@ -93,7 +93,17 @@ func generateRooms() *Room {
 		Key:              0,
 		containedObjects: []akevitt.GameObject{},
 	}
-	room.ContainObjects(createNpc("Maxwell Jensen", "The tutor", 0))
+	room.ContainObjects(createNpc("Maxwell Jensen", "The tutor", 0).UseInteract(func(engine *akevitt.Akevitt, session *ActiveSession) error {
+		lore := `
+		Welcome, fellow miner! In our corporation you will mine minerals and ores for us!
+		Go to the mine and mine with your pickaxe. 
+		Come back and ask Ivan to deposite ores and receive the salary.
+		Good luck!
+		`
+		session.input.Blur()
+		AppendText(session, lore, session.chat)
+		return nil
+	}))
 	room.ContainObjects(createNpc("Ivan Korchmit", "Depositor", 1))
 	room.ContainObjects(createNpc("John Doe", "Merchant", 2))
 

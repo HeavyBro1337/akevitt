@@ -13,6 +13,7 @@ type ActiveSession struct {
 	previousUI         *tview.Primitive
 	subscribedChannels []string
 	chat               *logview.LogView
+	input              *tview.InputField
 	lookList           *tview.List
 	character          *Character
 }

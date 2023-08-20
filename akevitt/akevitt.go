@@ -260,7 +260,6 @@ func (engine *Akevitt) Message(channel, message, username string, session Active
 func Run[TSession ActiveSession](engine *Akevitt) error {
 	fmt.Println("Running Akevitt")
 	err := createDatabase(engine)
-
 	if err != nil {
 		return err
 	}

@@ -14,7 +14,7 @@ func characterCreationWizard(engine *akevitt.Akevitt, session *ActiveSession) tv
 	})
 	characterCreator.AddButton("Done", func() {
 		if strings.TrimSpace(name) == "" {
-			ErrorBox("character name must not be empty!", session.app, session.GetPreviousUI())
+			ErrorBox("character name must not be empty!", session, session.GetPreviousUI())
 			return
 		}
 		characterParams := CharacterParams{}
@@ -22,7 +22,7 @@ func characterCreationWizard(engine *akevitt.Akevitt, session *ActiveSession) tv
 		emptyChar := &Character{}
 		_, err := akevitt.CreateObject(engine, session, emptyChar, characterParams)
 		if err != nil {
-			ErrorBox(err.Error(), session.app, session.GetPreviousUI())
+			ErrorBox(err.Error(), session, session.GetPreviousUI())
 			return
 		}
 		session.SetRoot(gameScreen(engine, session))

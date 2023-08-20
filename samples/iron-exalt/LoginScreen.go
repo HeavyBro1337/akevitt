@@ -20,20 +20,20 @@ func loginScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitiv
 		AddButton("Login", func() {
 			err := engine.Login(username, password, session)
 			if err != nil {
-				ErrorBox(err.Error(), session.app, session.previousUI)
+				ErrorBox(err.Error(), session, session.previousUI)
 				return
 			}
 			character, err := akevitt.FindObject[*Character](engine, session, CharacterKey)
 
 			if err != nil {
-				ErrorBox(err.Error(), session.app, session.previousUI)
+				ErrorBox(err.Error(), session, session.previousUI)
 				return
 			}
 			session.character = character
 			room, err := engine.GetRoom(session.character.CurrentRoomKey)
 
 			if err != nil {
-				ErrorBox(err.Error(), session.app, session.previousUI)
+				ErrorBox(err.Error(), session, session.previousUI)
 				return
 			}
 			session.character.account = session.account

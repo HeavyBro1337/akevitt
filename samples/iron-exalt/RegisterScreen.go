@@ -23,12 +23,12 @@ func registerScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primi
 	registerScreen.
 		AddButton("Create account", func() {
 			if password != repeatPassword {
-				ErrorBox("Passwords don't match!", session.GetApplication(), session.GetPreviousUI())
+				ErrorBox("Passwords don't match!", session, session.previousUI)
 				return
 			}
 			err := engine.Register(username, password, session)
 			if err != nil {
-				ErrorBox(err.Error(), session.app, session.GetPreviousUI())
+				ErrorBox(err.Error(), session, session.GetPreviousUI())
 				return
 			}
 			session.SetRoot(characterCreationWizard(engine, session))

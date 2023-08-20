@@ -40,7 +40,7 @@ func gameScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive
 	}).SetChangedFunc(func(text string) {
 		playerMessage = text
 	})
-
+	session.input = inputField
 	status := stats(engine, session)
 	visibles := visibleObjects(engine, session)
 	session.app.SetAfterDrawFunc(func(screen tcell.Screen) {
@@ -60,18 +60,19 @@ func gameScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive
 		if key == tcell.KeyEnter {
 			playerMessage = strings.TrimSpace(playerMessage)
 			if playerMessage == "" {
+				inputField.SetText("")
 				return
 			}
 			AppendText(session, playerMessage, session.chat)
 			err := engine.ProcessCommand(playerMessage, session)
 			if err != nil {
-				ErrorBox(err.Error(), session.app, session.GetPreviousUI())
-				inputField.Blur()
+				ErrorBox(err.Error(), session, session.GetPreviousUI())
 				inputField.SetText("")
 				return
 			}
 			playerMessage = ""
 			inputField.SetText("")
+
 			session.app.SetFocus(inputField)
 			lookupUpdate(engine, session, &visibles)
 			fmt.Fprint(status.Clear(), updateStats(engine, session))

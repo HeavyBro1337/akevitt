@@ -5,12 +5,16 @@ import (
 	"github.com/rivo/tview"
 )
 
-func ErrorBox(message string, app *tview.Application, back *tview.Primitive) {
+func ErrorBox(message string, session *ActiveSession, back *tview.Primitive) {
 	result := tview.NewModal().SetText("Error!").SetText(message).SetTextColor(tcell.ColorRed).
 		SetBackgroundColor(tcell.ColorBlack).
 		AddButtons([]string{"Close"}).SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-		app.SetRoot(*back, true)
+		session.app.SetRoot(*back, true)
+		if session.input != nil {
+			session.app.SetFocus(session.input)
+		}
 	})
+
 	result.SetBorder(true).SetBorderColor(tcell.ColorDarkRed)
-	app.SetRoot(result, true)
+	session.app.SetRoot(result, true)
 }
