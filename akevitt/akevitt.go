@@ -29,6 +29,7 @@ type Akevitt struct {
 	db            *bolt.DB
 	onMessage     MessageFunc
 	onDeadSession DeadSessionFunc
+	onDialogue    DialogueFunc
 	defaultRoom   Room
 	rooms         map[uint64]Room
 }
@@ -115,6 +116,12 @@ func (engine *Akevitt) ProcessCommand(command string, session ActiveSession) err
 
 func (engine *Akevitt) UseMessage(f MessageFunc) *Akevitt {
 	engine.onMessage = f
+
+	return engine
+}
+
+func (engine *Akevitt) UseDialogue(f DialogueFunc) *Akevitt {
+	engine.onDialogue = f
 
 	return engine
 }
@@ -224,7 +231,11 @@ func (engine *Akevitt) Interact(name string, room Room, session ActiveSession) e
 	return fmt.Errorf("object %s not found", name)
 }
 func (engine *Akevitt) SaveObject(gameObject GameObject, key uint64) error {
-	return overwriteObject(engine.db, key, "Global", gameObject)
+	return overwriteObject(engine.db, key, gameObject.GetName(), gameObject)
+}
+
+func (engine *Akevitt) GenerateKey(gameobject GameObject) (uint64, error) {
+	return generateKey(engine.db, gameobject.GetName())
 }
 
 func SaveObject[T Object](engine *Akevitt, obj T, category string, key uint64) error {
@@ -255,6 +266,14 @@ func (engine *Akevitt) Message(channel, message, username string, session Active
 	}
 
 	return nil
+}
+
+func (engine *Akevitt) Dialogue(dialogue *Dialogue, session ActiveSession) error {
+	if engine.onDialogue == nil {
+		return errors.New("dialogue callback is not installed")
+	}
+
+	return engine.onDialogue(engine, session, dialogue)
 }
 
 func Run[TSession ActiveSession](engine *Akevitt) error {
