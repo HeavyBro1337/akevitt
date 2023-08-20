@@ -31,11 +31,6 @@ func Find[T comparable](collection []T, value T) bool {
 	return false
 }
 
-// Converts byte array to `Uint64`
-// func byteToInt(source []byte) uint64 {
-// 	return binary.BigEndian.Uint64(source)
-// }
-
 // Converts `Uint64` to byte array
 func intToByte(value uint64) []byte {
 	binaryId := make([]byte, 8)
@@ -88,7 +83,7 @@ func RemoveItem[T comparable](l []T, item T) []T {
 	return l
 }
 
-func MapSlice[T comparable, TResult any](l []T, callback func(v T) TResult) []TResult {
+func MapSlice[T any, TResult any](l []T, callback func(v T) TResult) []TResult {
 	result := make([]TResult, 0)
 
 	for _, v := range l {
