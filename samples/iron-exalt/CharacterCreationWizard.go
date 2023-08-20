@@ -20,6 +20,7 @@ func characterCreationWizard(engine *akevitt.Akevitt, session *ActiveSession) tv
 		characterParams := CharacterParams{}
 		characterParams.name = name
 		emptyChar := &Character{}
+
 		_, err := akevitt.CreateObject(engine, session, emptyChar, characterParams)
 		if err != nil {
 			ErrorBox(err.Error(), session, session.GetPreviousUI())

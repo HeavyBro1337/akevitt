@@ -25,11 +25,15 @@ func main() {
 		})
 	}
 
+	gob.Register(&Item{})
 	gob.Register(&Exit{})
 	gob.Register(&Room{})
-	room := generateRooms()
 
-	engine := akevitt.NewEngine().
+	engine := akevitt.NewEngine()
+
+	room := generateRooms(engine)
+
+	engine = engine.
 		UseDBPath("data/iron-exalt.db").
 		UseMessage(func(engine *akevitt.Akevitt, session akevitt.ActiveSession, channel, message, username string) error {
 			if session == nil {
@@ -89,13 +93,14 @@ func main() {
 		RegisterCommand("ooc", ooc).
 		RegisterCommand("enter", enter).
 		RegisterCommand("interact", interact).
+		RegisterCommand("backpack", backpack).
 		UseSpawnRoom(room).
 		UseRootUI(rootScreen)
 
 	log.Fatal(akevitt.Run[*ActiveSession](engine))
 }
 
-func generateRooms() *Room {
+func generateRooms(engine *akevitt.Akevitt) *Room {
 
 	room := &Room{
 		Name:             "Spawn Room",
@@ -121,10 +126,22 @@ func generateRooms() *Room {
 	}))
 	room.ContainObjects(createNpc("Ivan Korchmit", "Depositor", 1))
 	room.ContainObjects(createNpc("John Doe", "Merchant", 2))
+	mine := &Room{Name: "Mine", DescriptionData: "Mine of the corporation.", Key: 1}
+	ironOre := NewItemParams().
+		withName("Iron Ore").
+		withDescription("Very hard rock blah blah blah")
 
+	ironOre.withCallback(func(engine *akevitt.Akevitt, session *ActiveSession) error {
+		session.character.Inventory = append(session.character.Inventory, createItem(ironOre))
+		return nil
+	})
+
+	mine.ContainObjects(createItem(ironOre))
+
+	mine.ContainObjects()
 	rooms := []akevitt.Room{
 		room,
-		&Room{Name: "Mine", DescriptionData: "Mine of the corporation.", Key: 1},
+		mine,
 		&Room{Name: "Iron City", DescriptionData: "The lounge of the miners.", Key: 2},
 	}
 	akevitt.BindRooms[*Exit](room, rooms...)

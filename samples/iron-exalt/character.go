@@ -41,6 +41,22 @@ func (character *Character) Create(engine *akevitt.Akevitt, session akevitt.Acti
 	character.currentRoom = room
 	character.CurrentRoomKey = character.currentRoom.GetKey()
 
+	pick := &Item{}
+	err := pick.Create(engine, session, NewItemParams().
+		withName("Rusty Pickaxe").
+		withDescription("Rookie's pick, isn't capable of much.").withCallback(
+		func(engine *akevitt.Akevitt, session *ActiveSession) error {
+			AppendText(session, "Hello, world!", session.chat)
+
+			return nil
+		}).withQuantity(1))
+
+	if err != nil {
+		return err
+	}
+
+	character.Inventory = append(character.Inventory, pick)
+
 	return character.Save(engine)
 }
 
