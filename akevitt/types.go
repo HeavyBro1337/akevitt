@@ -15,4 +15,4 @@ type MessageFunc = func(engine *Akevitt, session ActiveSession, channel, message
 
 type DeadSessionFunc = func(deadSession ActiveSession, liveSessions []ActiveSession, engine *Akevitt)
 
-type DialogueFunc = func(engine *Akevitt, session ActiveSession)
+type DialogueFunc = func(engine *Akevitt, session ActiveSession, dialogue *Dialogue) error

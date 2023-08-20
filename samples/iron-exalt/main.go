@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/rivo/tview"
 	"github.com/uaraven/logview"
 )
 
@@ -74,6 +75,16 @@ func main() {
 				AppendText(lsess, fmt.Sprintf("%s left the game", sess.account.Username), lsess.chat)
 			}
 		}).
+		UseDialogue(func(engine *akevitt.Akevitt, session akevitt.ActiveSession, dialogue *akevitt.Dialogue) error {
+			sess, ok := session.(*ActiveSession)
+
+			if !ok {
+				return errors.New("could not cast to session")
+			}
+
+			err := DialogueBox(dialogue, engine, sess)
+			return err
+		}).
 		RegisterCommand("say", say).
 		RegisterCommand("ooc", ooc).
 		RegisterCommand("enter", enter).
@@ -94,15 +105,19 @@ func generateRooms() *Room {
 		containedObjects: []akevitt.GameObject{},
 	}
 	room.ContainObjects(createNpc("Maxwell Jensen", "The tutor", 0).UseInteract(func(engine *akevitt.Akevitt, session *ActiveSession) error {
-		lore := `
+		lore := tview.NewTextView().SetText(`
 		Welcome, fellow miner! In our corporation you will mine minerals and ores for us!
 		Go to the mine and mine with your pickaxe. 
 		Come back and ask Ivan to deposite ores and receive the salary.
 		Good luck!
-		`
-		session.input.Blur()
-		AppendText(session, lore, session.chat)
-		return nil
+		`)
+		cya := tview.NewTextView().SetText(`See you later!`)
+		d := akevitt.NewDialogue("Welcome")
+		d.SetContent(lore)
+		d.
+			AddOption("Ok", cya).
+			End()
+		return engine.Dialogue(d, session)
 	}))
 	room.ContainObjects(createNpc("Ivan Korchmit", "Depositor", 1))
 	room.ContainObjects(createNpc("John Doe", "Merchant", 2))
