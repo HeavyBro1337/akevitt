@@ -29,7 +29,7 @@ func (sess *ActiveSession) AppendLook(gameObject akevitt.GameObject) {
 	if sess.lookList == nil {
 		return
 	}
-	sess.lookList.AddItem(gameObject.GetName(), gameObject.Description(), 0, nil)
+	sess.lookList.AddItem(gameObject.GetName(), gameObject.GetDescription(), 0, nil)
 }
 
 func (sess *ActiveSession) ClearLook() {

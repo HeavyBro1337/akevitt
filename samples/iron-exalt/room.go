@@ -20,7 +20,7 @@ func (room *Room) GetObjects() []akevitt.GameObject {
 	return room.containedObjects
 }
 
-func (room *Room) Description() string {
+func (room *Room) GetDescription() string {
 	return room.DescriptionData
 }
 

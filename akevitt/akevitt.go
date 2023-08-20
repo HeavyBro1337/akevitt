@@ -194,6 +194,10 @@ func (engine *Akevitt) SaveGameObject(gameObject GameObject, key uint64, account
 	return overwriteObject(engine.db, key, account.Username, gameObject)
 }
 
+func (engine *Akevitt) SaveObject(gameObject GameObject, key uint64) error {
+	return overwriteObject(engine.db, key, "Global", gameObject)
+}
+
 func SaveObject[T Object](engine *Akevitt, obj T, category string, key uint64) error {
 	return overwriteObject[T](engine.db, key, category, obj)
 }

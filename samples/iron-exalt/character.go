@@ -46,7 +46,7 @@ func (character *Character) Save(engine *akevitt.Akevitt) error {
 	return engine.SaveGameObject(character, CharacterKey, character.account)
 }
 
-func (character *Character) Description() string {
+func (character *Character) GetDescription() string {
 	format := `
 	Health %d/%d
 	`

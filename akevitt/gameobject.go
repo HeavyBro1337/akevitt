@@ -6,11 +6,16 @@ type Object interface {
 
 type NamedObject interface {
 	GetName() string
-	Description() string
+	GetDescription() string
 }
 
 type GameObject interface {
 	Object
 	NamedObject
 	Create(engine *Akevitt, session ActiveSession, params interface{}) error
+}
+
+type Interactable interface {
+	GameObject
+	Interact(engine *Akevitt, session ActiveSession) error
 }

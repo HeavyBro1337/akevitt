@@ -35,7 +35,7 @@ func lookupUpdate(engine *akevitt.Akevitt, session *ActiveSession, l **tview.Lis
 			continue
 		}
 
-		(*l).AddItem(v.GetName(), v.Description(), 0, nil)
+		(*l).AddItem(v.GetName(), v.GetDescription(), 0, nil)
 	}
 	(*l).AddItem("AVAILABLE ROOMS", "", 0, nil)
 	exits := session.character.currentRoom.GetExits()

@@ -12,20 +12,13 @@ import (
 
 const (
 	CharacterKey uint64 = iota + 1
+	NpcKey
 )
 
 func main() {
 	gob.Register(&Exit{})
 	gob.Register(&Room{})
-	room := &Room{Name: "Spawn Room", DescriptionData: "Just a spawn room.", Key: 0}
-	rooms := []akevitt.Room{
-		room,
-		&Room{Name: "Mine", DescriptionData: "Mine of the corporation.", Key: 1},
-		&Room{Name: "Iron City", DescriptionData: "The lounge of the miners.", Key: 2},
-	}
-	akevitt.BindRooms[*Exit](room, rooms...)
-	akevitt.BindRooms[*Exit](rooms[1], rooms...)
-	akevitt.BindRooms[*Exit](rooms[2], rooms...)
+	room := generateRooms()
 
 	engine := akevitt.NewEngine().
 		UseDBPath("data/iron-exalt.db").
@@ -80,6 +73,28 @@ func main() {
 		UseRootUI(rootScreen)
 
 	log.Fatal(akevitt.Run[*ActiveSession](engine))
+}
+
+func generateRooms() *Room {
+
+	room := &Room{
+		Name:             "Spawn Room",
+		DescriptionData:  "Just a spawn room.",
+		exits:            []akevitt.Exit{},
+		Key:              0,
+		containedObjects: []akevitt.GameObject{},
+	}
+	room.ContainObjects(createNpc("Maxwell", "Jensen", 0))
+
+	rooms := []akevitt.Room{
+		room,
+		&Room{Name: "Mine", DescriptionData: "Mine of the corporation.", Key: 1},
+		&Room{Name: "Iron City", DescriptionData: "The lounge of the miners.", Key: 2},
+	}
+	akevitt.BindRooms[*Exit](room, rooms...)
+	akevitt.BindRooms[*Exit](rooms[1], rooms...)
+	akevitt.BindRooms[*Exit](rooms[2], rooms...)
+	return room
 }
 
 func AppendText(currentSession *ActiveSession, message string, chatlog *logview.LogView) {
