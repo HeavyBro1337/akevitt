@@ -16,6 +16,7 @@ func gameScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive
 	chatlog := logview.NewLogView()
 	chatlog.SetLevelHighlighting(true)
 	session.subscribedChannels = append(session.subscribedChannels, "ooc")
+	session.proceed = make(chan struct{})
 	session.chat = chatlog
 	inputField := tview.NewInputField().SetAutocompleteFunc(func(currentText string) (entries []string) {
 		if len(currentText) == 0 {
@@ -63,7 +64,7 @@ func gameScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive
 				inputField.SetText("")
 				return
 			}
-			AppendText(session, playerMessage, session.chat)
+			AppendText(session, "\t>"+playerMessage, session.chat)
 			err := engine.ProcessCommand(playerMessage, session)
 			if err != nil {
 				ErrorBox(err.Error(), session, session.GetPreviousUI())
@@ -72,10 +73,18 @@ func gameScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive
 			}
 			playerMessage = ""
 			inputField.SetText("")
+			go func() {
+				for {
+					_, ok := <-session.proceed
+					if !ok {
+						break
+					}
+					session.app.SetFocus(inputField)
+					lookupUpdate(engine, session, &visibles)
+					fmt.Fprint(status.Clear(), updateStats(engine, session))
 
-			session.app.SetFocus(inputField)
-			lookupUpdate(engine, session, &visibles)
-			fmt.Fprint(status.Clear(), updateStats(engine, session))
+				}
+			}()
 		}
 	})
 	inputField.SetAutocompletedFunc(func(text string, index, source int) bool {

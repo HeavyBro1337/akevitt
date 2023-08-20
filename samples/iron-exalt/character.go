@@ -12,6 +12,7 @@ type Character struct {
 	MaxHealth      int
 	account        *akevitt.Account
 	currentRoom    akevitt.Room
+	Inventory      []akevitt.Interactable
 	CurrentRoomKey uint64
 }
 
@@ -32,6 +33,7 @@ func (character *Character) Create(engine *akevitt.Akevitt, session akevitt.Acti
 	character.Health = 10
 	character.MaxHealth = 10
 	character.currentRoom = engine.GetSpawnRoom()
+	character.Inventory = make([]akevitt.Interactable, 0)
 	character.account = sess.account
 	sess.character = character
 	room := engine.GetSpawnRoom()
