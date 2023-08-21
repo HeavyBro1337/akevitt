@@ -4,8 +4,8 @@ services:
   iron-exalt:
     image: iron-exalt
     volumes:
-      - ./samples/iron-exalt/data/:/app/samples/iron-exalt/data
-      - ./samples/iron-exalt/:/app/samples/iron-exalt
+      - ./examples/iron-exalt/data/:/app/examples/iron-exalt/data
+      - ./examples/iron-exalt/:/app/examples/iron-exalt
       - ./akevitt/:/app/akevitt
     build:
       context: .
