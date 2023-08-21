@@ -1,6 +1,6 @@
-package ironexalt
+package main
 
-import "akevitt"
+import "akevitt/akevitt"
 
 type autocomplete = func(entry string, engine *akevitt.Akevitt, session *ActiveSession) []string
 

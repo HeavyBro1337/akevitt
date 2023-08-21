@@ -1,7 +1,7 @@
-package ironexalt
+package main
 
 import (
-	"akevitt"
+	"akevitt/akevitt"
 
 	"github.com/rivo/tview"
 )
