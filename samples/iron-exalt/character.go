@@ -1,7 +1,7 @@
-package main
+package ironexalt
 
 import (
-	"akevitt/akevitt"
+	"akevitt"
 	"errors"
 	"fmt"
 )
@@ -9,6 +9,7 @@ import (
 type Character struct {
 	Name           string
 	Health         int
+	Money          int
 	MaxHealth      int
 	account        *akevitt.Account
 	currentRoom    akevitt.Room
@@ -32,6 +33,7 @@ func (character *Character) Create(engine *akevitt.Akevitt, session akevitt.Acti
 	character.Name = characterParams.name
 	character.Health = 10
 	character.MaxHealth = 10
+	character.Money = 100
 	character.currentRoom = engine.GetSpawnRoom()
 	character.Inventory = make([]akevitt.Interactable, 0)
 	character.account = sess.account

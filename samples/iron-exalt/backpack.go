@@ -1,7 +1,7 @@
-package main
+package ironexalt
 
 import (
-	"akevitt/akevitt"
+	"akevitt"
 	"errors"
 	"fmt"
 	"strings"

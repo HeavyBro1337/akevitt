@@ -1,7 +1,7 @@
-package main
+package ironexalt
 
 import (
-	"akevitt/akevitt"
+	"akevitt"
 	"fmt"
 	"strconv"
 
@@ -15,10 +15,11 @@ func stats(engine *akevitt.Akevitt, session *ActiveSession) *tview.TextView {
 
 func updateStats(engine *akevitt.Akevitt, session *ActiveSession) string {
 	character := session.character
-	return fmt.Sprintf("HEALTH: %d/%d, NAME: %s (%s)", character.Health,
+	return fmt.Sprintf("HEALTH: %d/%d, NAME: %s (%s) $%d", character.Health,
 		character.MaxHealth,
 		character.Name,
-		character.currentRoom.GetName())
+		character.currentRoom.GetName(),
+		character.Money)
 }
 
 func visibleObjects(engine *akevitt.Akevitt, session *ActiveSession) *tview.List {

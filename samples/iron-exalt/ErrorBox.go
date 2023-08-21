@@ -1,4 +1,4 @@
-package main
+package ironexalt
 
 import (
 	"github.com/gdamore/tcell/v2"

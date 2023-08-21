@@ -1,6 +1,5 @@
 module akevitt
 
-go 1.20
 
 require (
 	github.com/boltdb/bolt v1.3.1
@@ -8,7 +7,6 @@ require (
 )
 
 require (
-	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/uaraven/logview v0.1.0
 	gitlab.com/tslocum/cbind v0.1.4 // indirect
 	golang.org/x/term v0.10.0 // indirect
@@ -29,3 +27,6 @@ require (
 	golang.org/x/crypto v0.11.0
 	golang.org/x/sys v0.10.0 // indirect
 )
+
+
+go 1.20

@@ -1,7 +1,7 @@
-package main
+package ironexalt
 
 import (
-	"akevitt/akevitt"
+	"akevitt"
 	"encoding/gob"
 	"errors"
 	"fmt"
@@ -22,6 +22,22 @@ func main() {
 
 		return akevitt.MapSlice[*NPC, string](npcs, func(v *NPC) string {
 			return "interact " + v.Name
+		})
+	}
+
+	autocompletion["mine"] = func(entry string, engine *akevitt.Akevitt, session *ActiveSession) []string {
+		ores := akevitt.LookupOfType[*Ore](session.character.currentRoom)
+
+		return akevitt.MapSlice(ores, func(v *Ore) string {
+			return "mine " + v.Name
+		})
+	}
+
+	autocompletion["look"] = func(entry string, engine *akevitt.Akevitt, session *ActiveSession) []string {
+		gameobjects := engine.Lookup(session.character.currentRoom)
+
+		return akevitt.MapSlice(gameobjects, func(v akevitt.GameObject) string {
+			return "look " + v.GetName()
 		})
 	}
 
@@ -94,6 +110,7 @@ func main() {
 		RegisterCommand("enter", enter).
 		RegisterCommand("interact", interact).
 		RegisterCommand("backpack", backpack).
+		RegisterCommand("look", look).
 		UseSpawnRoom(room).
 		UseRootUI(rootScreen)
 
@@ -127,16 +144,8 @@ func generateRooms(engine *akevitt.Akevitt) *Room {
 	room.ContainObjects(createNpc("Ivan Korchmit", "Depositor", 1))
 	room.ContainObjects(createNpc("John Doe", "Merchant", 2))
 	mine := &Room{Name: "Mine", DescriptionData: "Mine of the corporation.", Key: 1}
-	ironOre := NewItemParams().
-		withName("Iron Ore").
-		withDescription("Very hard rock blah blah blah")
 
-	ironOre.withCallback(func(engine *akevitt.Akevitt, session *ActiveSession) error {
-		session.character.Inventory = append(session.character.Inventory, createItem(ironOre))
-		return nil
-	})
-
-	mine.ContainObjects(createItem(ironOre))
+	fillMine(mine)
 
 	mine.ContainObjects()
 	rooms := []akevitt.Room{
@@ -157,4 +166,36 @@ func AppendText(currentSession *ActiveSession, message string, chatlog *logview.
 	chatlog.SetFocusFunc(func() {
 		chatlog.Blur()
 	})
+	chatlog.ScrollToBottom()
+}
+
+func fillMine(r akevitt.Room) {
+	ironOreParams := NewItemParams().
+		withName("Iron Ore").
+		withDescription("Very hard rock blah blah blah")
+	ironOreParams.withCallback(func(engine *akevitt.Akevitt, session *ActiveSession) error {
+		session.character.Inventory = append(session.character.Inventory, createItem(&Ore{}, ironOreParams))
+		return session.character.Save(engine)
+	})
+
+	copperOreParams := NewItemParams().
+		withName("Copper Ore").
+		withDescription("Test!!!!")
+	copperOreParams.withCallback(func(engine *akevitt.Akevitt, session *ActiveSession) error {
+		session.character.Inventory = append(session.character.Inventory, createItem(&Ore{}, ironOreParams))
+		return session.character.Save(engine)
+	})
+
+	tinOreParams := NewItemParams().
+		withName("Tin Ore").
+		withDescription("Hmmmm, I wonder what happens if you mix it with copper?")
+	tinOreParams.withCallback(func(engine *akevitt.Akevitt, session *ActiveSession) error {
+		session.character.Inventory = append(session.character.Inventory, createItem(&Ore{}, ironOreParams))
+		return session.character.Save(engine)
+	})
+
+	r.ContainObjects(createItem(&Ore{}, ironOreParams))
+	r.ContainObjects(createItem(&Ore{}, copperOreParams))
+	r.ContainObjects(createItem(&Ore{}, tinOreParams))
+
 }

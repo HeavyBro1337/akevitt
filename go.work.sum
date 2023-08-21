@@ -3,10 +3,6 @@ github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be/go.mod h1:ySMOLuW
 github.com/araddon/dateparse v0.0.0-20210207001429-0eec95c9db7e/go.mod h1:DCaWoUhZrYW9p1lxo/cm8EmUOOzAPSEZNGF2DK1dJgw=
 github.com/boltdb/bolt v1.3.1 h1:JQmyP4ZBrce+ZQu0dY660FMfatumYDLun9hBCUVIkF4=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
-github.com/br0xen/boltbrowser v0.0.0-20230531143731-fcc13603daaf h1:NyqdH+vWNYPwQIK9jNv7sdIVbRGclwIdFhQk3+qlNEs=
-github.com/br0xen/boltbrowser v0.0.0-20230531143731-fcc13603daaf/go.mod h1:uhjRwoqgy4g6fCwo7OJHjCxDOmx/YSCz2rnAYb63ZhY=
-github.com/br0xen/termbox-util v0.0.0-20170904143325-de1d4c83380e h1:PF4gYXcZfTbAoAk5DPZcvjmq8gyg4gpcmWdT8W+0X1c=
-github.com/br0xen/termbox-util v0.0.0-20170904143325-de1d4c83380e/go.mod h1:x9wJlgOj74OFTOBwXOuO8pBguW37EgYNx51Dbjkfzo4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dlclark/regexp2 v1.4.0 h1:F1rxgk7p4uKjwIQxBs9oAXe5CqrXlCduYEJvrF4u93E=
 github.com/dlclark/regexp2 v1.4.0/go.mod h1:2pZnwuY/m+8K6iRw6wQdMtk+rH5tNGR1i55kozfMjCc=
@@ -28,8 +24,6 @@ github.com/mattn/go-runewidth v0.0.10/go.mod h1:RAqKPSqVFrSLVXbA8x7dzmKdmGzieGRC
 github.com/mattn/go-runewidth v0.0.14/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
 github.com/mattn/go-runewidth v0.0.15 h1:UNAjwbU9l54TA3KzvqLGxwWjHmMgBUVhBiTjelZgg3U=
 github.com/mattn/go-runewidth v0.0.15/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
-github.com/nsf/termbox-go v1.1.1 h1:nksUPLCb73Q++DwbYUBEglYBRPZyoXJdrj5L+TkjyZY=
-github.com/nsf/termbox-go v1.1.1/go.mod h1:T0cTdVuOwf7pHQNtfhnEbzHbcNyCEcVU4YPpouCbVxo=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rivo/tview v0.0.0-20210217110421-8a8f78a6dd01/go.mod h1:n2q/ydglZJ1kqxiNrnYO+FaX1H14vA0wKyIo953QakU=
 github.com/rivo/tview v0.0.0-20230621164836-6cc0565babaf h1:IchpMMtnfvzg7T3je672bP1nKWz1M4tW3kMZT6CbgoM=
@@ -47,8 +41,6 @@ github.com/uaraven/logview v0.1.0/go.mod h1:cNtLRu57MIZ+y/M8khL7/TXh1bve0KvDcJIx
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 gitlab.com/tslocum/cbind v0.1.4 h1:cbZXPPcieXspk8cShoT6efz7HAT8yMNQcofYWNizis4=
 gitlab.com/tslocum/cbind v0.1.4/go.mod h1:RvwYE3auSjBNlCmWeGspzn+jdLUVQ8C2QGC+0nP9ChI=
-go.etcd.io/bbolt v1.3.7 h1:j+zJOnnEjF/kyHlDDgGnVL/AIqIJPq8UoB2GSNfkUfQ=
-go.etcd.io/bbolt v1.3.7/go.mod h1:N9Mkw9X8x5fupy0IKsmuqVtoGDyxsaDlbk4Rd05IAQw=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20210921155107-089bfa567519/go.mod h1:GvvjBRRGRdwPK5ydBHafDWAxML/pGHZbMvKqRZ5+Abc=
 golang.org/x/crypto v0.0.0-20220826181053-bd7e27e6170d/go.mod h1:IxCIyHEi3zRg3s0A5j5BB6A9Jmi73HwBIUl50j+osU4=

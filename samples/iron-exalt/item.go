@@ -1,7 +1,7 @@
-package main
+package ironexalt
 
 import (
-	"akevitt/akevitt"
+	"akevitt"
 	"errors"
 )
 
@@ -11,6 +11,33 @@ type Item struct {
 	Name        string
 	Description string
 	onUse       InteractFunc
+}
+
+type ItemInterface interface {
+	SetQuantity(value int)
+	SetName(value string)
+	SetDescription(value string)
+	SetCallback(f InteractFunc)
+}
+
+func (item *Item) SetQuantity(value int) {
+	item.Quantity = value
+}
+
+func (item *Item) SetName(value string) {
+	item.Name = value
+}
+
+func (item *Item) SetDescription(value string) {
+	item.Description = value
+}
+
+func (item *Item) SetCallback(f InteractFunc) {
+	item.onUse = f
+}
+
+type Ore struct {
+	Item
 }
 
 type HandItem struct {
@@ -65,14 +92,14 @@ func (item *Item) Create(engine *akevitt.Akevitt, session akevitt.ActiveSession,
 	return item.Save(engine)
 }
 
-func mapItemParams(item *Item, itemParams *ItemParams) {
-	item.Name = itemParams.Name
-	item.Description = itemParams.Description
-	item.Quantity = itemParams.Quantity
+func mapItemParams(item ItemInterface, itemParams *ItemParams) {
+	item.SetName(itemParams.Name)
+	item.SetDescription(itemParams.Description)
+	item.SetCallback(itemParams.onUse)
+	item.SetQuantity(itemParams.Quantity)
 }
 
-func createItem(ip *ItemParams) *Item {
-	item := &Item{}
+func createItem[T ItemInterface](item T, ip *ItemParams) T {
 	mapItemParams(item, ip)
 
 	return item
