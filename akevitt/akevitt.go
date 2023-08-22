@@ -214,22 +214,6 @@ func (engine *Akevitt) SaveGameObject(gameObject GameObject, key uint64, account
 	return overwriteObject(engine.db, key, account.Username, gameObject)
 }
 
-func (engine *Akevitt) Interact(name string, room Room, session ActiveSession) error {
-	for _, v := range room.GetObjects() {
-		if !strings.EqualFold(v.GetName(), name) {
-			continue
-		}
-		interactable, ok := v.(Interactable)
-
-		if !ok {
-			return fmt.Errorf("the object %s isn't interactable", name)
-		}
-
-		return interactable.Interact(engine, session)
-	}
-
-	return fmt.Errorf("object %s not found", name)
-}
 func (engine *Akevitt) SaveObject(gameObject GameObject, key uint64) error {
 	return overwriteObject(engine.db, key, gameObject.GetName(), gameObject)
 }

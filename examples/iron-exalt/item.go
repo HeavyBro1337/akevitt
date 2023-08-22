@@ -118,16 +118,10 @@ func (item *Item) GetName() string {
 	return item.Name
 }
 
-func (item *Item) Interact(engine *akevitt.Akevitt, session akevitt.ActiveSession) error {
-	sess, ok := session.(*ActiveSession)
-
-	if !ok {
-		return errors.New("could not cast to session")
-	}
-
+func (item *Item) Interact(engine *akevitt.Akevitt, session *ActiveSession) error {
 	if item.onUse == nil {
 		return errors.New("this item is unusable")
 	}
 
-	return item.onUse(engine, sess)
+	return item.onUse(engine, session)
 }

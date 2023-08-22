@@ -38,15 +38,9 @@ func (npc *NPC) Save(engine *akevitt.Akevitt) error {
 	return engine.SaveObject(npc, NpcKey)
 }
 
-func (npc *NPC) Interact(engine *akevitt.Akevitt, session akevitt.ActiveSession) error {
-	sess, ok := session.(*ActiveSession)
-
-	if !ok {
-		return fmt.Errorf("could not cast to session")
-	}
-
+func (npc *NPC) Interact(engine *akevitt.Akevitt, session *ActiveSession) error {
 	if npc.onInteract == nil {
 		return fmt.Errorf("npc named %s has no interact callback installed", npc.Name)
 	}
-	return npc.onInteract(engine, sess)
+	return npc.onInteract(engine, session)
 }
