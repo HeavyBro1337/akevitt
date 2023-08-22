@@ -45,11 +45,9 @@ func main() {
 	gob.Register(&Exit{})
 	gob.Register(&Room{})
 
-	engine := akevitt.NewEngine()
+	room := generateRooms()
 
-	room := generateRooms(engine)
-
-	engine = engine.
+	engine := akevitt.NewEngine().
 		UseDBPath("data/iron-exalt.db").
 		UseMessage(func(engine *akevitt.Akevitt, session akevitt.ActiveSession, channel, message, username string) error {
 			if session == nil {
@@ -117,7 +115,7 @@ func main() {
 	log.Fatal(akevitt.Run[*ActiveSession](engine))
 }
 
-func generateRooms(engine *akevitt.Akevitt) *Room {
+func generateRooms() *Room {
 
 	room := &Room{
 		Name:             "Spawn Room",
