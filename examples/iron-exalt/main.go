@@ -17,33 +17,12 @@ const (
 )
 
 func main() {
-	autocompletion["interact"] = func(entry string, engine *akevitt.Akevitt, session *ActiveSession) []string {
-		npcs := akevitt.LookupOfType[*NPC](session.character.currentRoom)
-
-		return akevitt.MapSlice[*NPC, string](npcs, func(v *NPC) string {
-			return "interact " + v.Name
-		})
-	}
-
-	autocompletion["mine"] = func(entry string, engine *akevitt.Akevitt, session *ActiveSession) []string {
-		ores := akevitt.LookupOfType[*Ore](session.character.currentRoom)
-
-		return akevitt.MapSlice(ores, func(v *Ore) string {
-			return "mine " + v.Name
-		})
-	}
-
-	autocompletion["look"] = func(entry string, engine *akevitt.Akevitt, session *ActiveSession) []string {
-		gameobjects := engine.Lookup(session.character.currentRoom)
-
-		return akevitt.MapSlice(gameobjects, func(v akevitt.GameObject) string {
-			return "look " + v.GetName()
-		})
-	}
+	initAutocompletion()
 
 	gob.Register(&Item{})
 	gob.Register(&Exit{})
 	gob.Register(&Room{})
+	gob.Register(&Ore{})
 
 	room := generateRooms()
 
@@ -100,15 +79,16 @@ func main() {
 				return errors.New("could not cast to session")
 			}
 
-			err := DialogueBox(dialogue, engine, sess)
+			err := dialogueBox(dialogue, engine, sess)
 			return err
 		}).
-		RegisterCommand("say", say).
-		RegisterCommand("ooc", ooc).
-		RegisterCommand("enter", enter).
-		RegisterCommand("interact", interact).
-		RegisterCommand("backpack", backpack).
-		RegisterCommand("look", look).
+		UseRegisterCommand("say", say).
+		UseRegisterCommand("ooc", ooc).
+		UseRegisterCommand("enter", enter).
+		UseRegisterCommand("interact", interact).
+		UseRegisterCommand("backpack", backpack).
+		UseRegisterCommand("look", look).
+		UseRegisterCommand("mine", mine).
 		UseSpawnRoom(room).
 		UseRootUI(rootScreen)
 
@@ -180,20 +160,12 @@ func fillMine(r akevitt.Room) {
 		withName("Copper Ore").
 		withDescription("Test!!!!")
 	copperOreParams.withCallback(func(engine *akevitt.Akevitt, session *ActiveSession) error {
-		session.character.Inventory = append(session.character.Inventory, createItem(&Ore{}, ironOreParams))
+		session.character.Inventory = append(session.character.Inventory, createItem(&Ore{}, copperOreParams))
 		return session.character.Save(engine)
 	})
 
-	tinOreParams := NewItemParams().
-		withName("Tin Ore").
-		withDescription("Hmmmm, I wonder what happens if you mix it with copper?")
-	tinOreParams.withCallback(func(engine *akevitt.Akevitt, session *ActiveSession) error {
-		session.character.Inventory = append(session.character.Inventory, createItem(&Ore{}, ironOreParams))
-		return session.character.Save(engine)
-	})
-
-	r.ContainObjects(createItem(&Ore{}, ironOreParams))
-	r.ContainObjects(createItem(&Ore{}, copperOreParams))
-	r.ContainObjects(createItem(&Ore{}, tinOreParams))
+	r.ContainObjects(createOre("Iron Ore", "Okay, this is epic", 6))
+	r.ContainObjects(createOre("Copper Ore", "Hmmmm, I wonder what happens if you mix it with tin?", 6))
+	r.ContainObjects(createOre("Tin Ore", "Hmmmm, I wonder what happens if you mix it with copper?", 6))
 
 }

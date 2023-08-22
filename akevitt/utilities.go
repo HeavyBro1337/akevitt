@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"encoding/gob"
 	"errors"
+	"fmt"
+	"reflect"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -91,4 +93,111 @@ func MapSlice[T any, TResult any](l []T, callback func(v T) TResult) []TResult {
 	}
 
 	return result
+}
+
+func IsRoomReachable[T Room](engine *Akevitt, session ActiveSession, roomKey uint64, currentRoomKey uint64) (Exit, error) {
+	room, err := engine.GetRoom(currentRoomKey)
+
+	if err != nil {
+		return nil, err
+	}
+
+	exits := room.GetExits()
+
+	if exits == nil {
+		return nil, errors.New("array of exits is nil")
+	}
+	exit := findByKey(exits, func(key Exit) uint64 {
+		return key.GetKey()
+	}, roomKey)
+	if exit == nil {
+		return nil, errors.New("unreachable")
+	}
+	return *exit, nil
+}
+
+func BindRooms[T Exit](room Room, otherRooms ...Room) {
+	var emptyExit T
+	var exits []Exit = make([]Exit, 0)
+	for _, v := range otherRooms {
+		if v == room {
+			continue
+		}
+		exit := reflect.New(reflect.TypeOf(emptyExit).Elem()).Interface().(T)
+		exit.SetRoom(v)
+		exits = append(exits, exit)
+	}
+	room.SetExits(exits...)
+}
+
+func SaveObject[T Object](engine *Akevitt, obj T, category string, key uint64) error {
+	return overwriteObject[T](engine.db, key, category, obj)
+}
+
+func FindObject[T GameObject](engine *Akevitt, session ActiveSession, key uint64) (T, error) {
+	return findObject[T](engine.db, *session.GetAccount(), key)
+}
+
+func (engine *Akevitt) SaveGameObject(gameObject GameObject, key uint64, account *Account) error {
+	return overwriteObject(engine.db, key, account.Username, gameObject)
+}
+
+func (engine *Akevitt) SaveObject(gameObject GameObject, key uint64) error {
+	return overwriteObject(engine.db, key, gameObject.GetName(), gameObject)
+}
+
+func (engine *Akevitt) GenerateKey(gameobject GameObject) (uint64, error) {
+	return generateKey(engine.db, gameobject.GetName())
+}
+
+func CreateObject[T GameObject](engine *Akevitt, session ActiveSession, object T, params interface{}) (T, error) {
+	return object, object.Create(engine, session, params)
+}
+
+func (engine *Akevitt) Lookup(room Room) []GameObject {
+	return room.GetObjects()
+}
+
+func LookupOfType[T GameObject](room Room) []T {
+	objs := room.GetObjects()
+	result := make([]T, 0)
+	for _, v := range objs {
+		t, ok := v.(T)
+
+		if ok {
+			result = append(result, t)
+		}
+	}
+	return result
+}
+
+func saveRoomsRecursively(engine *Akevitt, room Room, visited []string) error {
+	if visited == nil {
+		visited = make([]string, 0)
+	}
+
+	if room == nil {
+		return errors.New("room is nil")
+	}
+
+	fmt.Printf("Loading Room: %s\n", room.GetName())
+
+	engine.rooms[room.GetKey()] = room
+
+	visited = append(visited, room.GetName())
+
+	for _, v := range room.GetExits() {
+		r := v.GetRoom()
+
+		if Find[string](visited, r.GetName()) {
+			continue
+		}
+
+		err := saveRoomsRecursively(engine, r, visited)
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

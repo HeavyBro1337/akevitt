@@ -48,10 +48,6 @@ func generateKey(db *bolt.DB, bucketName string) (uint64, error) {
 	})
 }
 
-func CreateObject[T GameObject](engine *Akevitt, session ActiveSession, object T, params interface{}) (T, error) {
-	return object, object.Create(engine, session, params)
-}
-
 func login(username string, password string, db *bolt.DB) (*Account, error) {
 	var accref *Account = nil
 

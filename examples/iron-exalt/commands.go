@@ -63,8 +63,7 @@ func interact(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments 
 	}
 
 	arguments = strings.TrimSpace(arguments)
-	interactables := akevitt.LookupOfType[Interactable](sess.character.currentRoom)
-	for _, v := range interactables {
+	for _, v := range akevitt.LookupOfType[Interactable](sess.character.currentRoom) {
 		if !strings.EqualFold(v.GetName(), arguments) {
 			continue
 		}
@@ -101,6 +100,24 @@ func backpack(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments 
 		AppendText(sess, fmt.Sprintf("№%d %s\n\t%s", k, v.GetName(), v.GetDescription()), sess.chat)
 	}
 	AppendText(sess, strings.Repeat("=.=", 16), sess.chat)
+
+	return nil
+}
+
+func mine(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
+	sess, ok := session.(*ActiveSession)
+
+	if !ok {
+		return errors.New("could not cast to session")
+	}
+
+	for _, v := range akevitt.LookupOfType[*Ore](sess.character.currentRoom) {
+		if !strings.EqualFold(v.GetName(), arguments) {
+			continue
+		}
+
+		return v.Use(engine, sess, sess.character.Inventory[0])
+	}
 
 	return nil
 }

@@ -40,6 +40,10 @@ type Ore struct {
 	Item
 }
 
+func (ore *Ore) Use(engine *akevitt.Akevitt, session *ActiveSession, other akevitt.GameObject) error {
+	return ore.onUse(engine, session)
+}
+
 type HandItem struct {
 	Item
 }
