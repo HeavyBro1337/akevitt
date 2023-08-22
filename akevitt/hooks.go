@@ -2,6 +2,7 @@ package akevitt
 
 import "errors"
 
+// Send the message to other current sessions
 func (engine *Akevitt) Message(channel, message, username string, session ActiveSession) error {
 	if engine.onMessage == nil {
 		return errors.New("onMessage func is nil")
@@ -24,6 +25,8 @@ func (engine *Akevitt) Message(channel, message, username string, session Active
 	return nil
 }
 
+// Invokes dialogue event.
+// Make sure you have installed the hook during initalisation.
 func (engine *Akevitt) Dialogue(dialogue *Dialogue, session ActiveSession) error {
 	if engine.onDialogue == nil {
 		return errors.New("dialogue callback is not installed")

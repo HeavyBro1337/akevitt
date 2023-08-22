@@ -19,6 +19,11 @@ import (
 	"github.com/rivo/tview"
 )
 
+// The engine instance which can be passed as an argument and provide some useful methods like
+// Login, Register, Message, Dialogue, etc.
+// Methods with name starting like Use should be called in a main function during the initialisation step.
+// To actually run the engine, you must call Run function and pass the engine instance
+// Example: fmt.Fatal(akevitt.Run[*MySessionStruct](engine))
 type Akevitt struct {
 	sessions      Sessions
 	root          UIFunc
@@ -34,6 +39,9 @@ type Akevitt struct {
 	rooms         map[uint64]Room
 }
 
+// Execute the command specified in a `command`.
+// The command can be registered using the useRegisterCommand method.
+// Returns an error if the given command not found or the result of associated function returns an error.
 func (engine *Akevitt) ExecuteCommand(command string, session ActiveSession) error {
 	zeroArg := strings.Fields(command)[0]
 	noZeroArgArray := strings.Fields(command)[1:]
@@ -46,6 +54,7 @@ func (engine *Akevitt) ExecuteCommand(command string, session ActiveSession) err
 	return commandFunc(engine, session, noZeroArg)
 }
 
+// Gets currently registered commands. This is useful if your game implements auto-completion.
 func (engine *Akevitt) GetCommands() []string {
 	result := make([]string, 0)
 
@@ -56,10 +65,12 @@ func (engine *Akevitt) GetCommands() []string {
 	return result
 }
 
+// Get sspawn room if specified. Useful for setting character's initial room during its creation.
 func (engine *Akevitt) GetSpawnRoom() Room {
 	return engine.defaultRoom
 }
 
+// Obtains currently loaded rooms by key. It will return an error if room not found.
 func (engine *Akevitt) GetRoom(key uint64) (Room, error) {
 	room, ok := engine.rooms[key]
 	if !ok {
@@ -69,6 +80,9 @@ func (engine *Akevitt) GetRoom(key uint64) (Room, error) {
 	return room, nil
 }
 
+// Run the given instance of engine.
+// You should pass your own implementation of ActiveSession,
+// so it can be controlled of how your game would behave
 func Run[TSession ActiveSession](engine *Akevitt) error {
 	fmt.Println("Running Akevitt")
 	err := createDatabase(engine)

@@ -28,7 +28,7 @@ func main() {
 
 	engine := akevitt.NewEngine().
 		UseDBPath("data/iron-exalt.db").
-		UseMessage(func(engine *akevitt.Akevitt, session akevitt.ActiveSession, channel, message, username string) error {
+		UseOnMessage(func(engine *akevitt.Akevitt, session akevitt.ActiveSession, channel, message, username string) error {
 			if session == nil {
 				return errors.New("session is nil. Probably the dead one")
 			}
@@ -72,7 +72,7 @@ func main() {
 				AppendText(lsess, fmt.Sprintf("%s left the game", sess.account.Username), lsess.chat)
 			}
 		}).
-		UseDialogue(func(engine *akevitt.Akevitt, session akevitt.ActiveSession, dialogue *akevitt.Dialogue) error {
+		UseOnDialogue(func(engine *akevitt.Akevitt, session akevitt.ActiveSession, dialogue *akevitt.Dialogue) error {
 			sess, ok := session.(*ActiveSession)
 
 			if !ok {

@@ -2,6 +2,8 @@ package akevitt
 
 import "errors"
 
+// Login call to the database.
+// Note: returns an error if the session is already active.
 func (engine *Akevitt) Login(username, password string, session ActiveSession) error {
 	account, err := login(username, password, engine.db)
 	if err != nil {
@@ -16,6 +18,8 @@ func (engine *Akevitt) Login(username, password string, session ActiveSession) e
 	return nil
 }
 
+// Create an account
+// Returns an error if account with the same username already exists
 func (engine *Akevitt) Register(username, password string, session ActiveSession) error {
 	exists := isAccountExists(username, engine.db)
 

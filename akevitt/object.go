@@ -4,17 +4,20 @@ type Object interface {
 	Save(engine *Akevitt) error // Save object into database
 }
 
+// Named object which has name and description
 type NamedObject interface {
 	GetName() string
 	GetDescription() string
 }
 
+// Base of the gameobjects that can be involved in gameplay.
 type GameObject interface {
 	Object
 	NamedObject
-	Create(engine *Akevitt, session ActiveSession, params interface{}) error
+	Create(engine *Akevitt, session ActiveSession, params interface{}) error // Create an object wuth specified parameters.
 }
 
+// Container of game objects.
 type Room interface {
 	Object
 	NamedObject
@@ -27,6 +30,7 @@ type Room interface {
 	OnCreate()
 }
 
+// The bridge between rooms
 type Exit interface {
 	Object
 	GetRoom() Room
