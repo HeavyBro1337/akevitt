@@ -3,6 +3,7 @@ package main
 import (
 	"akevitt/akevitt"
 	"errors"
+	"fmt"
 )
 
 type Item struct {
@@ -38,10 +39,15 @@ func (item *Item) SetCallback(f InteractFunc) {
 
 type Ore struct {
 	Item
+	Price int
 }
 
 func (ore *Ore) Use(engine *akevitt.Akevitt, session *ActiveSession, other akevitt.GameObject) error {
 	return ore.onUse(engine, session)
+}
+
+func (ore *Ore) GetDescription() string {
+	return ore.Description + fmt.Sprintf(" (%d$)", ore.Price)
 }
 
 type HandItem struct {

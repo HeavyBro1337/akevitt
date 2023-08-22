@@ -119,7 +119,18 @@ func generateRooms() *Room {
 			End()
 		return engine.Dialogue(d, session)
 	}))
-	room.ContainObjects(createNpc("Ivan Korchmit", "Depositor", 1))
+	room.ContainObjects(createNpc("Ivan Korchmit", "Depositor", 1).UseInteract(func(engine *akevitt.Akevitt, session *ActiveSession) error {
+		d := akevitt.NewDialogue("Deposit").SetContent(
+			inventoryList[*Ore](engine, session,
+				func(item Interactable) {
+					AppendText(session, fmt.Sprintf("Sold %s", item.GetName()), session.chat)
+					session.character.Inventory = akevitt.RemoveItem(session.character.Inventory, item)
+					ore := item.(*Ore)
+					session.character.Money += ore.Price
+				})).End()
+
+		return engine.Dialogue(d, session)
+	}))
 	room.ContainObjects(createNpc("John Doe", "Merchant", 2))
 	mine := &Room{Name: "Mine", DescriptionData: "Mine of the corporation.", Key: 1}
 

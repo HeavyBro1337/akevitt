@@ -250,11 +250,15 @@ func dialogueBox(dial *akevitt.Dialogue, engine *akevitt.Akevitt, session *Activ
 	}
 	var err error = nil
 	modal := tview.NewModal().AddButtons(labels).SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+		if buttonIndex < 0 {
+			return
+		}
+
 		err = dial.Proceed(buttonIndex, session, engine)
 		if len(dial.GetOptions()) == 0 {
 			session.app.SetRoot(*session.previousUI, true)
 		}
-	})
+	}).SetText("Press escape to change focus")
 
 	modal.SetBackgroundColor(tcell.ColorBlack).SetBorder(false)
 
@@ -265,6 +269,16 @@ func dialogueBox(dial *akevitt.Dialogue, engine *akevitt.Akevitt, session *Activ
 			AddItem(p, 0, 1, 3, 2, 0, 0, false).
 			AddItem(modal, 1, 1, 1, 1, 0, 0, true)
 		gr.SetBorder(true)
+		gr.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+			if event.Key() == tcell.KeyEscape {
+				if session.app.GetFocus() == p {
+					session.app.SetFocus(modal)
+				} else {
+					session.app.SetFocus(p)
+				}
+			}
+			return event
+		})
 		return gr
 	}
 
@@ -322,4 +336,26 @@ func lookupUpdate(engine *akevitt.Akevitt, session *ActiveSession, l **tview.Lis
 		(*l).AddItem(v.GetRoom().GetName(), strconv.FormatUint(v.GetKey(), 10), 0, nil)
 	}
 	(*l).SetSelectedBackgroundColor(tcell.ColorBlack).SetSelectedTextColor(tcell.ColorWhite)
+}
+
+type ItemFunc = func(item Interactable)
+
+func inventoryList[T Interactable](engine *akevitt.Akevitt, session *ActiveSession, f ItemFunc) *tview.List {
+	l := tview.NewList()
+
+	for k, v := range akevitt.FilterByType[T](session.character.Inventory) {
+		kCopy := k
+		vCopy := v
+
+		l.AddItem(v.GetName(), v.GetDescription(), 0, func() {
+			if f != nil {
+				fmt.Printf("k: %v\n", kCopy)
+				f(vCopy)
+			}
+		}).SetSelectedFunc(func(i int, s1, s2 string, r rune) {
+			l.RemoveItem(i)
+		})
+	}
+
+	return l
 }

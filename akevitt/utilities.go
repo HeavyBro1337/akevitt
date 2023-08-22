@@ -159,10 +159,13 @@ func (engine *Akevitt) Lookup(room Room) []GameObject {
 }
 
 func LookupOfType[T GameObject](room Room) []T {
-	objs := room.GetObjects()
+	return FilterByType[T, GameObject](room.GetObjects())
+}
+
+func FilterByType[T any, TCollection any](collection []TCollection) []T {
 	result := make([]T, 0)
-	for _, v := range objs {
-		t, ok := v.(T)
+	for _, v := range collection {
+		t, ok := any(v).(T)
 
 		if ok {
 			result = append(result, t)

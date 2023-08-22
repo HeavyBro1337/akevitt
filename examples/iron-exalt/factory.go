@@ -1,16 +1,18 @@
 package main
 
-import "akevitt/akevitt"
+import (
+	"akevitt/akevitt"
+)
 
 func createOre(name, description string, price int) *Ore {
 	oreParams := NewItemParams().
-		withName("Tin Ore").
-		withDescription("Hmmmm, I wonder what happens if you mix it with copper?")
+		withName(name).
+		withDescription(description)
 	oreParamsNoCallback := *oreParams
 	oreParams.withCallback(func(engine *akevitt.Akevitt, session *ActiveSession) error {
-		session.character.Inventory = append(session.character.Inventory, createItem(&Ore{}, &oreParamsNoCallback))
+		session.character.Inventory = append(session.character.Inventory, createItem(&Ore{Price: price}, &oreParamsNoCallback))
 		return session.character.Save(engine)
 	})
-
-	return createItem(&Ore{}, oreParams)
+	ore := createItem(&Ore{Price: price}, oreParams)
+	return ore
 }
