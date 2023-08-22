@@ -223,7 +223,7 @@ func gameScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive
 					session.app.SetFocus(inputField)
 					lookupUpdate(engine, session, &visibles)
 					fmt.Fprint(status.Clear(), updateStats(engine, session))
-
+					session.character.Save(engine)
 				}
 			}()
 		}
@@ -343,13 +343,11 @@ type ItemFunc = func(item Interactable)
 func inventoryList[T Interactable](engine *akevitt.Akevitt, session *ActiveSession, f ItemFunc) *tview.List {
 	l := tview.NewList()
 
-	for k, v := range akevitt.FilterByType[T](session.character.Inventory) {
-		kCopy := k
+	for _, v := range akevitt.FilterByType[T](session.character.Inventory) {
 		vCopy := v
 
 		l.AddItem(v.GetName(), v.GetDescription(), 0, func() {
 			if f != nil {
-				fmt.Printf("k: %v\n", kCopy)
 				f(vCopy)
 			}
 		}).SetSelectedFunc(func(i int, s1, s2 string, r rune) {
