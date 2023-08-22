@@ -1,6 +1,6 @@
 package main
 
-import "akevitt/akevitt"
+import "akevitt"
 
 type Interactable interface {
 	akevitt.GameObject

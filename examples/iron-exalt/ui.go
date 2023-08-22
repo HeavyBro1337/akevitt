@@ -1,7 +1,7 @@
 package main
 
 import (
-	"akevitt/akevitt"
+	"akevitt"
 	"bytes"
 	"fmt"
 	"image/png"

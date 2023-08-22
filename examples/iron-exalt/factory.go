@@ -1,7 +1,7 @@
 package main
 
 import (
-	"akevitt/akevitt"
+	"akevitt"
 )
 
 func createOre(name, description string, price int) *Ore {

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"akevitt/akevitt"
+	"akevitt"
 )
 
 type Room struct {

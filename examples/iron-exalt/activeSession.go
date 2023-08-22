@@ -1,7 +1,7 @@
 package main
 
 import (
-	"akevitt/akevitt"
+	"akevitt"
 
 	"github.com/rivo/tview"
 	"github.com/uaraven/logview"
