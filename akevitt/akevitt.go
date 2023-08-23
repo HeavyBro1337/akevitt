@@ -37,6 +37,7 @@ type Akevitt struct {
 	onDialogue    DialogueFunc
 	defaultRoom   Room
 	rooms         map[uint64]Room
+	heartbeats    map[int]chan struct{}
 }
 
 // Execute the command specified in a `command`.
@@ -80,6 +81,24 @@ func (engine *Akevitt) GetRoom(key uint64) (Room, error) {
 	return room, nil
 }
 
+func (engine *Akevitt) startHeartBeats() {
+	for k, v := range engine.heartbeats {
+		vCopy := v
+
+		ticker := time.NewTicker(time.Duration(k) * time.Second)
+
+		go func() {
+			for range ticker.C {
+				vCopy <- struct{}{}
+			}
+		}()
+	}
+}
+
+func (engine *Akevitt) AwaitHeartBeat(interval int) {
+	<-engine.heartbeats[interval]
+}
+
 // Run the given instance of engine.
 // You should pass your own implementation of ActiveSession,
 // so it can be controlled of how your game would behave
@@ -109,6 +128,7 @@ func Run[TSession ActiveSession](engine *Akevitt) error {
 	if engine.root == nil {
 		return errors.New("base screen is not provided")
 	}
+	engine.startHeartBeats()
 
 	ssh.Handle(func(sesh ssh.Session) {
 		var emptySession TSession

@@ -47,6 +47,7 @@ func NewEngine() *Akevitt {
 	engine.bind = ":2222"
 	engine.dbPath = "data/database.db"
 	engine.mouse = false
+	engine.heartbeats = make(map[int]chan struct{})
 	return engine
 }
 
@@ -56,5 +57,10 @@ func NewEngine() *Akevitt {
 func (engine *Akevitt) UseSpawnRoom(r Room) *Akevitt {
 	engine.defaultRoom = r
 
+	return engine
+}
+
+func (engine *Akevitt) UseNewHeartbeat(interval int) *Akevitt {
+	engine.heartbeats[interval] = make(chan struct{})
 	return engine
 }

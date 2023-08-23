@@ -36,6 +36,7 @@ func main() {
 					UseRegisterCommand("backpack", backpack).
 					UseRegisterCommand("look", look).
 					UseRegisterCommand("mine", mine).
+					UseNewHeartbeat(10).
 					UseSpawnRoom(spawn).  // Setting spawn root room
 					UseRootUI(rootScreen) // Passing root screen
 

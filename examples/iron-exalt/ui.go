@@ -160,7 +160,7 @@ func gameScreen(engine *akevitt.Akevitt, session *IronExaltSession) tview.Primit
 	// Preparing session by initializing UI primitives, channels and collections.
 	chatlog := logview.NewLogView()
 	chatlog.SetLevelHighlighting(true)
-	session.subscribedChannels = append(session.subscribedChannels, "ooc")
+	session.subscribedChannels = []string{"ooc"}
 	session.proceed = make(chan struct{})
 	session.chat = chatlog
 
@@ -200,14 +200,13 @@ func gameScreen(engine *akevitt.Akevitt, session *IronExaltSession) tview.Primit
 
 	// The gamescreen to be returned
 	gameScreen := tview.NewGrid().
-		SetRows(3).
-		SetColumns(30).
-		SetBorders(true).
-		AddItem(inputField, 0, 0, 1, 1, 0, 0, true).
+		SetRows(3, 0, 3).
+		SetColumns(30, 0, 30).
+		AddItem(status, 0, 0, 1, 3, 0, 0, false).
 		AddItem(visibles, 1, 0, 1, 1, 0, 0, false).
-		AddItem(status, 0, 1, 1, 2, 0, 0, false).
-		AddItem(chatlog, 1, 1, 1, 2, 0, 0, false)
-
+		AddItem(inputField, 2, 0, 1, 3, 0, 0, true).
+		AddItem(chatlog, 1, 1, 1, 2, 0, 0, false).
+		SetBorders(true)
 	inputField.SetFinishedFunc(func(key tcell.Key) {
 		if key == tcell.KeyEnter {
 			playerMessage = strings.TrimSpace(playerMessage)
