@@ -51,8 +51,11 @@ func registerScreen(engine *akevitt.Akevitt, session *IronExaltSession) tview.Pr
 
 func characterCreationWizard(engine *akevitt.Akevitt, session *IronExaltSession) tview.Primitive {
 	var name string
+	var description string
 	characterCreator := tview.NewForm().AddInputField("Character Name: ", "", 32, nil, func(text string) {
 		name = text
+	}).AddTextArea("Character Description: ", "", 64, 64, 0, func(text string) {
+		description = text
 	})
 	characterCreator.AddButton("Done", func() {
 		if strings.TrimSpace(name) == "" {
@@ -61,6 +64,7 @@ func characterCreationWizard(engine *akevitt.Akevitt, session *IronExaltSession)
 		}
 		characterParams := CharacterParams{}
 		characterParams.name = name
+		characterParams.description = description
 		emptyChar := &Character{}
 
 		_, err := akevitt.CreateObject(engine, session, emptyChar, characterParams)
@@ -94,6 +98,7 @@ func loginScreen(engine *akevitt.Akevitt, session *IronExaltSession) tview.Primi
 
 			if err != nil {
 				errorBox(err.Error(), session, session.previousUI)
+				session.SetRoot(characterCreationWizard(engine, session))
 				return
 			}
 			session.character = character

@@ -9,6 +9,7 @@ import (
 // The character struct represents an in-game character that the user will play as.
 type Character struct {
 	Name           string
+	Description    string
 	Health         int
 	Money          int
 	MaxHealth      int
@@ -32,6 +33,7 @@ func (character *Character) Create(engine *akevitt.Akevitt, session akevitt.Acti
 	}
 
 	character.Name = characterParams.name
+	character.Description = characterParams.description
 	character.Health = 10
 	character.MaxHealth = 10
 	character.Money = 100
@@ -68,10 +70,7 @@ func (character *Character) Save(engine *akevitt.Akevitt) error {
 }
 
 func (character *Character) GetDescription() string {
-	format := `
-	Health %d/%d
-	`
-	return fmt.Sprintf(format, character.Health, character.MaxHealth)
+	return character.Description
 }
 
 func (character *Character) GetName() string {
@@ -79,5 +78,6 @@ func (character *Character) GetName() string {
 }
 
 type CharacterParams struct {
-	name string
+	name        string
+	description string
 }
