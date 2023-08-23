@@ -23,8 +23,6 @@ func onMessage(engine *akevitt.Akevitt, session akevitt.ActiveSession, channel, 
 		}
 	} else if !ok {
 		fmt.Printf("could not cast to session")
-	} else {
-		fmt.Print("unknown error")
 	}
 
 	return nil
