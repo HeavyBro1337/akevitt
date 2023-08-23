@@ -120,7 +120,7 @@ func IsRoomReachable[T Room](engine *Akevitt, session ActiveSession, roomKey uin
 	return *exit, nil
 }
 
-// Binds room with an exit bi-directionally.
+// Binds room with an exit on both sides.
 func BindRooms[T Exit](room Room, otherRooms ...Room) {
 	var emptyExit T
 	var exits []Exit = make([]Exit, 0)

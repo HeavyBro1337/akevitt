@@ -2,12 +2,12 @@ package main
 
 import "akevitt"
 
-type autocomplete = func(entry string, engine *akevitt.Akevitt, session *ActiveSession) []string
+type autocomplete = func(entry string, engine *akevitt.Akevitt, session *IronExaltSession) []string
 
 var autocompletion map[string]autocomplete = make(map[string]autocomplete)
 
 func initAutocompletion() {
-	autocompletion["interact"] = func(entry string, engine *akevitt.Akevitt, session *ActiveSession) []string {
+	autocompletion["interact"] = func(entry string, engine *akevitt.Akevitt, session *IronExaltSession) []string {
 		npcs := akevitt.LookupOfType[*NPC](session.character.currentRoom)
 
 		return akevitt.MapSlice(npcs, func(v *NPC) string {
@@ -15,7 +15,7 @@ func initAutocompletion() {
 		})
 	}
 
-	autocompletion["mine"] = func(entry string, engine *akevitt.Akevitt, session *ActiveSession) []string {
+	autocompletion["mine"] = func(entry string, engine *akevitt.Akevitt, session *IronExaltSession) []string {
 		ores := akevitt.LookupOfType[*Ore](session.character.currentRoom)
 
 		return akevitt.MapSlice(ores, func(v *Ore) string {
@@ -23,7 +23,7 @@ func initAutocompletion() {
 		})
 	}
 
-	autocompletion["look"] = func(entry string, engine *akevitt.Akevitt, session *ActiveSession) []string {
+	autocompletion["look"] = func(entry string, engine *akevitt.Akevitt, session *IronExaltSession) []string {
 		gameobjects := engine.Lookup(session.character.currentRoom)
 
 		return akevitt.MapSlice(gameobjects, func(v akevitt.GameObject) string {

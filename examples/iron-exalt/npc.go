@@ -11,11 +11,7 @@ type NPC struct {
 	onInteract  InteractFunc
 }
 
-type InteractFunc = func(engine *akevitt.Akevitt, session *ActiveSession) error
-
-func createNpc(name, description string, key uint64) *NPC {
-	return &NPC{Name: name, Description: description}
-}
+type InteractFunc = func(engine *akevitt.Akevitt, session *IronExaltSession) error
 
 func (npc *NPC) UseInteract(f InteractFunc) *NPC {
 	npc.onInteract = f
@@ -38,7 +34,7 @@ func (npc *NPC) Save(engine *akevitt.Akevitt) error {
 	return engine.SaveObject(npc, NpcKey)
 }
 
-func (npc *NPC) Interact(engine *akevitt.Akevitt, session *ActiveSession) error {
+func (npc *NPC) Interact(engine *akevitt.Akevitt, session *IronExaltSession) error {
 	if npc.onInteract == nil {
 		return fmt.Errorf("npc named %s has no interact callback installed", npc.Name)
 	}

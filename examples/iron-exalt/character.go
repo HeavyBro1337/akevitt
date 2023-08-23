@@ -24,7 +24,7 @@ func (character *Character) Create(engine *akevitt.Akevitt, session akevitt.Acti
 	if !ok {
 		return errors.New("invalid params given")
 	}
-	sess, ok := session.(*ActiveSession)
+	sess, ok := session.(*IronExaltSession)
 
 	if !ok {
 		return errors.New("invalid session type")
@@ -39,15 +39,15 @@ func (character *Character) Create(engine *akevitt.Akevitt, session akevitt.Acti
 	character.account = sess.account
 	sess.character = character
 	room := engine.GetSpawnRoom()
-	room.ContainObjects(sess.character)
+	room.AddObjects(sess.character)
 	character.currentRoom = room
 	character.CurrentRoomKey = character.currentRoom.GetKey()
 
-	pick := &Item{}
+	pick := &BaseItem{}
 	err := pick.Create(engine, session, NewItemParams().
 		withName("Rusty Pickaxe").
 		withDescription("Rookie's pick, isn't capable of much.").withCallback(
-		func(engine *akevitt.Akevitt, session *ActiveSession) error {
+		func(engine *akevitt.Akevitt, session *IronExaltSession) error {
 			AppendText(session, "Hello, world!", session.chat)
 
 			return nil

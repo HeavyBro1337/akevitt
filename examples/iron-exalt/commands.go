@@ -9,7 +9,7 @@ import (
 )
 
 func enter(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
-	sess, ok := session.(*ActiveSession)
+	sess, ok := session.(*IronExaltSession)
 	if !ok {
 		return errors.New("invalid session type")
 	}
@@ -34,7 +34,7 @@ func enter(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments str
 }
 
 func look(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
-	sess, ok := session.(*ActiveSession)
+	sess, ok := session.(*IronExaltSession)
 
 	if !ok {
 		return errors.New("could not cast to session")
@@ -56,7 +56,7 @@ func look(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments stri
 }
 
 func interact(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
-	sess, ok := session.(*ActiveSession)
+	sess, ok := session.(*IronExaltSession)
 
 	if !ok {
 		return errors.New("invalid session type")
@@ -75,7 +75,7 @@ func interact(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments 
 }
 
 func say(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
-	sess, ok := session.(*ActiveSession)
+	sess, ok := session.(*IronExaltSession)
 
 	if !ok {
 		return errors.New("invalid session type")
@@ -89,7 +89,7 @@ func ooc(engine *akevitt.Akevitt, session akevitt.ActiveSession, command string)
 }
 
 func backpack(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
-	sess, ok := session.(*ActiveSession)
+	sess, ok := session.(*IronExaltSession)
 
 	if !ok {
 		return errors.New("could not cast to session")
@@ -105,7 +105,7 @@ func backpack(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments 
 }
 
 func mine(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
-	sess, ok := session.(*ActiveSession)
+	sess, ok := session.(*IronExaltSession)
 
 	if !ok {
 		return errors.New("could not cast to session")

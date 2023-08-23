@@ -15,7 +15,7 @@ import (
 	"github.com/uaraven/logview"
 )
 
-func registerScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive {
+func registerScreen(engine *akevitt.Akevitt, session *IronExaltSession) tview.Primitive {
 	var username string
 	var password string
 	var repeatPassword string
@@ -37,7 +37,7 @@ func registerScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primi
 			}
 			err := engine.Register(username, password, session)
 			if err != nil {
-				errorBox(err.Error(), session, session.GetPreviousUI())
+				errorBox(err.Error(), session, session.previousUI)
 				return
 			}
 			session.SetRoot(characterCreationWizard(engine, session))
@@ -49,14 +49,14 @@ func registerScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primi
 	return registerScreen
 }
 
-func characterCreationWizard(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive {
+func characterCreationWizard(engine *akevitt.Akevitt, session *IronExaltSession) tview.Primitive {
 	var name string
 	characterCreator := tview.NewForm().AddInputField("Character Name: ", "", 32, nil, func(text string) {
 		name = text
 	})
 	characterCreator.AddButton("Done", func() {
 		if strings.TrimSpace(name) == "" {
-			errorBox("character name must not be empty!", session, session.GetPreviousUI())
+			errorBox("character name must not be empty!", session, session.previousUI)
 			return
 		}
 		characterParams := CharacterParams{}
@@ -65,7 +65,7 @@ func characterCreationWizard(engine *akevitt.Akevitt, session *ActiveSession) tv
 
 		_, err := akevitt.CreateObject(engine, session, emptyChar, characterParams)
 		if err != nil {
-			errorBox(err.Error(), session, session.GetPreviousUI())
+			errorBox(err.Error(), session, session.previousUI)
 			return
 		}
 		session.SetRoot(gameScreen(engine, session))
@@ -73,7 +73,7 @@ func characterCreationWizard(engine *akevitt.Akevitt, session *ActiveSession) tv
 	return characterCreator
 }
 
-func loginScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive {
+func loginScreen(engine *akevitt.Akevitt, session *IronExaltSession) tview.Primitive {
 	var username string
 	var password string
 	loginScreen := tview.NewForm().
@@ -105,7 +105,7 @@ func loginScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitiv
 			}
 			session.character.account = session.account
 			session.character.currentRoom = room
-			room.ContainObjects(session.character)
+			room.AddObjects(session.character)
 			session.SetRoot(gameScreen(engine, session))
 		}).
 		AddButton("Back", func() {
@@ -115,7 +115,7 @@ func loginScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitiv
 }
 
 func rootScreen(engine *akevitt.Akevitt, session akevitt.ActiveSession) tview.Primitive {
-	sess, ok := session.(*ActiveSession)
+	sess, ok := session.(*IronExaltSession)
 
 	if !ok {
 		panic("could not cast to custom session")
@@ -151,7 +151,7 @@ func rootScreen(engine *akevitt.Akevitt, session akevitt.ActiveSession) tview.Pr
 	return welcome
 }
 
-func gameScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive {
+func gameScreen(engine *akevitt.Akevitt, session *IronExaltSession) tview.Primitive {
 
 	var playerMessage string
 	chatlog := logview.NewLogView()
@@ -208,7 +208,7 @@ func gameScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive
 			AppendText(session, "\t>"+playerMessage, session.chat)
 			err := engine.ExecuteCommand(playerMessage, session)
 			if err != nil {
-				errorBox(err.Error(), session, session.GetPreviousUI())
+				errorBox(err.Error(), session, session.previousUI)
 				inputField.SetText("")
 				return
 			}
@@ -238,7 +238,7 @@ func gameScreen(engine *akevitt.Akevitt, session *ActiveSession) tview.Primitive
 	return gameScreen
 }
 
-func dialogueBox(dial *akevitt.Dialogue, engine *akevitt.Akevitt, session *ActiveSession) error {
+func dialogueBox(dial *akevitt.Dialogue, engine *akevitt.Akevitt, session *IronExaltSession) error {
 	labels := akevitt.MapSlice(dial.GetOptions(), func(v *akevitt.Dialogue) string {
 		return v.GetTitle()
 	})
@@ -286,7 +286,7 @@ func dialogueBox(dial *akevitt.Dialogue, engine *akevitt.Akevitt, session *Activ
 	return err
 }
 
-func errorBox(message string, session *ActiveSession, back *tview.Primitive) {
+func errorBox(message string, session *IronExaltSession, back *tview.Primitive) {
 	result := tview.NewModal().SetText("Error!").SetText(message).SetTextColor(tcell.ColorRed).
 		SetBackgroundColor(tcell.ColorBlack).
 		AddButtons([]string{"Close"}).SetDoneFunc(func(buttonIndex int, buttonLabel string) {
@@ -300,11 +300,11 @@ func errorBox(message string, session *ActiveSession, back *tview.Primitive) {
 	session.app.SetRoot(result, true)
 }
 
-func stats(engine *akevitt.Akevitt, session *ActiveSession) *tview.TextView {
+func stats(engine *akevitt.Akevitt, session *IronExaltSession) *tview.TextView {
 	return tview.NewTextView().SetText(updateStats(engine, session))
 }
 
-func updateStats(engine *akevitt.Akevitt, session *ActiveSession) string {
+func updateStats(engine *akevitt.Akevitt, session *IronExaltSession) string {
 	character := session.character
 	return fmt.Sprintf("HEALTH: %d/%d, NAME: %s (%s) $%d", character.Health,
 		character.MaxHealth,
@@ -313,13 +313,13 @@ func updateStats(engine *akevitt.Akevitt, session *ActiveSession) string {
 		character.Money)
 }
 
-func visibleObjects(engine *akevitt.Akevitt, session *ActiveSession) *tview.List {
+func visibleObjects(engine *akevitt.Akevitt, session *IronExaltSession) *tview.List {
 	l := tview.NewList()
 	lookupUpdate(engine, session, &l)
 	return l
 }
 
-func lookupUpdate(engine *akevitt.Akevitt, session *ActiveSession, l **tview.List) {
+func lookupUpdate(engine *akevitt.Akevitt, session *IronExaltSession, l **tview.List) {
 	objects := engine.Lookup(session.character.currentRoom)
 	(*l).Clear()
 	for _, v := range objects {
@@ -340,7 +340,7 @@ func lookupUpdate(engine *akevitt.Akevitt, session *ActiveSession, l **tview.Lis
 
 type ItemFunc = func(item Interactable)
 
-func inventoryList[T Interactable](engine *akevitt.Akevitt, session *ActiveSession, f ItemFunc) *tview.List {
+func inventoryList[T Interactable](engine *akevitt.Akevitt, session *IronExaltSession, f ItemFunc) *tview.List {
 	l := tview.NewList()
 
 	for _, v := range akevitt.FilterByType[T](session.character.Inventory) {
@@ -356,4 +356,14 @@ func inventoryList[T Interactable](engine *akevitt.Akevitt, session *ActiveSessi
 	}
 
 	return l
+}
+
+func AppendText(currentSession *IronExaltSession, message string, chatlog *logview.LogView) {
+	ev := logview.NewLogEvent("message", message)
+	ev.Level = logview.LogLevelInfo
+	chatlog.AppendEvent(ev)
+	chatlog.SetFocusFunc(func() {
+		chatlog.Blur()
+	})
+	chatlog.ScrollToBottom()
 }

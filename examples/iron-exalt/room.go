@@ -44,7 +44,7 @@ func (room *Room) SetExits(exits ...akevitt.Exit) {
 	room.exits = exits
 }
 
-func (room *Room) ContainObjects(objects ...akevitt.GameObject) {
+func (room *Room) AddObjects(objects ...akevitt.GameObject) {
 	room.containedObjects = append(room.containedObjects, objects...)
 }
 

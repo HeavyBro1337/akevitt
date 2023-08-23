@@ -22,7 +22,7 @@ func (exit *Exit) GetKey() uint64 {
 }
 
 func (exit *Exit) Enter(engine *akevitt.Akevitt, session akevitt.ActiveSession) error {
-	sess, ok := session.(*ActiveSession)
+	sess, ok := session.(*IronExaltSession)
 	if !ok {
 		return errors.New("invalid session type")
 	}
@@ -30,7 +30,7 @@ func (exit *Exit) Enter(engine *akevitt.Akevitt, session akevitt.ActiveSession) 
 	character.currentRoom.RemoveObject(character)
 	room := exit.room
 	character.currentRoom = room
-	room.ContainObjects(character)
+	room.AddObjects(character)
 
 	character.CurrentRoomKey = exit.Key
 	return character.Save(engine)

@@ -21,20 +21,20 @@ type GameObject interface {
 type Room interface {
 	Object
 	NamedObject
-	GetExits() []Exit
-	SetExits(exits ...Exit)
-	GetKey() uint64
+	GetExits() []Exit       // Gets exits.
+	SetExits(exits ...Exit) // Sets exits.
+	GetKey() uint64         // Gets room key.
 	GetObjects() []GameObject
-	ContainObjects(objects ...GameObject)
-	RemoveObject(object GameObject)
+	AddObjects(objects ...GameObject) // Contains given objects to a room.
+	RemoveObject(object GameObject)   // Removes specified objects from a room.
 	OnCreate()
 }
 
 // The bridge between rooms
 type Exit interface {
 	Object
-	GetRoom() Room
+	GetRoom() Room // Gets room associated with this exit
 	GetKey() uint64
 	SetRoom(room Room)
-	Enter(engine *Akevitt, session ActiveSession) error
+	Enter(engine *Akevitt, session ActiveSession) error // Enter the room
 }
