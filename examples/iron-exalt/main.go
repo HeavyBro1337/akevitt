@@ -36,9 +36,15 @@ func main() {
 					UseRegisterCommand("backpack", backpack).
 					UseRegisterCommand("look", look).
 					UseRegisterCommand("mine", mine).
-					UseNewHeartbeat(10).
-					UseSpawnRoom(spawn).  // Setting spawn root room
-					UseRootUI(rootScreen) // Passing root screen
+					UseRegisterCommand("attack",
+			func(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
+				return engine.SubscribeToHeartBeat(15, func() {
+					engine.Message("ooc", "Attacked", session.GetAccount().Username, session)
+				})
+			}).
+		UseNewHeartbeat(15).
+		UseSpawnRoom(spawn).  // Setting spawn root room
+		UseRootUI(rootScreen) // Passing root screen
 
 	log.Fatal(akevitt.Run[*IronExaltSession](engine))
 }

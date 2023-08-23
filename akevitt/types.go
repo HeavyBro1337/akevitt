@@ -5,6 +5,11 @@ import (
 	"github.com/rivo/tview"
 )
 
+type pair[TFirst any, TSecond any] struct {
+	f TFirst
+	s TSecond
+}
+
 type Sessions = map[ssh.Session]ActiveSession
 
 type UIFunc = func(engine *Akevitt, session ActiveSession) tview.Primitive

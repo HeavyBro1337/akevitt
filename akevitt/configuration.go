@@ -1,6 +1,9 @@
 package akevitt
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
 // Specify an address to listen.
 // Example: :22, 127.0.0.1:2222, etc.
@@ -47,7 +50,7 @@ func NewEngine() *Akevitt {
 	engine.bind = ":2222"
 	engine.dbPath = "data/database.db"
 	engine.mouse = false
-	engine.heartbeats = make(map[int]chan struct{})
+	engine.heartbeats = make(map[int]*pair[time.Ticker, []func()])
 	return engine
 }
 
@@ -61,6 +64,8 @@ func (engine *Akevitt) UseSpawnRoom(r Room) *Akevitt {
 }
 
 func (engine *Akevitt) UseNewHeartbeat(interval int) *Akevitt {
-	engine.heartbeats[interval] = make(chan struct{})
+	dur := time.Duration(interval) * time.Second
+
+	engine.heartbeats[interval] = &pair[time.Ticker, []func()]{f: *time.NewTicker(dur), s: make([]func(), 0)}
 	return engine
 }

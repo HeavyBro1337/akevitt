@@ -37,7 +37,7 @@ type Akevitt struct {
 	onDialogue    DialogueFunc
 	defaultRoom   Room
 	rooms         map[uint64]Room
-	heartbeats    map[int]chan struct{}
+	heartbeats    map[int]*pair[time.Ticker, []func()]
 }
 
 // Execute the command specified in a `command`.
@@ -81,22 +81,25 @@ func (engine *Akevitt) GetRoom(key uint64) (Room, error) {
 	return room, nil
 }
 
-func (engine *Akevitt) startHeartBeats() {
-	for k, v := range engine.heartbeats {
-		vCopy := v
+func (engine *Akevitt) startHeartBeats(interval int) {
+	go func() {
+		t, ok := engine.heartbeats[interval]
 
-		ticker := time.NewTicker(time.Duration(k) * time.Second)
-
-		go func() {
-			for range ticker.C {
-				vCopy <- struct{}{}
+		if !ok {
+			fmt.Printf("warn: ticker %d does not exist", interval)
+			return
+		}
+		for range t.f.C {
+			for _, v := range t.s {
+				if v == nil {
+					continue
+				}
+				v()
 			}
-		}()
-	}
-}
+		}
 
-func (engine *Akevitt) AwaitHeartBeat(interval int) {
-	<-engine.heartbeats[interval]
+	}()
+
 }
 
 // Run the given instance of engine.
@@ -115,6 +118,10 @@ func Run[TSession ActiveSession](engine *Akevitt) error {
 
 	err = saveRoomsRecursively(engine, engine.defaultRoom, nil)
 
+	for k := range engine.heartbeats {
+		engine.startHeartBeats(k)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -128,7 +135,6 @@ func Run[TSession ActiveSession](engine *Akevitt) error {
 	if engine.root == nil {
 		return errors.New("base screen is not provided")
 	}
-	engine.startHeartBeats()
 
 	ssh.Handle(func(sesh ssh.Session) {
 		var emptySession TSession
@@ -164,5 +170,11 @@ func Run[TSession ActiveSession](engine *Akevitt) error {
 		}
 		sesh.Exit(0)
 	})
-	return ssh.ListenAndServe(engine.bind, nil)
+	usePubKey := ssh.HostKeyFile("id_rsa")
+
+	allowKeys := ssh.PublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
+		return true
+	})
+
+	return ssh.ListenAndServe(engine.bind, nil, allowKeys, usePubKey)
 }

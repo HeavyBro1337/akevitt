@@ -10,3 +10,9 @@ iron-exalt
 
 # Un-ignore sample directory
 !iron-exalt/
+
+# sensitive stuff
+*.pem
+*.key
+*.csr
+id_rsa*
