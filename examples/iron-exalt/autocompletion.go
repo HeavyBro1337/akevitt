@@ -6,6 +6,9 @@ type autocomplete = func(entry string, engine *akevitt.Akevitt, session *IronExa
 
 var autocompletion map[string]autocomplete = make(map[string]autocomplete)
 
+// Initialize autocompletion entries which can autocomplete with addiotnal arguments
+// Example: `npc M`
+// May suggest `npc Maxwell Jensen`
 func initAutocompletion() {
 	autocompletion["interact"] = func(entry string, engine *akevitt.Akevitt, session *IronExaltSession) []string {
 		npcs := akevitt.LookupOfType[*NPC](session.character.currentRoom)

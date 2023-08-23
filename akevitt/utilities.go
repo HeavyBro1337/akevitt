@@ -120,18 +120,16 @@ func IsRoomReachable[T Room](engine *Akevitt, session ActiveSession, roomKey uin
 	return *exit, nil
 }
 
-// Binds room with an exit on both sides.
+// Binds room with an exit.
 func BindRooms[T Exit](room Room, otherRooms ...Room) {
 	var emptyExit T
-	var exits []Exit = make([]Exit, 0)
+	exits := make([]Exit, 0)
 	for _, v := range otherRooms {
-		if v == room {
-			continue
-		}
-		exit := reflect.New(reflect.TypeOf(emptyExit).Elem()).Interface().(T)
-		exit.SetRoom(v)
+		exit := reflect.New(reflect.TypeOf(emptyExit).Elem()).Interface().(T) // Creating empty Exit
+		exit.SetRoom(v)                                                       // Setting exit's current room
 		exits = append(exits, exit)
 	}
+
 	room.SetExits(exits...)
 }
 

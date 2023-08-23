@@ -9,7 +9,7 @@ import (
 
 func generateRooms() *Room {
 	spawn := createRoom("Spawn Room", "Just a spawn room")
-	npcs := initNpcs()
+	npcs := generateNpcs()
 
 	mine := createRoom("Mine", "Mine of the corporation.")
 
@@ -20,10 +20,11 @@ func generateRooms() *Room {
 	spawn.AddObjects(npcs...)
 
 	akevitt.BindRooms[*Exit](spawn, mine)
+	akevitt.BindRooms[*Exit](mine, spawn)
 	return spawn
 }
 
-func initNpcs() []akevitt.GameObject {
+func generateNpcs() []akevitt.GameObject {
 	return []akevitt.GameObject{
 		createNpc("Maxwell Jensen", "The tutor").
 			UseInteract(func(engine *akevitt.Akevitt, session *IronExaltSession) error {

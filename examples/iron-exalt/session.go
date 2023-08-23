@@ -7,6 +7,8 @@ import (
 	"github.com/uaraven/logview"
 )
 
+// The custom session which holds reference to some UI primitives, subscribed channels of current user, character
+// and account
 type IronExaltSession struct {
 	account            *akevitt.Account
 	app                *tview.Application

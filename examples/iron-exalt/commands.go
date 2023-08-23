@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// Enter the room command
 func enter(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
 	sess, ok := session.(*IronExaltSession)
 	if !ok {
@@ -33,6 +34,7 @@ func enter(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments str
 	return nil
 }
 
+// Standard look command
 func look(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
 	sess, ok := session.(*IronExaltSession)
 
@@ -55,6 +57,7 @@ func look(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments stri
 	return nil
 }
 
+// Interact with an NPC or any other interactable objects
 func interact(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
 	sess, ok := session.(*IronExaltSession)
 
@@ -74,6 +77,7 @@ func interact(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments 
 	return fmt.Errorf("the object %s not found", arguments)
 }
 
+// Say command
 func say(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
 	sess, ok := session.(*IronExaltSession)
 
@@ -84,10 +88,12 @@ func say(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments strin
 	return engine.Message(sess.character.currentRoom.GetName(), arguments, sess.character.Name, session)
 }
 
+// Out-of-character chat command
 func ooc(engine *akevitt.Akevitt, session akevitt.ActiveSession, command string) error {
 	return engine.Message("ooc", command, session.GetAccount().Username, session)
 }
 
+// View inventory
 func backpack(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
 	sess, ok := session.(*IronExaltSession)
 
@@ -104,6 +110,7 @@ func backpack(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments 
 	return nil
 }
 
+// Mine ores
 func mine(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
 	sess, ok := session.(*IronExaltSession)
 

@@ -1,3 +1,6 @@
+// This is an example game powered by Akevitt named Iron Exalt
+// This game implements gameplay elements such as dialogues, talking with NPCs, selling ores, etc.
+
 package main
 
 import (
@@ -14,27 +17,27 @@ const (
 func main() {
 	initAutocompletion()
 
-	gob.Register(&BaseItem{})
+	gob.Register(&BaseItem{}) // Registering custom structs for database
 	gob.Register(&Exit{})
 	gob.Register(&Room{})
 	gob.Register(&Ore{})
 
-	room := generateRooms()
+	spawn := generateRooms()
 
-	engine := akevitt.NewEngine().
-		UseDBPath("data/iron-exalt.db").
-		UseOnMessage(onMessage).
-		UseOnSessionEnd(onSessionEnd).
-		UseOnDialogue(onDialogue).
-		UseRegisterCommand("say", say).
-		UseRegisterCommand("ooc", ooc).
-		UseRegisterCommand("enter", enter).
-		UseRegisterCommand("interact", interact).
-		UseRegisterCommand("backpack", backpack).
-		UseRegisterCommand("look", look).
-		UseRegisterCommand("mine", mine).
-		UseSpawnRoom(room).
-		UseRootUI(rootScreen)
+	engine := akevitt.NewEngine(). // Engine creation stage
+					UseDBPath("data/iron-exalt.db"). // Using custom database path
+					UseOnMessage(onMessage).         // Installing hooks
+					UseOnSessionEnd(onSessionEnd).   // to have control over logic
+					UseOnDialogue(onDialogue).       //
+					UseRegisterCommand("say", say).  // Registering commands
+					UseRegisterCommand("ooc", ooc).
+					UseRegisterCommand("enter", enter).
+					UseRegisterCommand("interact", interact).
+					UseRegisterCommand("backpack", backpack).
+					UseRegisterCommand("look", look).
+					UseRegisterCommand("mine", mine).
+					UseSpawnRoom(spawn).  // Setting spawn root room
+					UseRootUI(rootScreen) // Passing root screen
 
 	log.Fatal(akevitt.Run[*IronExaltSession](engine))
 }

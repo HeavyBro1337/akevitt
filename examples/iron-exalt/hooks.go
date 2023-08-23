@@ -30,6 +30,7 @@ func onMessage(engine *akevitt.Akevitt, session akevitt.ActiveSession, channel, 
 	return nil
 }
 
+// In this hook it is good to do some clean up (I.e. removing associated character from a room)
 func onSessionEnd(deadSession akevitt.ActiveSession, liveSessions []akevitt.ActiveSession, engine *akevitt.Akevitt) {
 	sess, ok := deadSession.(*IronExaltSession)
 	if !ok {

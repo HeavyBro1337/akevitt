@@ -9,7 +9,7 @@ type Sessions = map[ssh.Session]ActiveSession
 
 type UIFunc = func(engine *Akevitt, session ActiveSession) tview.Primitive
 
-type CommandFunc = func(engine *Akevitt, session ActiveSession, command string) error
+type CommandFunc = func(engine *Akevitt, session ActiveSession, arguments string) error
 
 type MessageFunc = func(engine *Akevitt, session ActiveSession, channel, message, username string) error
 

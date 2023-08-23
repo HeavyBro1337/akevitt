@@ -6,6 +6,7 @@ import (
 	"fmt"
 )
 
+// The character struct represents an in-game character that the user will play as.
 type Character struct {
 	Name           string
 	Health         int
@@ -18,7 +19,7 @@ type Character struct {
 }
 
 func (character *Character) Create(engine *akevitt.Akevitt, session akevitt.ActiveSession, params interface{}) error {
-	fmt.Println("Creating character...")
+	fmt.Println("Creating a character...")
 
 	characterParams, ok := params.(CharacterParams)
 	if !ok {

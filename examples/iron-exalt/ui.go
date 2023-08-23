@@ -114,6 +114,8 @@ func loginScreen(engine *akevitt.Akevitt, session *IronExaltSession) tview.Primi
 	return loginScreen
 }
 
+// Root screen is a screen which gets displayed when you connect via SSH.
+// The root screen may lead to the authentication process and then gameplay screen.
 func rootScreen(engine *akevitt.Akevitt, session akevitt.ActiveSession) tview.Primitive {
 	sess, ok := session.(*IronExaltSession)
 
@@ -151,14 +153,17 @@ func rootScreen(engine *akevitt.Akevitt, session akevitt.ActiveSession) tview.Pr
 	return welcome
 }
 
+// Gameplay screen
 func gameScreen(engine *akevitt.Akevitt, session *IronExaltSession) tview.Primitive {
+	playerMessage := ""
 
-	var playerMessage string
+	// Preparing session by initializing UI primitives, channels and collections.
 	chatlog := logview.NewLogView()
 	chatlog.SetLevelHighlighting(true)
 	session.subscribedChannels = append(session.subscribedChannels, "ooc")
 	session.proceed = make(chan struct{})
 	session.chat = chatlog
+
 	inputField := tview.NewInputField().SetAutocompleteFunc(func(currentText string) (entries []string) {
 		if len(currentText) == 0 {
 			return
@@ -183,12 +188,17 @@ func gameScreen(engine *akevitt.Akevitt, session *IronExaltSession) tview.Primit
 		playerMessage = text
 	})
 	session.input = inputField
+	// Creating some useful UI elements such as character's status (health, money, etc.)
+	// and visible objects in a room.
 	status := stats(engine, session)
 	visibles := visibleObjects(engine, session)
+
 	session.app.SetAfterDrawFunc(func(screen tcell.Screen) {
 		lookupUpdate(engine, session, &visibles)
 		fmt.Fprint(status.Clear(), updateStats(engine, session))
 	})
+
+	// The gamescreen to be returned
 	gameScreen := tview.NewGrid().
 		SetRows(3).
 		SetColumns(30).
