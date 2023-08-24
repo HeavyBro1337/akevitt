@@ -1,6 +1,7 @@
 # executables
 *.exe
 iron-exalt
+generator/akevitt-gen
 # database files
 *.db
 *.db.lock
@@ -16,4 +17,3 @@ iron-exalt
 *.key
 *.csr
 id_rsa*
-generator/akevitt-gen
