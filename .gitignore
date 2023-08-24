@@ -16,3 +16,4 @@ iron-exalt
 *.key
 *.csr
 id_rsa*
+generator/akevitt-gen
