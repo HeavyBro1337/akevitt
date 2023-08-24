@@ -1,7 +1,7 @@
 # executables
 *.exe
 iron-exalt
-generator/akevitt-gen
+generator/akevitt-gen*
 # database files
 *.db
 *.db.lock
