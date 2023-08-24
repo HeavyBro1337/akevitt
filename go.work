@@ -2,4 +2,3 @@ go 1.20
 
 use ./akevitt
 use ./examples/iron-exalt
-use ./examples/template
