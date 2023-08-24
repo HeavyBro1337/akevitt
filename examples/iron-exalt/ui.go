@@ -1,7 +1,6 @@
 package main
 
 import (
-	"akevitt"
 	"bytes"
 	"fmt"
 	"image/png"
@@ -9,6 +8,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/IvanKorchmit/akevitt"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"

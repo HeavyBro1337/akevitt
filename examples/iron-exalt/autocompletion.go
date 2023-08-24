@@ -1,6 +1,6 @@
 package main
 
-import "akevitt"
+import "github.com/IvanKorchmit/akevitt"
 
 type autocomplete = func(entry string, engine *akevitt.Akevitt, session *IronExaltSession) []string
 

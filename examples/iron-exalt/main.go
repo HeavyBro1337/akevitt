@@ -4,9 +4,10 @@
 package main
 
 import (
-	"akevitt"
 	"encoding/gob"
 	"log"
+
+	"github.com/IvanKorchmit/akevitt"
 )
 
 const (

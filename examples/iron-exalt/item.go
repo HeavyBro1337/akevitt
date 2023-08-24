@@ -1,8 +1,9 @@
 package main
 
 import (
-	"akevitt"
 	"errors"
+
+	"github.com/IvanKorchmit/akevitt"
 )
 
 type Interactable interface {

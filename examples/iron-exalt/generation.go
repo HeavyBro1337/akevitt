@@ -1,8 +1,9 @@
 package main
 
 import (
-	"akevitt"
 	"fmt"
+
+	"github.com/IvanKorchmit/akevitt"
 
 	"github.com/rivo/tview"
 )

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"akevitt"
 	"errors"
 	"fmt"
+
+	"github.com/IvanKorchmit/akevitt"
 )
 
 func onMessage(engine *akevitt.Akevitt, session akevitt.ActiveSession, channel, message, username string) error {

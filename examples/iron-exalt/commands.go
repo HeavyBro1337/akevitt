@@ -1,11 +1,12 @@
 package main
 
 import (
-	"akevitt"
 	"errors"
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/IvanKorchmit/akevitt"
 )
 
 // Enter the room command

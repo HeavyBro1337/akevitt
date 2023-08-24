@@ -1,9 +1,10 @@
 package main
 
 import (
-	"akevitt"
 	"errors"
 	"fmt"
+
+	"github.com/IvanKorchmit/akevitt"
 )
 
 // The character struct represents an in-game character that the user will play as.
