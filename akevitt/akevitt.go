@@ -19,6 +19,11 @@ import (
 	"github.com/rivo/tview"
 )
 
+// The engine instance which can be passed as an argument and provide some useful methods like
+// Login, Register, Message, Dialogue, etc.
+// Methods with name starting like Use should be called in a main function during the initialisation step.
+// To actually run the engine, you must call Run function and pass the engine instance
+// Example: fmt.Fatal(akevitt.Run[*MySessionStruct](engine))
 type Akevitt struct {
 	sessions      Sessions
 	root          UIFunc
@@ -29,79 +34,16 @@ type Akevitt struct {
 	db            *bolt.DB
 	onMessage     MessageFunc
 	onDeadSession DeadSessionFunc
+	onDialogue    DialogueFunc
 	defaultRoom   Room
 	rooms         map[uint64]Room
+	heartbeats    map[int]*pair[time.Ticker, []func()]
 }
 
-// Engine default constructor
-func NewEngine() *Akevitt {
-	engine := &Akevitt{}
-	engine.rooms = make(map[uint64]Room)
-	engine.bind = ":2222"
-	engine.sessions = make(Sessions)
-	engine.dbPath = "data/database.db"
-	engine.mouse = false
-	engine.commands = make(map[string]CommandFunc)
-	return engine
-}
-
-func (engine *Akevitt) UseBind(bindAddress string) *Akevitt {
-	engine.bind = bindAddress
-
-	return engine
-}
-
-func (engine *Akevitt) UseRootUI(uiFunc UIFunc) *Akevitt {
-	engine.root = uiFunc
-
-	return engine
-}
-
-func (engine *Akevitt) UseDBPath(path string) *Akevitt {
-	engine.dbPath = path
-
-	return engine
-}
-
-func (engine *Akevitt) UseMouse() *Akevitt {
-	engine.mouse = true
-
-	return engine
-}
-
-func (engine *Akevitt) RegisterCommand(command string, function CommandFunc) *Akevitt {
-	command = strings.TrimSpace(command)
-	engine.commands[command] = function
-	return engine
-}
-
-func (engine *Akevitt) Login(username, password string, session ActiveSession) error {
-	account, err := login(username, password, engine.db)
-	if err != nil {
-		return err
-	}
-	if isSessionAlreadyActive(*account, &engine.sessions, engine) {
-		return errors.New("the session is already active")
-	}
-
-	session.SetAccount(account)
-
-	return nil
-}
-
-func (engine *Akevitt) Register(username, password string, session ActiveSession) error {
-	exists := isAccountExists(username, engine.db)
-
-	if exists {
-		return errors.New("account already exists")
-	}
-	account, err := createAccount(engine.db, username, password)
-	session.SetAccount(account)
-
-	return err
-}
-
-func (engine *Akevitt) ProcessCommand(command string, session ActiveSession) error {
+// Execute the command specified in a `command`.
+// The command can be registered using the useRegisterCommand method.
+// Returns an error if the given command not found or the result of associated function returns an error.
+func (engine *Akevitt) ExecuteCommand(command string, session ActiveSession) error {
 	zeroArg := strings.Fields(command)[0]
 	noZeroArgArray := strings.Fields(command)[1:]
 	noZeroArg := strings.Join(noZeroArgArray, " ")
@@ -113,56 +55,7 @@ func (engine *Akevitt) ProcessCommand(command string, session ActiveSession) err
 	return commandFunc(engine, session, noZeroArg)
 }
 
-func (engine *Akevitt) UseMessage(f MessageFunc) *Akevitt {
-	engine.onMessage = f
-
-	return engine
-}
-
-func (engine *Akevitt) UseSpawnRoom(r Room) *Akevitt {
-	engine.defaultRoom = r
-
-	return engine
-}
-
-// Provide some callback if session is ended. Note: Some methods are dangerious to call i.e. engine.Message,
-// because it may invoke dead session cleanup which will cause stack overflow error and crash the application.
-func (engine *Akevitt) UseOnSessionEnd(f DeadSessionFunc) *Akevitt {
-	engine.onDeadSession = f
-	return engine
-}
-
-func saveRoomsRecursively(engine *Akevitt, room Room, visited []string) error {
-	if visited == nil {
-		visited = make([]string, 0)
-	}
-
-	if room == nil {
-		return errors.New("room is nil")
-	}
-
-	fmt.Printf("Loading Room: %s\n", room.GetName())
-
-	engine.rooms[room.GetKey()] = room
-
-	visited = append(visited, room.GetName())
-
-	for _, v := range room.GetExits() {
-		r := v.GetRoom()
-
-		if Find[string](visited, r.GetName()) {
-			continue
-		}
-
-		err := saveRoomsRecursively(engine, r, visited)
-
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
+// Gets currently registered commands. This is useful if your game implements auto-completion.
 func (engine *Akevitt) GetCommands() []string {
 	result := make([]string, 0)
 
@@ -173,14 +66,12 @@ func (engine *Akevitt) GetCommands() []string {
 	return result
 }
 
-func (engine *Akevitt) Lookup(room Room) []GameObject {
-	return room.GetObjects()
-}
-
+// Get sspawn room if specified. Useful for setting character's initial room during its creation.
 func (engine *Akevitt) GetSpawnRoom() Room {
 	return engine.defaultRoom
 }
 
+// Obtains currently loaded rooms by key. It will return an error if room not found.
 func (engine *Akevitt) GetRoom(key uint64) (Room, error) {
 	room, ok := engine.rooms[key]
 	if !ok {
@@ -190,44 +81,33 @@ func (engine *Akevitt) GetRoom(key uint64) (Room, error) {
 	return room, nil
 }
 
-func (engine *Akevitt) SaveGameObject(gameObject GameObject, key uint64, account *Account) error {
-	return overwriteObject(engine.db, key, account.Username, gameObject)
-}
+func (engine *Akevitt) startHeartBeats(interval int) {
+	go func() {
+		t, ok := engine.heartbeats[interval]
 
-func SaveObject[T Object](engine *Akevitt, obj T, category string, key uint64) error {
-	return overwriteObject[T](engine.db, key, category, obj)
-}
-
-func FindObject[T GameObject](engine *Akevitt, session ActiveSession, key uint64) (T, error) {
-	return findObject[T](engine.db, *session.GetAccount(), key)
-}
-
-func (engine *Akevitt) Message(channel, message, username string, session ActiveSession) error {
-	if engine.onMessage == nil {
-		return errors.New("onMessage func is nil")
-	}
-	purgeDeadSessions(&engine.sessions, engine, engine.onDeadSession)
-
-	for _, v := range engine.sessions {
-
-		err := engine.onMessage(engine, v, channel, message, username)
-
-		if session != v {
-			v.GetApplication().Draw()
+		if !ok {
+			fmt.Printf("warn: ticker %d does not exist", interval)
+			return
+		}
+		for range t.f.C {
+			for _, v := range t.s {
+				if v == nil {
+					continue
+				}
+				v()
+			}
 		}
 
-		if err != nil {
-			return err
-		}
-	}
+	}()
 
-	return nil
 }
 
+// Run the given instance of engine.
+// You should pass your own implementation of ActiveSession,
+// so it can be controlled of how your game would behave
 func Run[TSession ActiveSession](engine *Akevitt) error {
 	fmt.Println("Running Akevitt")
 	err := createDatabase(engine)
-
 	if err != nil {
 		return err
 	}
@@ -237,6 +117,10 @@ func Run[TSession ActiveSession](engine *Akevitt) error {
 	fmt.Println("Loading rooms recursively...")
 
 	err = saveRoomsRecursively(engine, engine.defaultRoom, nil)
+
+	for k := range engine.heartbeats {
+		engine.startHeartBeats(k)
+	}
 
 	if err != nil {
 		return err
@@ -286,5 +170,11 @@ func Run[TSession ActiveSession](engine *Akevitt) error {
 		}
 		sesh.Exit(0)
 	})
-	return ssh.ListenAndServe(engine.bind, nil)
+	usePubKey := ssh.HostKeyFile("id_rsa")
+
+	allowKeys := ssh.PublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
+		return true
+	})
+
+	return ssh.ListenAndServe(engine.bind, nil, allowKeys, usePubKey)
 }

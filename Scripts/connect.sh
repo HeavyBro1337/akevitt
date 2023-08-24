@@ -1,4 +1,4 @@
 #!/bin/bash
 
 
-ssh -o StrictHostKeyChecking=no localhost -p 1487
+ssh localhost -p 1487

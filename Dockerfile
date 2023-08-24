@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-WORKDIR  /app/samples/iron-exalt
+WORKDIR  /app/examples/iron-exalt
 
 RUN mkdir data
 

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"akevitt/akevitt"
+	"akevitt"
 )
 
 type Room struct {
@@ -20,7 +20,7 @@ func (room *Room) GetObjects() []akevitt.GameObject {
 	return room.containedObjects
 }
 
-func (room *Room) Description() string {
+func (room *Room) GetDescription() string {
 	return room.DescriptionData
 }
 
@@ -44,7 +44,7 @@ func (room *Room) SetExits(exits ...akevitt.Exit) {
 	room.exits = exits
 }
 
-func (room *Room) ContainObjects(objects ...akevitt.GameObject) {
+func (room *Room) AddObjects(objects ...akevitt.GameObject) {
 	room.containedObjects = append(room.containedObjects, objects...)
 }
 
