@@ -8,15 +8,19 @@ technical skill in Go.
 
 ## Features
 
-- TODO list
+- Runs on an SSH server, meaning that, just like with Telnet, you can connect to an Akevitt game from almost any
+device available in the world.
+- Automatic database, meaning any game object (`GObject`) you create is tracked and survives reboots. You do not need
+to think about the database, ever.
+- Modularity. Use straight-forward API to create your objects, NPCs, rooms, or anything with, and place them all in
+one file or organised across as many files as you need.
 
 ## How does Akevitt work?
 
 The engine runs on a simple SSH server, which means that anybody with an SSH client installed on their computer can
-connect to the game and play in their terminal. In other words: accessible from virtually every computer platform in
-existence. Data is then stored in a small database that requires no external libraries or programs. It is all built
-into Akevitt. The server is entirely self-sufficient: nothing like SQLite is required for the host, or even for the
-clients to install a custom client.
+connect to the game and play in their terminal. Data is then stored in a small database that requires no external
+libraries or programs. It is all built into Akevitt. The server is entirely self-sufficient: nothing like SQLite is
+required.
 
 ## What does Akevitt use to work?
 
