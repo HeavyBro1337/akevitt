@@ -1,3 +1,5 @@
+// Project creator executable
+
 package main
 
 import "fmt"
