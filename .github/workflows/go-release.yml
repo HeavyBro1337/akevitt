@@ -30,4 +30,3 @@ jobs:
         goversion: "https://dl.google.com/go/go1.20.1.linux-amd64.tar.gz"
         project_path: "./generator"
         binary_name: "akevitt-generator-linux-amd64"
-        extra_files: LICENCE README.md
