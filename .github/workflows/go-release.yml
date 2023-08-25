@@ -25,8 +25,8 @@ jobs:
     - uses: wangyoucao577/go-release-action@v1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        goos: linux
-        goarch: amd64
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
         goversion: "https://dl.google.com/go/go1.20.1.linux-amd64.tar.gz"
         project_path: "./generator"
         binary_name: "akevitt-generator-linux-amd64"
