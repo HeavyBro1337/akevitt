@@ -279,9 +279,9 @@ func loginScreen(engine *akevitt.Akevitt, session *Session) tview.Primitive {
 	return loginScreen
 }
 
-func RootScreen(engine *akevitt.Akevitt, session *Session) tview.Primitive {
+func RootScreen(engine *akevitt.Akevitt, session *Session, gameName string) tview.Primitive {
 	wizard := tview.NewModal().
-		SetText("Welcome to Iron Exalt! Would you register your account?").
+		SetText(fmt.Sprintf("Welcome to the %s! Would you register your account?", gameName)).
 		AddButtons([]string{"Register", "Login"}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 			if buttonLabel == "Login" {
