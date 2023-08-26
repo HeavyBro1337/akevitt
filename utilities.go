@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -162,12 +163,48 @@ func CreateObject[T GameObject](engine *Akevitt, session ActiveSession, object T
 	return object, object.Create(engine, session, params)
 }
 
-func (engine *Akevitt) Lookup(room Room) []GameObject {
-	return room.GetObjects()
+func (engine *Akevitt) GlobalLookup(room Room, name string) []GameObject {
+	return globalSearchRecursive(engine.defaultRoom, name, nil, nil)
 }
 
 func LookupOfType[T GameObject](room Room) []T {
 	return FilterByType[T, GameObject](room.GetObjects())
+}
+
+func globalSearchRecursive(room Room, name string, visited []string, result []GameObject) []GameObject {
+	if visited == nil {
+		visited = make([]string, 0)
+	}
+
+	if room == nil {
+		return nil
+	}
+	if result == nil {
+		result = make([]GameObject, 0)
+	}
+
+	visited = append(visited, room.GetName())
+
+	for _, v := range room.GetObjects() {
+		if strings.EqualFold(v.GetName(), name) {
+			result = append(result, v)
+		}
+	}
+
+	for _, v := range room.GetExits() {
+		r := v.GetRoom()
+
+		if Find[string](visited, r.GetName()) {
+			continue
+		}
+
+		err := globalSearchRecursive(r, name, visited, result)
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func FilterByType[T any, TCollection any](collection []TCollection) []T {
