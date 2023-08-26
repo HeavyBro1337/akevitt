@@ -314,7 +314,7 @@ func updateStats(engine *akevitt.Akevitt, session *Session) string {
 }
 
 func lookupUpdate(engine *akevitt.Akevitt, session *Session, l **tview.List) {
-	objects := engine.Lookup(session.Character.currentRoom)
+	objects := session.Character.currentRoom.GetObjects()
 	(*l).Clear()
 	for _, v := range objects {
 		if v == session.Character {
