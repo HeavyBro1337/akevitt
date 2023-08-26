@@ -1,8 +1,6 @@
-package main
+package basic
 
 import (
-	"errors"
-
 	"github.com/IvanKorchmit/akevitt"
 )
 
@@ -22,12 +20,8 @@ func (exit *Exit) GetKey() uint64 {
 	return exit.Key
 }
 
-func (exit *Exit) Enter(engine *akevitt.Akevitt, session akevitt.ActiveSession) error {
-	sess, ok := session.(*IronExaltSession)
-	if !ok {
-		return errors.New("invalid session type")
-	}
-	character := sess.character
+func (exit *Exit) Enter(engine *akevitt.Akevitt, session *Session) error {
+	character := session.Character
 	character.currentRoom.RemoveObject(character)
 	room := exit.room
 	character.currentRoom = room

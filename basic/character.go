@@ -1,4 +1,4 @@
-package main
+package basic
 
 import (
 	"errors"
@@ -7,6 +7,21 @@ import (
 	"github.com/IvanKorchmit/akevitt"
 )
 
+const (
+	CharacterKey uint64 = iota + 1
+	NpcKey
+)
+
+type Interactable interface {
+	akevitt.GameObject
+	Interact(engine *akevitt.Akevitt, session *Session) error
+}
+
+type Usable[T akevitt.ActiveSession] interface {
+	Interactable
+	Use(engine *akevitt.Akevitt, session *Session, other akevitt.GameObject) error
+}
+
 // The character struct represents an in-game character that the user will play as.
 type Character struct {
 	Name           string
@@ -14,23 +29,20 @@ type Character struct {
 	Health         int
 	Money          int
 	MaxHealth      int
-	account        *akevitt.Account
 	currentRoom    akevitt.Room
+	account        *akevitt.Account
 	Inventory      []Interactable
 	CurrentRoomKey uint64
 }
 
 func (character *Character) Create(engine *akevitt.Akevitt, session akevitt.ActiveSession, params interface{}) error {
+	sess := CastSession[*Session](session)
+
 	fmt.Println("Creating a character...")
 
 	characterParams, ok := params.(CharacterParams)
 	if !ok {
 		return errors.New("invalid params given")
-	}
-	sess, ok := session.(*IronExaltSession)
-
-	if !ok {
-		return errors.New("invalid session type")
 	}
 
 	character.Name = characterParams.name
@@ -40,22 +52,22 @@ func (character *Character) Create(engine *akevitt.Akevitt, session akevitt.Acti
 	character.Money = 100
 	character.currentRoom = engine.GetSpawnRoom()
 	character.Inventory = make([]Interactable, 0)
+	sess.Character = character
 	character.account = sess.account
-	sess.character = character
 	room := engine.GetSpawnRoom()
-	room.AddObjects(sess.character)
+	room.AddObjects(sess.Character)
 	character.currentRoom = room
 	character.CurrentRoomKey = character.currentRoom.GetKey()
 
 	pick := &BaseItem{}
 	err := pick.Create(engine, session, NewItemParams().
-		withName("Rusty Pickaxe").
-		withDescription("Rookie's pick, isn't capable of much.").withCallback(
-		func(engine *akevitt.Akevitt, session *IronExaltSession) error {
-			AppendText(session, "Hello, world!", session.chat)
+		WithName("Rusty Pickaxe").
+		WithDescription("Rookie's pick, isn't capable of much.").WithCallback(
+		func(engine *akevitt.Akevitt, session *Session) error {
+			AppendText(session, "Hello, world!", session.Chat)
 
 			return nil
-		}).withQuantity(1))
+		}).WithQuantity(1))
 
 	if err != nil {
 		return err

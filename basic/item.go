@@ -1,4 +1,4 @@
-package main
+package basic
 
 import (
 	"errors"
@@ -6,15 +6,7 @@ import (
 	"github.com/IvanKorchmit/akevitt"
 )
 
-type Interactable interface {
-	akevitt.GameObject
-	Interact(engine *akevitt.Akevitt, session *IronExaltSession) error
-}
-
-type Usable interface {
-	Interactable
-	Use(engine *akevitt.Akevitt, session *IronExaltSession, other akevitt.GameObject) error
-}
+type InteractFunc = func(engine *akevitt.Akevitt, session *Session) error
 
 type BaseItem struct {
 	Quantity    int
@@ -62,11 +54,13 @@ func (item *BaseItem) Create(engine *akevitt.Akevitt, session akevitt.ActiveSess
 	return item.Save(engine)
 }
 
-func (item *BaseItem) Save(engine *akevitt.Akevitt) error { return engine.SaveObject(item, item.ID) }
-func (item *BaseItem) GetName() string                    { return item.Name }
-func (item *BaseItem) GetDescription() string             { return item.Description }
+func (item *BaseItem) Save(engine *akevitt.Akevitt) error {
+	return engine.SaveObject(item, item.ID)
+}
+func (item *BaseItem) GetName() string        { return item.Name }
+func (item *BaseItem) GetDescription() string { return item.Description }
 
-func (item *BaseItem) Interact(engine *akevitt.Akevitt, session *IronExaltSession) error {
+func (item *BaseItem) Interact(engine *akevitt.Akevitt, session *Session) error {
 	if item.onUse == nil {
 		return errors.New("this item is unusable")
 	}
