@@ -34,14 +34,14 @@ func EnterCmd(engine *akevitt.Akevitt, session *Session, arguments string) error
 func LookCmd(engine *akevitt.Akevitt, session *Session, arguments string) error {
 
 	if strings.TrimSpace(arguments) == "" {
-		for _, v := range engine.Lookup(session.Character.currentRoom) {
+		for _, v := range session.Character.currentRoom.GetObjects() {
 			AppendText(session, fmt.Sprintf("%s\n\t%s\n", v.GetName(), v.GetDescription()), session.Chat)
 		}
 
 		return nil
 	}
 
-	for _, v := range engine.Lookup(session.Character.currentRoom) {
+	for _, v := range session.Character.currentRoom.GetObjects() {
 		if strings.EqualFold(v.GetName(), arguments) {
 			AppendText(session, fmt.Sprintf("%s\n\t%s\n", v.GetName(), v.GetDescription()), session.Chat)
 		}

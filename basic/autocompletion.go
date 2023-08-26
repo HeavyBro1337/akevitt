@@ -21,7 +21,7 @@ func InitAutocompletion() {
 	}
 
 	autocompletion["look"] = func(entry string, engine *akevitt.Akevitt, session *Session) []string {
-		gameobjects := engine.Lookup(session.Character.currentRoom)
+		gameobjects := session.Character.currentRoom.GetObjects()
 
 		return akevitt.MapSlice(gameobjects, func(v akevitt.GameObject) string {
 			return "look " + v.GetName()
