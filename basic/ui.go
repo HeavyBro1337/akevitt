@@ -279,15 +279,17 @@ func loginScreen(engine *akevitt.Akevitt, session *Session, gameName string) tvi
 	return loginScreen
 }
 
-func RootScreen(engine *akevitt.Akevitt, session *Session, gameName string) tview.Primitive {
+func RootScreen(engine *akevitt.Akevitt, session akevitt.ActiveSession, gameName string) tview.Primitive {
+	sess := CastSession[*Session](session)
+
 	wizard := tview.NewModal().
 		SetText(fmt.Sprintf("Welcome to the %s! Would you register your account?", gameName)).
 		AddButtons([]string{"Register", "Login"}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 			if buttonLabel == "Login" {
-				session.SetRoot(loginScreen(engine, session, gameName))
+				sess.SetRoot(loginScreen(engine, sess, gameName))
 			} else if buttonLabel == "Register" {
-				session.SetRoot(registerScreen(engine, session, gameName))
+				sess.SetRoot(registerScreen(engine, sess, gameName))
 			}
 		})
 	welcome := tview.NewGrid().
@@ -296,7 +298,7 @@ func RootScreen(engine *akevitt.Akevitt, session *Session, gameName string) tvie
 		SetColumns(30, 0, 30).
 		AddItem(wizard, 2, 2, 3, 3, 0, 0, true)
 
-	session.app.SetFocus(wizard)
+	sess.app.SetFocus(wizard)
 	return welcome
 }
 
