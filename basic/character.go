@@ -35,6 +35,14 @@ type Character struct {
 	CurrentRoomKey uint64
 }
 
+func (char *Character) SetCurrentRoom(room akevitt.Room) {
+	char.currentRoom = room
+}
+
+func (char *Character) GetCurrentRoom() akevitt.Room {
+	return char.currentRoom
+}
+
 func (character *Character) Create(engine *akevitt.Akevitt, session akevitt.ActiveSession, params interface{}) error {
 	sess := CastSession[*Session](session)
 
