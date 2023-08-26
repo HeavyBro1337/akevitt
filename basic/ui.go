@@ -83,7 +83,7 @@ func ErrorBox(message string, session *Session, back *tview.Primitive) {
 	session.app.SetRoot(result, true)
 }
 
-func registerScreen(engine *akevitt.Akevitt, session *Session) tview.Primitive {
+func registerScreen(engine *akevitt.Akevitt, session *Session, gameName string) tview.Primitive {
 	var username string
 	var password string
 	var repeatPassword string
@@ -111,7 +111,7 @@ func registerScreen(engine *akevitt.Akevitt, session *Session) tview.Primitive {
 			session.SetRoot(characterCreationWizard(engine, session))
 		}).
 		AddButton("Back", func() {
-			session.app.SetRoot(RootScreen(engine, session), true)
+			session.app.SetRoot(RootScreen(engine, session, gameName), true)
 		})
 	registerScreen.SetBorder(true).SetTitle(" Register ")
 	return registerScreen
@@ -238,7 +238,7 @@ func gameScreen(engine *akevitt.Akevitt, session *Session) tview.Primitive {
 	return gameScreen
 }
 
-func loginScreen(engine *akevitt.Akevitt, session *Session) tview.Primitive {
+func loginScreen(engine *akevitt.Akevitt, session *Session, gameName string) tview.Primitive {
 	var username string
 	var password string
 	loginScreen := tview.NewForm().
@@ -274,7 +274,7 @@ func loginScreen(engine *akevitt.Akevitt, session *Session) tview.Primitive {
 			session.SetRoot(gameScreen(engine, session))
 		}).
 		AddButton("Back", func() {
-			session.app.SetRoot(RootScreen(engine, session), true)
+			session.app.SetRoot(RootScreen(engine, session, gameName), true)
 		})
 	return loginScreen
 }
@@ -285,9 +285,9 @@ func RootScreen(engine *akevitt.Akevitt, session *Session, gameName string) tvie
 		AddButtons([]string{"Register", "Login"}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 			if buttonLabel == "Login" {
-				session.SetRoot(loginScreen(engine, session))
+				session.SetRoot(loginScreen(engine, session, gameName))
 			} else if buttonLabel == "Register" {
-				session.SetRoot(registerScreen(engine, session))
+				session.SetRoot(registerScreen(engine, session, gameName))
 			}
 		})
 	welcome := tview.NewGrid().
