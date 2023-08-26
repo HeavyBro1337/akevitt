@@ -31,55 +31,62 @@ func EnterCmd(engine *akevitt.Akevitt, session *Session, arguments string) error
 }
 
 // Standard LookCmd command
-func LookCmd(engine *akevitt.Akevitt, session *Session, arguments string) error {
+func LookCmd(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
+	sess := CastSession[*Session](session)
 
 	if strings.TrimSpace(arguments) == "" {
-		for _, v := range session.Character.currentRoom.GetObjects() {
-			AppendText(session, fmt.Sprintf("%s\n\t%s\n", v.GetName(), v.GetDescription()), session.Chat)
+		for _, v := range sess.Character.currentRoom.GetObjects() {
+			AppendText(sess, fmt.Sprintf("%s\n\t%s\n", v.GetName(), v.GetDescription()), sess.Chat)
 		}
 
 		return nil
 	}
 
-	for _, v := range session.Character.currentRoom.GetObjects() {
+	for _, v := range sess.Character.currentRoom.GetObjects() {
 		if strings.EqualFold(v.GetName(), arguments) {
-			AppendText(session, fmt.Sprintf("%s\n\t%s\n", v.GetName(), v.GetDescription()), session.Chat)
+			AppendText(sess, fmt.Sprintf("%s\n\t%s\n", v.GetName(), v.GetDescription()), sess.Chat)
 		}
 	}
 	return nil
 }
 
 // Interact with an NPC or any other interactable objects
-func TalkCmd(engine *akevitt.Akevitt, session *Session, arguments string) error {
+func TalkCmd(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
+	sess := CastSession[*Session](session)
+
 	arguments = strings.TrimSpace(arguments)
-	for _, v := range akevitt.LookupOfType[Interactable](session.Character.currentRoom) {
+	for _, v := range akevitt.LookupOfType[Interactable](sess.Character.currentRoom) {
 		if !strings.EqualFold(v.GetName(), arguments) {
 			continue
 		}
 
-		return v.Interact(engine, session)
+		return v.Interact(engine, sess)
 	}
 
 	return fmt.Errorf("the object %s not found", arguments)
 }
 
 // Say command
-func SayCmd(engine *akevitt.Akevitt, session *Session, arguments string) error {
-	return engine.Message(session.Character.currentRoom.GetName(), arguments, session.Character.Name, session)
+func SayCmd(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
+	sess := CastSession[*Session](session)
+
+	return engine.Message(sess.Character.currentRoom.GetName(), arguments, sess.Character.Name, session)
 }
 
 // Out-of-character chat command
-func OocCmd(engine *akevitt.Akevitt, session *Session, command string) error {
+func OocCmd(engine *akevitt.Akevitt, session akevitt.ActiveSession, command string) error {
 	return engine.Message("ooc", command, session.GetAccount().Username, session)
 }
 
 // View inventory
-func InventoryCmd(engine *akevitt.Akevitt, session *Session, arguments string) error {
-	AppendText(session, "Your backpack", session.Chat)
-	for k, v := range session.Character.Inventory {
-		AppendText(session, fmt.Sprintf("№%d %s\n\t%s", k, v.GetName(), v.GetDescription()), session.Chat)
+func InventoryCmd(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
+	sess := CastSession[*Session](session)
+
+	AppendText(sess, "Your backpack", sess.Chat)
+	for k, v := range sess.Character.Inventory {
+		AppendText(sess, fmt.Sprintf("№%d %s\n\t%s", k, v.GetName(), v.GetDescription()), sess.Chat)
 	}
-	AppendText(session, strings.Repeat("=.=", 16), session.Chat)
+	AppendText(sess, strings.Repeat("=.=", 16), sess.Chat)
 
 	return nil
 }

@@ -20,8 +20,10 @@ func (exit *Exit) GetKey() uint64 {
 	return exit.Key
 }
 
-func (exit *Exit) Enter(engine *akevitt.Akevitt, session *Session) error {
-	character := session.Character
+func (exit *Exit) Enter(engine *akevitt.Akevitt, session akevitt.ActiveSession) error {
+	sess := CastSession[*Session](session)
+
+	character := sess.Character
 	character.currentRoom.RemoveObject(character)
 	room := exit.room
 	character.currentRoom = room
