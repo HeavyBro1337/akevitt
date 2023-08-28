@@ -37,8 +37,9 @@ func purgeDeadSessions(sessions *Sessions, engine *Akevitt, callback DeadSession
 		}
 		liveSessions = append(liveSessions, v)
 	}
-
-	for _, v := range deadSessions {
-		callback(v, liveSessions, engine)
+	if callback != nil {
+		for _, v := range deadSessions {
+			callback(v, liveSessions, engine)
+		}
 	}
 }
