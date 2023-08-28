@@ -10,7 +10,7 @@ import (
 	"github.com/uaraven/logview"
 )
 
-func AppendText(currentSession *Session, message string, chatlog *logview.LogView) {
+func AppendText(message string, chatlog *logview.LogView) {
 	ev := logview.NewLogEvent("message", message)
 	ev.Level = logview.LogLevelInfo
 	chatlog.AppendEvent(ev)
@@ -201,7 +201,7 @@ func GameScreen(engine *akevitt.Akevitt, session *Session) tview.Primitive {
 				inputField.SetText("")
 				return
 			}
-			AppendText(session, "\t>"+playerMessage, session.Chat)
+			AppendText("\t>"+playerMessage, session.Chat)
 			err := engine.ExecuteCommand(playerMessage, session)
 			if err != nil {
 				ErrorBox(err.Error(), session.app, session.previousUI)

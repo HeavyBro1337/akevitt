@@ -18,9 +18,9 @@ func OnMessageHook(engine *akevitt.Akevitt, session akevitt.ActiveSession, chann
 
 	if sess.subscribedChannels != nil {
 		if akevitt.Find[string](sess.subscribedChannels, channel) {
-			AppendText(sess, st, sess.Chat)
+			AppendText(st, sess.Chat)
 		} else if sess.Character.currentRoom.GetName() == channel {
-			AppendText(sess, st, sess.Chat)
+			AppendText(st, sess.Chat)
 		}
 	} else {
 		fmt.Printf("warn: the channels is empty at %s", sess.account.Username)
@@ -45,7 +45,7 @@ func OnSessionDeathHook(deadSession akevitt.ActiveSession, liveSessions []akevit
 			continue
 		}
 
-		AppendText(v, fmt.Sprintf("%s left the game", deadSess.account.Username), v.Chat)
+		AppendText(fmt.Sprintf("%s left the game", deadSess.account.Username), v.Chat)
 	}
 }
 

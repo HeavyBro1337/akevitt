@@ -34,7 +34,7 @@ func LookCmd(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments s
 
 	if strings.TrimSpace(arguments) == "" {
 		for _, v := range sess.Character.currentRoom.GetObjects() {
-			AppendText(sess, fmt.Sprintf("%s\n\t%s\n", v.GetName(), v.GetDescription()), sess.Chat)
+			AppendText(fmt.Sprintf("%s\n\t%s\n", v.GetName(), v.GetDescription()), sess.Chat)
 		}
 
 		return nil
@@ -42,7 +42,7 @@ func LookCmd(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments s
 
 	for _, v := range sess.Character.currentRoom.GetObjects() {
 		if strings.EqualFold(v.GetName(), arguments) {
-			AppendText(sess, fmt.Sprintf("%s\n\t%s\n", v.GetName(), v.GetDescription()), sess.Chat)
+			AppendText(fmt.Sprintf("%s\n\t%s\n", v.GetName(), v.GetDescription()), sess.Chat)
 		}
 	}
 	return nil
@@ -80,11 +80,11 @@ func OocCmd(engine *akevitt.Akevitt, session akevitt.ActiveSession, command stri
 func InventoryCmd(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
 	sess := CastSession[*Session](session)
 
-	AppendText(sess, "Your backpack", sess.Chat)
+	AppendText("Your backpack", sess.Chat)
 	for k, v := range sess.Character.Inventory {
-		AppendText(sess, fmt.Sprintf("№%d %s\n\t%s", k, v.GetName(), v.GetDescription()), sess.Chat)
+		AppendText(fmt.Sprintf("№%d %s\n\t%s", k, v.GetName(), v.GetDescription()), sess.Chat)
 	}
-	AppendText(sess, strings.Repeat("=.=", 16), sess.Chat)
+	AppendText(strings.Repeat("=.=", 16), sess.Chat)
 
 	return nil
 }

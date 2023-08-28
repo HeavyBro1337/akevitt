@@ -72,7 +72,7 @@ func (character *Character) Create(engine *akevitt.Akevitt, session akevitt.Acti
 		WithName("Rusty Pickaxe").
 		WithDescription("Rookie's pick, isn't capable of much.").WithCallback(
 		func(engine *akevitt.Akevitt, session *Session) error {
-			AppendText(session, "Hello, world!", session.Chat)
+			AppendText("Hello, world!", session.Chat)
 
 			return nil
 		}).WithQuantity(1))
