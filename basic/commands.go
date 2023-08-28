@@ -8,8 +8,10 @@ import (
 )
 
 // Enter the room command
-func EnterCmd(engine *akevitt.Akevitt, session *Session, arguments string) error {
-	character := session.Character
+func EnterCmd(engine *akevitt.Akevitt, session akevitt.ActiveSession, arguments string) error {
+	sess := CastSession[*Session](session)
+
+	character := sess.Character
 	prevRoom := character.currentRoom.GetName()
 
 	exit, err := akevitt.IsRoomReachable[*Room](engine, session, arguments, character.CurrentRoomKey)
