@@ -182,7 +182,7 @@ func GameScreen(engine *akevitt.Akevitt, session *Session) tview.Primitive {
 	// Creating some useful UI elements such as character's status (health, money, etc.)
 	// and visible objects in a room.
 	status := stats(engine, session)
-	visibles := visibleObjects(engine, session)
+	visibles := VisibleObject(engine, session)
 
 	session.app.SetAfterDrawFunc(func(screen tcell.Screen) {
 		lookupUpdate(engine, session, &visibles)
@@ -317,9 +317,8 @@ func updateStats(engine *akevitt.Akevitt, session *Session) string {
 }
 
 func lookupUpdate(engine *akevitt.Akevitt, session *Session, l **tview.List) {
-	objects := session.Character.currentRoom.GetObjects()
 	(*l).Clear()
-	for _, v := range objects {
+	for _, v := range session.Character.currentRoom.GetObjects() {
 		if v == session.Character {
 			continue
 		}
@@ -335,7 +334,7 @@ func lookupUpdate(engine *akevitt.Akevitt, session *Session, l **tview.List) {
 	(*l).SetSelectedBackgroundColor(tcell.ColorBlack).SetSelectedTextColor(tcell.ColorWhite)
 }
 
-func visibleObjects(engine *akevitt.Akevitt, session *Session) *tview.List {
+func VisibleObject(engine *akevitt.Akevitt, session *Session) *tview.List {
 	l := tview.NewList()
 	lookupUpdate(engine, session, &l)
 	return l

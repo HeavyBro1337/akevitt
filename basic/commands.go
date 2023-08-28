@@ -2,7 +2,6 @@ package basic
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/IvanKorchmit/akevitt"
@@ -12,11 +11,8 @@ import (
 func EnterCmd(engine *akevitt.Akevitt, session *Session, arguments string) error {
 	character := session.Character
 	prevRoom := character.currentRoom.GetName()
-	roomKey, err := strconv.ParseUint(arguments, 10, 64)
-	if err != nil {
-		return err
-	}
-	exit, err := akevitt.IsRoomReachable[*Room](engine, session, roomKey, character.CurrentRoomKey)
+
+	exit, err := akevitt.IsRoomReachable[*Room](engine, session, arguments, character.CurrentRoomKey)
 	if err != nil {
 		return err
 	}

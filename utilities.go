@@ -66,7 +66,7 @@ func deserialize[T Object](b []byte) (T, error) {
 	return result, err
 }
 
-func findByKey[TCollection, T comparable](collection []TCollection, selector func(key TCollection) T, value T) *TCollection {
+func FindByKey[TCollection, T comparable](collection []TCollection, selector func(key TCollection) T, value T) *TCollection {
 	if collection == nil {
 		panic(errors.New("collection is nil"))
 	}
@@ -103,8 +103,17 @@ func MapSlice[T any, TResult any](l []T, callback func(v T) TResult) []TResult {
 	return result
 }
 
+func FindNeighboringRoomByName(currentRoom Room, name string) (Room, Exit, error) {
+	for _, v := range currentRoom.GetExits() {
+		if strings.EqualFold(v.GetRoom().GetName(), name) {
+			return v.GetRoom(), v, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("room %s not found", name)
+}
+
 // Checks if current room specified reachable to another room.
-func IsRoomReachable[T Room](engine *Akevitt, session ActiveSession, roomKey uint64, currentRoomKey uint64) (Exit, error) {
+func IsRoomReachable[T Room](engine *Akevitt, session ActiveSession, name string, currentRoomKey uint64) (Exit, error) {
 	room, err := engine.GetRoom(currentRoomKey)
 
 	if err != nil {
@@ -116,9 +125,9 @@ func IsRoomReachable[T Room](engine *Akevitt, session ActiveSession, roomKey uin
 	if exits == nil {
 		return nil, errors.New("array of exits is nil")
 	}
-	exit := findByKey(exits, func(key Exit) uint64 {
-		return key.GetKey()
-	}, roomKey)
+	exit := FindByKey(exits, func(key Exit) string {
+		return key.GetRoom().GetName()
+	}, name)
 	if exit == nil {
 		return nil, errors.New("unreachable")
 	}
