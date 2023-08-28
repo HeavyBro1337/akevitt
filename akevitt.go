@@ -142,6 +142,19 @@ func Run[TSession ActiveSession](engine *Akevitt) error {
 		return errors.New("base screen is not provided")
 	}
 
+	ticker := time.NewTicker(100 * time.Millisecond)
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				purgeDeadSessions(&engine.sessions, engine, engine.onDeadSession)
+			case <-quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 	ssh.Handle(func(sesh ssh.Session) {
 		var emptySession TSession
 		screen, err := newSessionScreen(sesh)
@@ -156,13 +169,10 @@ func Run[TSession ActiveSession](engine *Akevitt) error {
 
 		engine.sessions[sesh].SetApplication(app)
 		engine.sessions[sesh].GetApplication().SetRoot(engine.root(engine, engine.sessions[sesh]), true)
-		ticker := time.NewTicker(100 * time.Millisecond)
-		quit := make(chan struct{})
 		go func() {
 			for {
 				select {
 				case <-ticker.C:
-					purgeDeadSessions(&engine.sessions, engine, engine.onDeadSession)
 					app.Draw()
 				case <-quit:
 					ticker.Stop()
