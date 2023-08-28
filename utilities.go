@@ -159,6 +159,10 @@ func FindObject[T GameObject](engine *Akevitt, session ActiveSession, key uint64
 
 // Saves game object in a database associated with an account.
 func (engine *Akevitt) SaveGameObject(gameObject GameObject, key uint64, account *Account) error {
+	if account == nil {
+		return errors.New("account is nil")
+	}
+
 	return overwriteObject(engine.db, key, account.Username, gameObject)
 }
 
