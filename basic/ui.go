@@ -256,7 +256,7 @@ func loginScreen(engine *akevitt.Akevitt, session *Session, gameName string, gam
 				return
 			}
 			character, err := akevitt.FindObject[*Character](engine, session, CharacterKey)
-
+			character.account = session.account
 			if err != nil {
 				session.SetRoot(characterCreationWizard(engine, session, gameScreen))
 				ErrorBox(err.Error(), session, session.previousUI)
