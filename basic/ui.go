@@ -2,7 +2,6 @@ package basic
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/IvanKorchmit/akevitt"
@@ -329,7 +328,7 @@ func lookupUpdate(engine *akevitt.Akevitt, session *Session, l **tview.List) {
 	exits := session.Character.currentRoom.GetExits()
 
 	for _, v := range exits {
-		(*l).AddItem(v.GetRoom().GetName(), strconv.FormatUint(v.GetKey(), 10), 0, nil)
+		(*l).AddItem(v.GetRoom().GetName(), v.GetRoom().GetDescription(), 0, nil)
 	}
 	(*l).SetSelectedBackgroundColor(tcell.ColorBlack).SetSelectedTextColor(tcell.ColorWhite)
 }

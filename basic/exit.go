@@ -9,13 +9,6 @@ type Exit struct {
 	room akevitt.Room
 }
 
-func (exit *Exit) GetName() string {
-	if exit.room == nil {
-		return "Nowhere"
-	}
-	return exit.room.GetName()
-}
-
 func (exit *Exit) GetKey() uint64 {
 	return exit.Key
 }
