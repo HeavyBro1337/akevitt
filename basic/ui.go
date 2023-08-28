@@ -108,7 +108,7 @@ func registerScreen(engine *akevitt.Akevitt, session *Session, gameName string, 
 				ErrorBox(err.Error(), session, session.GetCurrentUI())
 				return
 			}
-			session.SetRoot(characterCreationWizard(engine, session))
+			session.SetRoot(characterCreationWizard(engine, session, gameScreen))
 		}).
 		AddButton("Back", func() {
 			session.app.SetRoot(RootScreen(engine, session, gameName, gameScreen), true)
@@ -117,7 +117,7 @@ func registerScreen(engine *akevitt.Akevitt, session *Session, gameName string, 
 	return registerScreen
 }
 
-func characterCreationWizard(engine *akevitt.Akevitt, session *Session) tview.Primitive {
+func characterCreationWizard(engine *akevitt.Akevitt, session *Session, gameScreen func(engine *akevitt.Akevitt, session *Session) tview.Primitive) tview.Primitive {
 	var name string
 	var description string
 	characterCreator := tview.NewForm().AddInputField("Character Name: ", "", 32, nil, func(text string) {
@@ -140,7 +140,7 @@ func characterCreationWizard(engine *akevitt.Akevitt, session *Session) tview.Pr
 			ErrorBox(err.Error(), session, session.previousUI)
 			return
 		}
-		session.SetRoot(GameScreen(engine, session))
+		session.SetRoot(gameScreen(engine, session))
 	})
 	return characterCreator
 }
@@ -258,8 +258,8 @@ func loginScreen(engine *akevitt.Akevitt, session *Session, gameName string, gam
 			character, err := akevitt.FindObject[*Character](engine, session, CharacterKey)
 
 			if err != nil {
+				session.SetRoot(characterCreationWizard(engine, session, gameScreen))
 				ErrorBox(err.Error(), session, session.previousUI)
-				session.SetRoot(characterCreationWizard(engine, session))
 				return
 			}
 			session.Character = character
