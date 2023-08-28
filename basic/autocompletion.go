@@ -27,5 +27,11 @@ func InitAutocompletion() {
 			return "look " + v.GetName()
 		})
 	}
+	autocompletion["enter"] = func(entry string, engine *akevitt.Akevitt, session *Session) []string {
+		exits := session.Character.currentRoom.GetExits()
 
+		return akevitt.MapSlice(exits, func(v akevitt.Exit) string {
+			return "enter " + v.GetRoom().GetName()
+		})
+	}
 }
