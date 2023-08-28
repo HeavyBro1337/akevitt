@@ -50,7 +50,7 @@ func NewEngine() *Akevitt {
 	engine.bind = ":2222"
 	engine.dbPath = "data/database.db"
 	engine.mouse = false
-	engine.heartbeats = make(map[int]*pair[time.Ticker, []func()])
+	engine.heartbeats = make(map[int]*pair[time.Ticker, []func() error])
 	return engine
 }
 
@@ -66,6 +66,6 @@ func (engine *Akevitt) UseSpawnRoom(r Room) *Akevitt {
 func (engine *Akevitt) UseNewHeartbeat(interval int) *Akevitt {
 	dur := time.Duration(interval) * time.Second
 
-	engine.heartbeats[interval] = &pair[time.Ticker, []func()]{f: *time.NewTicker(dur), s: make([]func(), 0)}
+	engine.heartbeats[interval] = &pair[time.Ticker, []func() error]{f: *time.NewTicker(dur), s: make([]func() error, 0)}
 	return engine
 }

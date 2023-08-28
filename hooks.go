@@ -38,7 +38,7 @@ func (engine *Akevitt) Dialogue(dialogue *Dialogue, session ActiveSession) error
 	return engine.onDialogue(engine, session, dialogue)
 }
 
-func (engine *Akevitt) SubscribeToHeartBeat(interval int, fn func()) error {
+func (engine *Akevitt) SubscribeToHeartBeat(interval int, fn func() error) error {
 	t, ok := engine.heartbeats[interval]
 
 	if !ok {

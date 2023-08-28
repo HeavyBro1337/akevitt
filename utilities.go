@@ -88,6 +88,10 @@ func RemoveItem[T comparable](l []T, item T) []T {
 	return l
 }
 
+func RemoveItemByIndex[T any](l []T, i int) []T {
+	return append(l[:i], l[i+1:]...)
+}
+
 // Maps slice, similar to JavaScript's map method.
 func MapSlice[T any, TResult any](l []T, callback func(v T) TResult) []TResult {
 	result := make([]TResult, 0)

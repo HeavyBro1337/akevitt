@@ -37,7 +37,7 @@ type Akevitt struct {
 	onDialogue    DialogueFunc
 	defaultRoom   Room
 	rooms         map[uint64]Room
-	heartbeats    map[int]*pair[time.Ticker, []func()]
+	heartbeats    map[int]*pair[time.Ticker, []func() error]
 }
 
 // Execute the command specified in a `command`.
@@ -84,17 +84,23 @@ func (engine *Akevitt) GetRoom(key uint64) (Room, error) {
 func (engine *Akevitt) startHeartBeats(interval int) {
 	go func() {
 		t, ok := engine.heartbeats[interval]
-
+		errResults := make([]int, 0)
 		if !ok {
-			fmt.Printf("warn: ticker %d does not exist", interval)
+			LogWarn(fmt.Sprintf("ticker %d does not exist", interval))
 			return
 		}
 		for range t.f.C {
-			for _, v := range t.s {
+			for i, v := range t.s {
 				if v == nil {
 					continue
 				}
-				v()
+				if v() != nil {
+					errResults = append(errResults, i)
+				}
+			}
+
+			for i := len(errResults) - 1; i >= 0; i-- {
+				t.s = RemoveItemByIndex(t.s, i)
 			}
 		}
 

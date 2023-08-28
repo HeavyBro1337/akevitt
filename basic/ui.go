@@ -83,7 +83,7 @@ func ErrorBox(message string, session *Session, back *tview.Primitive) {
 	session.app.SetRoot(result, true)
 }
 
-func registerScreen(engine *akevitt.Akevitt, session *Session, gameName string) tview.Primitive {
+func registerScreen(engine *akevitt.Akevitt, session *Session, gameName string, gameScreen func(engine *akevitt.Akevitt, session *Session) tview.Primitive) tview.Primitive {
 	var username string
 	var password string
 	var repeatPassword string
@@ -111,7 +111,7 @@ func registerScreen(engine *akevitt.Akevitt, session *Session, gameName string) 
 			session.SetRoot(characterCreationWizard(engine, session))
 		}).
 		AddButton("Back", func() {
-			session.app.SetRoot(RootScreen(engine, session, gameName), true)
+			session.app.SetRoot(RootScreen(engine, session, gameName, gameScreen), true)
 		})
 	registerScreen.SetBorder(true).SetTitle(" Register ")
 	return registerScreen
@@ -140,12 +140,12 @@ func characterCreationWizard(engine *akevitt.Akevitt, session *Session) tview.Pr
 			ErrorBox(err.Error(), session, session.previousUI)
 			return
 		}
-		session.SetRoot(gameScreen(engine, session))
+		session.SetRoot(GameScreen(engine, session))
 	})
 	return characterCreator
 }
 
-func gameScreen(engine *akevitt.Akevitt, session *Session) tview.Primitive {
+func GameScreen(engine *akevitt.Akevitt, session *Session) tview.Primitive {
 	playerMessage := ""
 
 	// Preparing session by initializing UI primitives, channels and collections.
@@ -238,7 +238,7 @@ func gameScreen(engine *akevitt.Akevitt, session *Session) tview.Primitive {
 	return gameScreen
 }
 
-func loginScreen(engine *akevitt.Akevitt, session *Session, gameName string) tview.Primitive {
+func loginScreen(engine *akevitt.Akevitt, session *Session, gameName string, gameScreen func(engine *akevitt.Akevitt, session *Session) tview.Primitive) tview.Primitive {
 	var username string
 	var password string
 	loginScreen := tview.NewForm().
@@ -271,15 +271,16 @@ func loginScreen(engine *akevitt.Akevitt, session *Session, gameName string) tvi
 			}
 			session.Character.currentRoom = room
 			room.AddObjects(session.Character)
-			session.SetRoot(gameScreen(engine, session))
+			session.SetRoot(GameScreen(engine, session))
 		}).
 		AddButton("Back", func() {
-			session.app.SetRoot(RootScreen(engine, session, gameName), true)
+			session.app.SetRoot(RootScreen(engine, session, gameName, gameScreen), true)
 		})
 	return loginScreen
 }
 
-func RootScreen(engine *akevitt.Akevitt, session akevitt.ActiveSession, gameName string) tview.Primitive {
+func RootScreen(engine *akevitt.Akevitt, session akevitt.ActiveSession, gameName string,
+	gameScreen func(engine *akevitt.Akevitt, session *Session) tview.Primitive) tview.Primitive {
 	sess := CastSession[*Session](session)
 
 	wizard := tview.NewModal().
@@ -287,9 +288,9 @@ func RootScreen(engine *akevitt.Akevitt, session akevitt.ActiveSession, gameName
 		AddButtons([]string{"Register", "Login"}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 			if buttonLabel == "Login" {
-				sess.SetRoot(loginScreen(engine, sess, gameName))
+				sess.SetRoot(loginScreen(engine, sess, gameName, gameScreen))
 			} else if buttonLabel == "Register" {
-				sess.SetRoot(registerScreen(engine, sess, gameName))
+				sess.SetRoot(registerScreen(engine, sess, gameName, gameScreen))
 			}
 		})
 	welcome := tview.NewGrid().
