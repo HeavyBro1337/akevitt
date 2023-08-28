@@ -161,7 +161,7 @@ func GameScreen(engine *akevitt.Akevitt, session *Session) tview.Primitive {
 			}
 		}
 
-		f, ok := autocompletion[strings.Split(currentText, " ")[0]]
+		f, ok := Autocompletion[strings.Split(currentText, " ")[0]]
 
 		if ok {
 			for _, word := range f(currentText, engine, session) {
