@@ -68,18 +68,15 @@ func DialogueBox(dial *akevitt.Dialogue, engine *akevitt.Akevitt, session *Sessi
 	return err
 }
 
-func ErrorBox(message string, session *Session, back *tview.Primitive) {
+func ErrorBox(message string, app *tview.Application, back *tview.Primitive) {
 	result := tview.NewModal().SetText("Error!").SetText(message).SetTextColor(tcell.ColorRed).
 		SetBackgroundColor(tcell.ColorBlack).
 		AddButtons([]string{"Close"}).SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-		session.app.SetRoot(*back, true)
-		if session.Input != nil {
-			session.app.SetFocus(session.Input)
-		}
+		app.SetRoot(*back, true)
 	})
 
 	result.SetBorder(true).SetBorderColor(tcell.ColorDarkRed)
-	session.app.SetRoot(result, true)
+	app.SetRoot(result, true)
 }
 
 func registerScreen(engine *akevitt.Akevitt, session *Session, gameName string, gameScreen func(engine *akevitt.Akevitt, session *Session) tview.Primitive) tview.Primitive {
@@ -99,12 +96,12 @@ func registerScreen(engine *akevitt.Akevitt, session *Session, gameName string, 
 	registerScreen.
 		AddButton("Create account", func() {
 			if password != repeatPassword {
-				ErrorBox("Passwords don't match!", session, session.GetCurrentUI())
+				ErrorBox("Passwords don't match!", session.app, session.GetCurrentUI())
 				return
 			}
 			err := engine.Register(username, password, session)
 			if err != nil {
-				ErrorBox(err.Error(), session, session.GetCurrentUI())
+				ErrorBox(err.Error(), session.app, session.GetCurrentUI())
 				return
 			}
 			session.SetRoot(characterCreationWizard(engine, session, gameScreen))
@@ -126,7 +123,7 @@ func characterCreationWizard(engine *akevitt.Akevitt, session *Session, gameScre
 	})
 	characterCreator.AddButton("Done", func() {
 		if strings.TrimSpace(name) == "" {
-			ErrorBox("character name must not be empty!", session, session.previousUI)
+			ErrorBox("character name must not be empty!", session.app, session.previousUI)
 			return
 		}
 		characterParams := CharacterParams{}
@@ -136,7 +133,7 @@ func characterCreationWizard(engine *akevitt.Akevitt, session *Session, gameScre
 
 		_, err := akevitt.CreateObject(engine, session, emptyChar, characterParams)
 		if err != nil {
-			ErrorBox(err.Error(), session, session.previousUI)
+			ErrorBox(err.Error(), session.app, session.previousUI)
 			return
 		}
 		session.SetRoot(gameScreen(engine, session))
@@ -207,7 +204,7 @@ func GameScreen(engine *akevitt.Akevitt, session *Session) tview.Primitive {
 			AppendText(session, "\t>"+playerMessage, session.Chat)
 			err := engine.ExecuteCommand(playerMessage, session)
 			if err != nil {
-				ErrorBox(err.Error(), session, session.previousUI)
+				ErrorBox(err.Error(), session.app, session.previousUI)
 				inputField.SetText("")
 				return
 			}
@@ -251,21 +248,21 @@ func loginScreen(engine *akevitt.Akevitt, session *Session, gameName string, gam
 		AddButton("Login", func() {
 			err := engine.Login(username, password, session)
 			if err != nil {
-				ErrorBox(err.Error(), session, session.previousUI)
+				ErrorBox(err.Error(), session.app, session.previousUI)
 				return
 			}
 			character, err := akevitt.FindObject[*Character](engine, session, CharacterKey)
 			character.account = session.account
 			if err != nil {
 				session.SetRoot(characterCreationWizard(engine, session, gameScreen))
-				ErrorBox(err.Error(), session, session.previousUI)
+				ErrorBox(err.Error(), session.app, session.previousUI)
 				return
 			}
 			session.Character = character
 			room, err := engine.GetRoom(session.Character.CurrentRoomKey)
 
 			if err != nil {
-				ErrorBox(err.Error(), session, session.previousUI)
+				ErrorBox(err.Error(), session.app, session.previousUI)
 				return
 			}
 			session.Character.currentRoom = room
