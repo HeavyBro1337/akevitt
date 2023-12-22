@@ -166,6 +166,7 @@ func (engine *Akevitt) Run() error {
 		app := tview.NewApplication().SetScreen(screen).EnableMouse(engine.mouse)
 
 		emptySession.Application = app
+		emptySession.Data = make(map[string]any)
 
 		if engine.initFunc != nil {
 			engine.initFunc(&emptySession)
