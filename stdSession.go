@@ -8,17 +8,17 @@ import (
 const DEFAULT_KEY string = "CUSTOM_DATA"
 
 type DefaultSessionData struct {
-	subscribedChannels []string
+	SubscribedChannels []string
 	previousUI         *tview.Primitive
 	Chat               *logview.LogView
 	Input              *tview.InputField
-	proceed            chan struct{}
 }
 
 func InitSession(session *ActiveSession) {
 	defSession := DefaultSessionData{
-		subscribedChannels: []string{"ooc"},
+		SubscribedChannels: []string{"ooc"},
 		Chat:               logview.NewLogView(),
+		Input:              tview.NewInputField(),
 	}
 	session.Data[DEFAULT_KEY] = &defSession
 }
