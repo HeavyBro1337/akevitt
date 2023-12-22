@@ -44,7 +44,7 @@ func (builder *akevittBuilder) UseRegisterCommand(command string, function Comma
 // Engine default constructor
 func NewEngine() *akevittBuilder {
 	engine := &Akevitt{}
-	engine.rooms = make(map[uint64]Room)
+	engine.rooms = make(map[uint64]*Room)
 	engine.sessions = make(Sessions)
 	engine.commands = make(map[string]CommandFunc)
 	engine.bind = ":2222"
@@ -60,7 +60,7 @@ func NewEngine() *akevittBuilder {
 // Sets the spawn room.
 // Note: During startup, the engine traverses from spawn room to exits associated with that room recursively.
 // Make sure you connect rooms with BindRoom function
-func (builder *akevittBuilder) UseSpawnRoom(r Room) *akevittBuilder {
+func (builder *akevittBuilder) UseSpawnRoom(r *Room) *akevittBuilder {
 	builder.engine.defaultRoom = r
 
 	return builder

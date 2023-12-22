@@ -6,7 +6,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"reflect"
+	"hash/fnv"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -103,30 +103,30 @@ func MapSlice[T any, TResult any](l []T, callback func(v T) TResult) []TResult {
 	return result
 }
 
-func FindNeighboringRoomByName(currentRoom Room, name string) (Room, Exit, error) {
-	for _, v := range currentRoom.GetExits() {
-		if strings.EqualFold(v.GetRoom().GetName(), name) {
-			return v.GetRoom(), v, nil
+func FindNeighboringRoomByName(currentRoom *Room, name string) (*Room, *Exit, error) {
+	for _, v := range currentRoom.Exits {
+		if strings.EqualFold(v.Room.Name, name) {
+			return v.Room, v, nil
 		}
 	}
 	return nil, nil, fmt.Errorf("room %s not found", name)
 }
 
 // Checks if current room specified reachable to another room.
-func IsRoomReachable[T Room](engine *Akevitt, session ActiveSession, name string, currentRoomKey uint64) (Exit, error) {
+func IsRoomReachable[T Room](engine *Akevitt, session ActiveSession, name string, currentRoomKey uint64) (*Exit, error) {
 	room, err := engine.GetRoom(currentRoomKey)
 
 	if err != nil {
 		return nil, err
 	}
 
-	exits := room.GetExits()
+	exits := room.Exits
 
 	if exits == nil {
 		return nil, errors.New("array of exits is nil")
 	}
-	exit := FindByKey(exits, func(key Exit) string {
-		return strings.ToLower(key.GetRoom().GetName())
+	exit := FindByKey(exits, func(key *Exit) string {
+		return strings.ToLower(key.Room.Name)
 	}, strings.ToLower(name))
 	if exit == nil {
 		return nil, errors.New("unreachable")
@@ -135,16 +135,15 @@ func IsRoomReachable[T Room](engine *Akevitt, session ActiveSession, name string
 }
 
 // Binds room with an exit.
-func BindRooms[T Exit](room Room, otherRooms ...Room) {
-	var emptyExit T
-	exits := make([]Exit, 0)
+func BindRooms(emptyExit Exit, room *Room, otherRooms ...*Room) {
+	exits := make([]*Exit, 0)
 	for _, v := range otherRooms {
-		exit := reflect.New(reflect.TypeOf(emptyExit).Elem()).Interface().(T) // Creating empty Exit
-		exit.SetRoom(v)                                                       // Setting exit's current room
-		exits = append(exits, exit)
+		exit := emptyExit
+		exit.Room = v // Setting exit's current room
+		exits = append(exits, &exit)
 	}
 
-	room.SetExits(exits...)
+	room.Exits = exits
 }
 
 // Saves object to database.
@@ -180,15 +179,15 @@ func CreateObject[T GameObject](engine *Akevitt, session ActiveSession, object T
 	return object, object.Create(engine, session, params)
 }
 
-func (engine *Akevitt) GlobalLookup(room Room, name string) []GameObject {
+func (engine *Akevitt) GlobalLookup(room *Room, name string) []GameObject {
 	return globalSearchRecursive(engine.defaultRoom, name, nil, nil)
 }
 
 func LookupOfType[T GameObject](room Room) []T {
-	return FilterByType[T, GameObject](room.GetObjects())
+	return FilterByType[T, GameObject](room.Objects)
 }
 
-func globalSearchRecursive(room Room, name string, visited []string, result []GameObject) []GameObject {
+func globalSearchRecursive(room *Room, name string, visited []string, result []GameObject) []GameObject {
 	if visited == nil {
 		visited = make([]string, 0)
 	}
@@ -200,18 +199,18 @@ func globalSearchRecursive(room Room, name string, visited []string, result []Ga
 		result = make([]GameObject, 0)
 	}
 
-	visited = append(visited, room.GetName())
+	visited = append(visited, room.Name)
 
-	for _, v := range room.GetObjects() {
+	for _, v := range room.Objects {
 		if strings.EqualFold(v.GetName(), name) {
 			result = append(result, v)
 		}
 	}
 
-	for _, v := range room.GetExits() {
-		r := v.GetRoom()
+	for _, v := range room.Exits {
+		r := v.Room
 
-		if Find[string](visited, r.GetName()) {
+		if Find[string](visited, r.Name) {
 			continue
 		}
 
@@ -236,7 +235,7 @@ func FilterByType[T any, TCollection any](collection []TCollection) []T {
 	return result
 }
 
-func saveRoomsRecursively(engine *Akevitt, room Room, visited []string) error {
+func saveRoomsRecursively(engine *Akevitt, room *Room, visited []string) error {
 	if visited == nil {
 		visited = make([]string, 0)
 	}
@@ -245,16 +244,16 @@ func saveRoomsRecursively(engine *Akevitt, room Room, visited []string) error {
 		return errors.New("room is nil")
 	}
 
-	fmt.Printf("Loading Room: %s\n", room.GetName())
+	fmt.Printf("Loading Room: %s\n", room.Name)
 
 	engine.rooms[room.GetKey()] = room
 
-	visited = append(visited, room.GetName())
+	visited = append(visited, room.Name)
 
-	for _, v := range room.GetExits() {
-		r := v.GetRoom()
+	for _, v := range room.Exits {
+		r := v.Room
 
-		if Find[string](visited, r.GetName()) {
+		if Find[string](visited, r.Name) {
 			continue
 		}
 
@@ -265,4 +264,10 @@ func saveRoomsRecursively(engine *Akevitt, room Room, visited []string) error {
 		}
 	}
 	return nil
+}
+
+func hash(s string) uint64 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return uint64(h.Sum32())
 }

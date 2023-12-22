@@ -35,8 +35,8 @@ type Akevitt struct {
 	onMessage     MessageFunc
 	onDeadSession DeadSessionFunc
 	onDialogue    DialogueFunc
-	defaultRoom   Room
-	rooms         map[uint64]Room
+	defaultRoom   *Room
+	rooms         map[uint64]*Room
 	heartbeats    map[int]*pair[time.Ticker, []func() error]
 }
 
@@ -67,12 +67,12 @@ func (engine *Akevitt) GetCommands() []string {
 }
 
 // Get sspawn room if specified. Useful for setting character's initial room during its creation.
-func (engine *Akevitt) GetSpawnRoom() Room {
+func (engine *Akevitt) GetSpawnRoom() *Room {
 	return engine.defaultRoom
 }
 
 // Obtains currently loaded rooms by key. It will return an error if room not found.
-func (engine *Akevitt) GetRoom(key uint64) (Room, error) {
+func (engine *Akevitt) GetRoom(key uint64) (*Room, error) {
 	room, ok := engine.rooms[key]
 	if !ok {
 		return nil, errors.New("room not found")
