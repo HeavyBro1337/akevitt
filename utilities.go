@@ -154,7 +154,7 @@ func SaveObject[T Object](engine *Akevitt, obj T, category string, key uint64) e
 
 // Finds game object associated with an account in database.
 func FindObject[T GameObject](engine *Akevitt, session ActiveSession, key uint64) (T, error) {
-	return findObject[T](engine.db, *session.GetAccount(), key)
+	return findObject[T](engine.db, *session.SessionAccount, key)
 }
 
 // Saves game object in a database associated with an account.

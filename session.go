@@ -18,11 +18,10 @@ import (
 //		input              *tview.InputField
 //		character          *Character
 //	}
-type ActiveSession interface {
-	GetAccount() *Account
-	SetAccount(acc *Account)
-	GetApplication() *tview.Application
-	SetApplication(app *tview.Application)
+type ActiveSession struct {
+	SessionAccount *Account
+	Application    *tview.Application
+	Data           any
 }
 
 func purgeDeadSessions(sessions *Sessions, engine *Akevitt, callback DeadSessionFunc) {

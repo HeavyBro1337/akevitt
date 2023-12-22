@@ -6,11 +6,6 @@ require (
 )
 
 require (
-	github.com/ldez/go-git-cmd-wrapper v1.3.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
-)
-
-require (
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/uaraven/logview v0.1.0
 	gitlab.com/tslocum/cbind v0.1.4 // indirect

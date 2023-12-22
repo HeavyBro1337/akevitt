@@ -17,7 +17,7 @@ func (engine *Akevitt) Message(channel, message, username string, session Active
 		err := engine.onMessage(engine, v, channel, message, username)
 
 		if session != v {
-			v.GetApplication().Draw()
+			v.Application.Draw()
 		}
 
 		if err != nil {

@@ -18,10 +18,10 @@ func isSessionAlreadyActive(acc Account, sessions *Sessions, engine *Akevitt) bo
 	// We want make sure we purge dead sessions before looking for active.
 	purgeDeadSessions(sessions, engine, engine.onDeadSession)
 	for _, v := range *sessions {
-		if v.GetAccount() == nil {
+		if v.SessionAccount == nil {
 			continue
 		}
-		if *v.GetAccount() == acc {
+		if *v.SessionAccount == acc {
 			return true
 		}
 	}

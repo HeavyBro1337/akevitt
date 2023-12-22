@@ -10,7 +10,6 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"reflect"
 	"strings"
 	"time"
 
@@ -111,7 +110,7 @@ func (engine *Akevitt) startHeartBeats(interval int) {
 // Run the given instance of engine.
 // You should pass your own implementation of ActiveSession,
 // so it can be controlled of how your game would behave
-func Run[TSession ActiveSession](engine *Akevitt) error {
+func Run(engine *Akevitt) error {
 	fmt.Println("Running Akevitt")
 	err := createDatabase(engine)
 	if err != nil {
@@ -156,7 +155,7 @@ func Run[TSession ActiveSession](engine *Akevitt) error {
 		}
 	}()
 	ssh.Handle(func(sesh ssh.Session) {
-		var emptySession TSession
+		emptySession := ActiveSession{}
 		screen, err := newSessionScreen(sesh)
 		if err != nil {
 			fmt.Fprintln(sesh.Stderr(), "unable to create screen:", err)
@@ -165,10 +164,12 @@ func Run[TSession ActiveSession](engine *Akevitt) error {
 		purgeDeadSessions(&engine.sessions, engine, engine.onDeadSession)
 		app := tview.NewApplication().SetScreen(screen).EnableMouse(engine.mouse)
 
-		engine.sessions[sesh] = reflect.New(reflect.TypeOf(emptySession).Elem()).Interface().(TSession)
+		emptySession.Application = app
 
-		engine.sessions[sesh].SetApplication(app)
-		engine.sessions[sesh].GetApplication().SetRoot(engine.root(engine, engine.sessions[sesh]), true)
+		engine.sessions[sesh] = emptySession
+
+		emptySession.Application.SetRoot(engine.root(engine, engine.sessions[sesh]), true)
+
 		go func() {
 			for {
 				select {
