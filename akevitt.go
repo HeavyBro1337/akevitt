@@ -110,7 +110,7 @@ func (engine *Akevitt) startHeartBeats(interval int) {
 // Run the given instance of engine.
 // You should pass your own implementation of ActiveSession,
 // so it can be controlled of how your game would behave
-func Run(engine *Akevitt) error {
+func (engine *Akevitt) Run() error {
 	fmt.Println("Running Akevitt")
 	err := createDatabase(engine)
 	if err != nil {
