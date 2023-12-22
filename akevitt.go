@@ -37,6 +37,7 @@ type Akevitt struct {
 	onDialogue    DialogueFunc
 	defaultRoom   *Room
 	rooms         map[uint64]*Room
+	rsaKey        string
 	heartbeats    map[int]*pair[time.Ticker, []func() error]
 }
 
@@ -193,7 +194,7 @@ func (engine *Akevitt) Run() error {
 		}
 		sesh.Exit(0)
 	})
-	usePubKey := ssh.HostKeyFile("id_rsa")
+	usePubKey := ssh.HostKeyFile(engine.rsaKey)
 
 	allowKeys := ssh.PublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
 		return true

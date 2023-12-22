@@ -48,6 +48,7 @@ func NewEngine() *akevittBuilder {
 	engine.sessions = make(Sessions)
 	engine.commands = make(map[string]CommandFunc)
 	engine.bind = ":2222"
+	engine.rsaKey = "id_rsa"
 	engine.dbPath = "data/database.db"
 	engine.mouse = false
 	engine.heartbeats = make(map[int]*pair[time.Ticker, []func() error])
@@ -75,6 +76,12 @@ func (builder *akevittBuilder) UseNewHeartbeat(interval int) *akevittBuilder {
 
 func (builder *akevittBuilder) UseOnJoin(f func(*ActiveSession)) *akevittBuilder {
 	builder.engine.initFunc = f
+
+	return builder
+}
+
+func (builder *akevittBuilder) UseKeyPath(path string) *akevittBuilder {
+	builder.engine.rsaKey = path
 
 	return builder
 }
