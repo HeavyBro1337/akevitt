@@ -1,4 +1,4 @@
-package basic
+package akevitt
 
 import (
 	"github.com/gdamore/tcell/v2"
