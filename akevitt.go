@@ -29,6 +29,7 @@ type Akevitt struct {
 	bind          string
 	mouse         bool
 	dbPath        string
+	initFunc      func(ActiveSession)
 	commands      map[string]CommandFunc
 	db            *bolt.DB
 	onMessage     MessageFunc

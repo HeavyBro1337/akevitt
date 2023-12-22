@@ -72,3 +72,9 @@ func (builder *akevittBuilder) UseNewHeartbeat(interval int) *akevittBuilder {
 	builder.engine.heartbeats[interval] = &pair[time.Ticker, []func() error]{f: *time.NewTicker(dur), s: make([]func() error, 0)}
 	return builder
 }
+
+func (builder *akevittBuilder) UseOnJoin(f func(ActiveSession)) *akevittBuilder {
+	builder.engine.initFunc = f
+
+	return builder
+}
