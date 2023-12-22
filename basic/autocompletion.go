@@ -1,0 +1,37 @@
+package basic
+
+import (
+	"github.com/IvanKorchmit/akevitt"
+)
+
+type autocomplete = func(entry string, engine *akevitt.Akevitt, session *Session) []string
+
+var Autocompletion map[string]autocomplete = make(map[string]autocomplete)
+
+// Initialize autocompletion entries which can autocomplete with addiotnal arguments
+// Example: `npc M`
+// May suggest `npc Maxwell Jensen`
+func InitAutocompletion() {
+	Autocompletion["interact"] = func(entry string, engine *akevitt.Akevitt, session *Session) []string {
+		npcs := akevitt.LookupOfType[*NPC](session.Character.currentRoom)
+
+		return akevitt.MapSlice(npcs, func(v *NPC) string {
+			return "interact " + v.Name
+		})
+	}
+
+	Autocompletion["look"] = func(entry string, engine *akevitt.Akevitt, session *Session) []string {
+		gameobjects := session.Character.currentRoom.GetObjects()
+
+		return akevitt.MapSlice(gameobjects, func(v akevitt.GameObject) string {
+			return "look " + v.GetName()
+		})
+	}
+	Autocompletion["enter"] = func(entry string, engine *akevitt.Akevitt, session *Session) []string {
+		exits := session.Character.currentRoom.GetExits()
+
+		return akevitt.MapSlice(exits, func(v akevitt.Exit) string {
+			return "enter " + v.GetRoom().GetName()
+		})
+	}
+}
