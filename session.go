@@ -6,22 +6,10 @@ import (
 	"github.com/rivo/tview"
 )
 
-// The interface that is associated with each player.
-// Implement this interface to take control of the logic of your game.
-// Example of the custom session struct:
-//
-//	type ActiveSession struct {
-//		account            *akevitt.Account
-//		app                *tview.Application
-//		subscribedChannels []string
-//		chat               *logview.LogView
-//		input              *tview.InputField
-//		character          *Character
-//	}
 type ActiveSession struct {
 	Account     *Account
 	Application *tview.Application
-	Data        any
+	Data        map[string]any
 }
 
 func purgeDeadSessions(sessions *Sessions, engine *Akevitt, callback DeadSessionFunc) {
