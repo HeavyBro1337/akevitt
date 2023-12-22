@@ -13,7 +13,7 @@ func (engine *Akevitt) Login(username, password string, session ActiveSession) e
 		return errors.New("the session is already active")
 	}
 
-	session.SessionAccount = account
+	session.Account = account
 
 	return nil
 }
@@ -27,7 +27,7 @@ func (engine *Akevitt) Register(username, password string, session ActiveSession
 		return errors.New("account already exists")
 	}
 	account, err := createAccount(engine.db, username, password)
-	session.SessionAccount = account
+	session.Account = account
 
 	return err
 }

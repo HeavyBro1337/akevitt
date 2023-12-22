@@ -19,9 +19,9 @@ import (
 //		character          *Character
 //	}
 type ActiveSession struct {
-	SessionAccount *Account
-	Application    *tview.Application
-	Data           any
+	Account     *Account
+	Application *tview.Application
+	Data        any
 }
 
 func purgeDeadSessions(sessions *Sessions, engine *Akevitt, callback DeadSessionFunc) {
