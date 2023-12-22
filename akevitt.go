@@ -29,7 +29,7 @@ type Akevitt struct {
 	bind          string
 	mouse         bool
 	dbPath        string
-	initFunc      func(ActiveSession)
+	initFunc      func(*ActiveSession)
 	commands      map[string]CommandFunc
 	db            *bolt.DB
 	onMessage     MessageFunc
@@ -166,6 +166,10 @@ func (engine *Akevitt) Run() error {
 		app := tview.NewApplication().SetScreen(screen).EnableMouse(engine.mouse)
 
 		emptySession.Application = app
+
+		if engine.initFunc != nil {
+			engine.initFunc(&emptySession)
+		}
 
 		engine.sessions[sesh] = emptySession
 

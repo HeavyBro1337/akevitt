@@ -73,7 +73,7 @@ func (builder *akevittBuilder) UseNewHeartbeat(interval int) *akevittBuilder {
 	return builder
 }
 
-func (builder *akevittBuilder) UseOnJoin(f func(ActiveSession)) *akevittBuilder {
+func (builder *akevittBuilder) UseOnJoin(f func(*ActiveSession)) *akevittBuilder {
 	builder.engine.initFunc = f
 
 	return builder
