@@ -55,7 +55,7 @@ func (dial *Dialogue) GetTitle() string {
 }
 
 // Invokes engine.Dialogue of the specified index from options.
-func (dial *Dialogue) Proceed(index int, session ActiveSession, engine *Akevitt) error {
+func (dial *Dialogue) Proceed(index int, session *ActiveSession, engine *Akevitt) error {
 	return engine.Dialogue(dial.options[index], session)
 }
 

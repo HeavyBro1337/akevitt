@@ -43,7 +43,7 @@ type Akevitt struct {
 // Execute the command specified in a `command`.
 // The command can be registered using the useRegisterCommand method.
 // Returns an error if the given command not found or the result of associated function returns an error.
-func (engine *Akevitt) ExecuteCommand(command string, session ActiveSession) error {
+func (engine *Akevitt) ExecuteCommand(command string, session *ActiveSession) error {
 	zeroArg := strings.Fields(command)[0]
 	noZeroArgArray := strings.Fields(command)[1:]
 	noZeroArg := strings.Join(noZeroArgArray, " ")
@@ -171,7 +171,7 @@ func (engine *Akevitt) Run() error {
 			engine.initFunc(&emptySession)
 		}
 
-		engine.sessions[sesh] = emptySession
+		engine.sessions[sesh] = &emptySession
 
 		emptySession.Application.SetRoot(engine.root(engine, engine.sessions[sesh]), true)
 

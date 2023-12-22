@@ -25,8 +25,8 @@ type ActiveSession struct {
 }
 
 func purgeDeadSessions(sessions *Sessions, engine *Akevitt, callback DeadSessionFunc) {
-	deadSessions := make([]ActiveSession, 0)
-	liveSessions := make([]ActiveSession, 0)
+	deadSessions := make([]*ActiveSession, 0)
+	liveSessions := make([]*ActiveSession, 0)
 	for k, v := range *sessions {
 		_, err := io.WriteString(k, "\000")
 		if err != nil {
