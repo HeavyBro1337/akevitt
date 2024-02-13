@@ -36,7 +36,7 @@ func (builder *HeartBuilder) NewDuration(duration time.Duration) *HeartBuilder {
 	return builder
 }
 
-func (builder *HeartBuilder) Finish(duration time.Duration) *HeartBeatsPlugin {
+func (builder *HeartBuilder) Finish() *HeartBeatsPlugin {
 	return builder.plugin
 }
 
