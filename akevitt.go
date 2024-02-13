@@ -30,7 +30,6 @@ type Akevitt struct {
 	dbPath        string
 	initFunc      func(*ActiveSession)
 	commands      map[string]CommandFunc
-	onMessage     MessageFunc
 	onDeadSession DeadSessionFunc
 	onDialogue    DialogueFunc
 	defaultRoom   *Room
@@ -81,6 +80,14 @@ func (engine *Akevitt) GetRoom(key uint64) (*Room, error) {
 	return room, nil
 }
 
+func (engine *Akevitt) GetSessions() Sessions {
+	return engine.sessions
+}
+
+func (engine *Akevitt) GetOnDeadSession() DeadSessionFunc {
+	return engine.onDeadSession
+}
+
 // Run the given instance of engine.
 // You should pass your own implementation of ActiveSession,
 // so it can be controlled of how your game would behave
@@ -91,6 +98,7 @@ func (engine *Akevitt) Run() error {
 
 	for _, plugin := range engine.plugins {
 		if err := plugin.Build(engine); err != nil {
+			fmt.Println("Build failed...")
 			return err
 		}
 	}
@@ -119,7 +127,7 @@ func (engine *Akevitt) Run() error {
 		for {
 			select {
 			case <-ticker.C:
-				purgeDeadSessions(&engine.sessions, engine, engine.onDeadSession)
+				PurgeDeadSessions(engine, engine.onDeadSession)
 			case <-quit:
 				ticker.Stop()
 				return
@@ -133,7 +141,7 @@ func (engine *Akevitt) Run() error {
 			fmt.Fprintln(sesh.Stderr(), "unable to create screen:", err)
 			return
 		}
-		purgeDeadSessions(&engine.sessions, engine, engine.onDeadSession)
+		PurgeDeadSessions(engine, engine.onDeadSession)
 		app := tview.NewApplication().SetScreen(screen).EnableMouse(engine.mouse)
 
 		emptySession.Application = app

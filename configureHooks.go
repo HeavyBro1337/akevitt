@@ -1,12 +1,5 @@
 package akevitt
 
-// Accepts the function which gets invoked when someone sends the message (engine.Message)
-func (builder *akevittBuilder) UseOnMessage(f MessageFunc) *akevittBuilder {
-	builder.engine.onMessage = f
-
-	return builder
-}
-
 // Called when engine.Dialogue is called
 func (builder *akevittBuilder) UseOnDialogue(f DialogueFunc) *akevittBuilder {
 	builder.engine.onDialogue = f

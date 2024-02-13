@@ -22,9 +22,14 @@ func (builder *akevittBuilder) UseRootUI(uiFunc UIFunc) *akevittBuilder {
 
 // Register command with an alias and function
 func (builder *akevittBuilder) UseRegisterCommand(command string, function CommandFunc) *akevittBuilder {
-	command = strings.TrimSpace(command)
-	builder.engine.commands[command] = function
+	builder.engine.AddCommand(command, function)
 	return builder
+}
+
+// Register command with an alias and function
+func (engine *Akevitt) AddCommand(command string, function CommandFunc) {
+	command = strings.TrimSpace(command)
+	engine.commands[command] = function
 }
 
 // Engine default constructor

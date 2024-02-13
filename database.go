@@ -7,7 +7,7 @@ import (
 
 func isSessionAlreadyActive(acc Account, sessions *Sessions, engine *Akevitt) bool {
 	// We want make sure we purge dead sessions before looking for active.
-	purgeDeadSessions(sessions, engine, engine.onDeadSession)
+	PurgeDeadSessions(engine, engine.onDeadSession)
 	for _, v := range *sessions {
 		if v.Account == nil {
 			continue
