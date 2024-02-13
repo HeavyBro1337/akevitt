@@ -18,7 +18,5 @@ func FetchPlugin[T Plugin](engine *Akevitt) (*T, error) {
 		}
 	}
 
-	tType := reflect.TypeOf(new(T)).Name()
-
-	return nil, fmt.Errorf("couldn't fetch the plugin of type %s", tType)
+	return nil, fmt.Errorf("couldn't fetch the plugin of type %s", reflect.TypeOf(new(T)))
 }
