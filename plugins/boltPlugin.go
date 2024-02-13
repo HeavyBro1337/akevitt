@@ -3,6 +3,8 @@ package plugins
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
+	"reflect"
 
 	"github.com/IvanKorchmit/akevitt"
 	"github.com/boltdb/bolt"
@@ -20,15 +22,19 @@ func (plugin *BoltDbPlugin[T]) Build(engine *akevitt.Akevitt) error {
 
 func (plugin *BoltDbPlugin[T]) Save(object T) error {
 	return db.Update(func(tx *bolt.Tx) error {
+		bkt, err := tx.CreateBucketIfNotExists([]byte(fmt.Sprint(reflect.TypeOf(new(T)))))
+
+		if err != nil {
+			return err
+		}
+
 		bytes, err := plugin.serialize(object)
 
 		if err != nil {
 			return err
 		}
 
-		_, err = tx.CreateBucketIfNotExists(bytes)
-
-		return err
+		return bkt.Put(bytes, nil)
 	})
 }
 
@@ -36,8 +42,14 @@ func (plugin *BoltDbPlugin[T]) LoadAll() ([]T, error) {
 	objects := make([]T, 0)
 
 	err := db.Update(func(tx *bolt.Tx) error {
-		return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
-			obj, err := plugin.deserialize(name)
+		bkt := tx.Bucket([]byte(fmt.Sprint(reflect.TypeOf(new(T)))))
+
+		if bkt == nil {
+			return fmt.Errorf("bucket of type %s doesn't exist", reflect.TypeOf(new(T)))
+		}
+
+		return bkt.ForEach(func(k []byte, v []byte) error {
+			obj, err := plugin.deserialize(k)
 
 			if err != nil {
 				return err
