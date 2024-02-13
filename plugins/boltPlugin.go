@@ -42,10 +42,10 @@ func (plugin *BoltDbPlugin[T]) LoadAll() ([]T, error) {
 	objects := make([]T, 0)
 
 	err := db.Update(func(tx *bolt.Tx) error {
-		bkt := tx.Bucket([]byte(fmt.Sprint(reflect.TypeOf(new(T)))))
+		bkt, err := tx.CreateBucketIfNotExists([]byte(fmt.Sprint(reflect.TypeOf(new(T)))))
 
-		if bkt == nil {
-			return fmt.Errorf("bucket of type %s doesn't exist", reflect.TypeOf(new(T)))
+		if err != nil {
+			return err
 		}
 
 		return bkt.ForEach(func(k []byte, v []byte) error {
