@@ -10,12 +10,13 @@ type MessageFunc = func(engine *akevitt.Akevitt, session *akevitt.ActiveSession,
 
 type MessagePlugin struct {
 	onMessageFn MessageFunc
+	includeCmd  bool
 }
 
 // Send the message to other current sessions
 func (plugin *MessagePlugin) Message(engine *akevitt.Akevitt, channel, message, username string, session *akevitt.ActiveSession) error {
 	if plugin.onMessageFn == nil {
-		return errors.New("onMessage func is nil")
+		return errors.New("message callback is nil")
 	}
 	akevitt.PurgeDeadSessions(engine, engine.GetOnDeadSession())
 
@@ -35,9 +36,17 @@ func (plugin *MessagePlugin) Message(engine *akevitt.Akevitt, channel, message, 
 }
 
 func (plugin *MessagePlugin) Build(engine *akevitt.Akevitt) error {
-	engine.AddCommand("ooc", plugin.oocCmd)
+	if plugin.includeCmd {
+		engine.AddCommand("ooc", plugin.oocCmd)
+	}
 
 	return nil
+}
+
+func NewMessagePlugin(includeCmd bool) *MessagePlugin {
+	return &MessagePlugin{
+		includeCmd: includeCmd,
+	}
 }
 
 // Out-of-character chat command

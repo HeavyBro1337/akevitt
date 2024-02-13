@@ -17,11 +17,6 @@ import (
 	"github.com/rivo/tview"
 )
 
-// The engine instance which can be passed as an argument and provide some useful methods like
-// Login, Register, Message, Dialogue, etc.
-// Methods with name starting like Use should be called in a main function during the initialisation step.
-// To actually run the engine, you must call Run function and pass the engine instance
-// Example: fmt.Fatal(akevitt.Run[*MySessionStruct](engine))
 type Akevitt struct {
 	sessions      Sessions
 	root          UIFunc
