@@ -26,6 +26,10 @@ func (builder *akevittBuilder) UseRegisterCommand(command string, function Comma
 	return builder
 }
 
+func (engine *Akevitt) AddInit(fn func(*ActiveSession)) {
+	engine.initFunc = append(engine.initFunc, fn)
+}
+
 // Register command with an alias and function
 func (engine *Akevitt) AddCommand(command string, function CommandFunc) {
 	command = strings.TrimSpace(command)
@@ -59,8 +63,8 @@ func (builder *akevittBuilder) UseSpawnRoom(r *Room) *akevittBuilder {
 	return builder
 }
 
-func (builder *akevittBuilder) UseOnJoin(f func(*ActiveSession)) *akevittBuilder {
-	builder.engine.initFunc = f
+func (builder *akevittBuilder) UseOnJoin(fn func(*ActiveSession)) *akevittBuilder {
+	builder.engine.AddInit(fn)
 
 	return builder
 }

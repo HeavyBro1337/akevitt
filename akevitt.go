@@ -23,7 +23,7 @@ type Akevitt struct {
 	bind          string
 	mouse         bool
 	dbPath        string
-	initFunc      func(*ActiveSession)
+	initFunc      []func(*ActiveSession)
 	commands      map[string]CommandFunc
 	onDeadSession DeadSessionFunc
 	onDialogue    DialogueFunc
@@ -143,7 +143,9 @@ func (engine *Akevitt) Run() error {
 		emptySession.Data = make(map[string]any)
 
 		if engine.initFunc != nil {
-			engine.initFunc(&emptySession)
+			for _, fn := range engine.initFunc {
+				fn(&emptySession)
+			}
 		}
 
 		engine.sessions[sesh] = &emptySession
