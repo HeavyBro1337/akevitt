@@ -37,6 +37,7 @@ type Akevitt struct {
 	onDialogue    DialogueFunc
 	defaultRoom   *Room
 	rooms         map[uint64]*Room
+	plugins       []Plugin
 	rsaKey        string
 	heartbeats    map[int]*pair[time.Ticker, []func() error]
 }

@@ -20,20 +20,6 @@ func (builder *akevittBuilder) UseRootUI(uiFunc UIFunc) *akevittBuilder {
 	return builder
 }
 
-// Specify path to save database
-func (builder *akevittBuilder) UseDBPath(path string) *akevittBuilder {
-	builder.engine.dbPath = path
-
-	return builder
-}
-
-// Enable mouse integration feature
-func (builder *akevittBuilder) UseMouse() *akevittBuilder {
-	builder.engine.mouse = true
-
-	return builder
-}
-
 // Register command with an alias and function
 func (builder *akevittBuilder) UseRegisterCommand(command string, function CommandFunc) *akevittBuilder {
 	command = strings.TrimSpace(command)
@@ -52,6 +38,7 @@ func NewEngine() *akevittBuilder {
 	engine.dbPath = "data/database.db"
 	engine.mouse = false
 	engine.heartbeats = make(map[int]*pair[time.Ticker, []func() error])
+	engine.plugins = make([]Plugin, 0)
 
 	builder := &akevittBuilder{engine}
 
@@ -64,13 +51,6 @@ func NewEngine() *akevittBuilder {
 func (builder *akevittBuilder) UseSpawnRoom(r *Room) *akevittBuilder {
 	builder.engine.defaultRoom = r
 
-	return builder
-}
-
-func (builder *akevittBuilder) UseNewHeartbeat(interval int) *akevittBuilder {
-	dur := time.Duration(interval) * time.Second
-
-	builder.engine.heartbeats[interval] = &pair[time.Ticker, []func() error]{f: *time.NewTicker(dur), s: make([]func() error, 0)}
 	return builder
 }
 
