@@ -113,7 +113,7 @@ func FindNeighboringRoomByName(currentRoom *Room, name string) (*Room, *Exit, er
 }
 
 // Checks if current room specified reachable to another room.
-func IsRoomReachable[T Room](engine *Akevitt, session ActiveSession, name string, currentRoomKey uint64) (*Exit, error) {
+func IsRoomReachable[T Room](engine *Akevitt, session *ActiveSession, name string, currentRoomKey uint64) (*Exit, error) {
 	room, err := engine.GetRoom(currentRoomKey)
 
 	if err != nil {
@@ -152,7 +152,7 @@ func SaveObject[T Object](engine *Akevitt, obj T, category string, key uint64) e
 }
 
 // Finds game object associated with an account in database.
-func FindObject[T GameObject](engine *Akevitt, session ActiveSession, key uint64) (T, error) {
+func FindObject[T GameObject](engine *Akevitt, session *ActiveSession, key uint64) (T, error) {
 	return findObject[T](engine.db, *session.Account, key)
 }
 
@@ -175,7 +175,7 @@ func (engine *Akevitt) GenerateKey(gameobject GameObject) (uint64, error) {
 	return generateKey(engine.db, gameobject.GetName())
 }
 
-func CreateObject[T GameObject](engine *Akevitt, session ActiveSession, object T, params interface{}) (T, error) {
+func CreateObject[T GameObject](engine *Akevitt, session *ActiveSession, object T, params interface{}) (T, error) {
 	return object, object.Create(engine, session, params)
 }
 

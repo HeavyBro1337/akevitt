@@ -8,7 +8,7 @@ type Object interface {
 type GameObject interface {
 	Object
 	GetName() string
-	Create(engine *Akevitt, session ActiveSession, params interface{}) error // Create an object wuth specified parameters.
+	Create(engine *Akevitt, session *ActiveSession, params interface{}) error // Create an object wuth specified parameters.
 }
 
 type Room struct {

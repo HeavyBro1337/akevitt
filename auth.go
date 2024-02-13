@@ -20,7 +20,7 @@ func (engine *Akevitt) Login(username, password string, session *ActiveSession) 
 
 // Create an account
 // Returns an error if account with the same username already exists
-func (engine *Akevitt) Register(username, password string, session ActiveSession) error {
+func (engine *Akevitt) Register(username, password string, session *ActiveSession) error {
 	exists := isAccountExists(username, engine.db)
 
 	if exists {
