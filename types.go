@@ -5,9 +5,9 @@ import (
 	"github.com/rivo/tview"
 )
 
-type pair[TFirst any, TSecond any] struct {
-	f TFirst
-	s TSecond
+type Pair[TFirst any, TSecond any] struct {
+	L TFirst
+	R TSecond
 }
 
 type Sessions = map[ssh.Session]*ActiveSession

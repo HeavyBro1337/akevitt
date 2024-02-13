@@ -2,7 +2,6 @@ package akevitt
 
 import (
 	"errors"
-	"fmt"
 )
 
 // Send the message to other current sessions
@@ -36,14 +35,4 @@ func (engine *Akevitt) Dialogue(dialogue *Dialogue, session *ActiveSession) erro
 	}
 
 	return engine.onDialogue(engine, session, dialogue)
-}
-
-func (engine *Akevitt) SubscribeToHeartBeat(interval int, fn func() error) error {
-	t, ok := engine.heartbeats[interval]
-
-	if !ok {
-		return fmt.Errorf("warn: ticker %d does not exist", interval)
-	}
-	t.s = append(t.s, fn)
-	return nil
 }

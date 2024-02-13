@@ -10,5 +10,10 @@ type Account struct {
 
 // Save account into a database
 func (account *Account) Save(engine *Akevitt) error {
-	return overwriteObject[*Account](engine.db, 0, account.Username, account)
+	databasePlugin, err := FetchPlugin[DatabasePlugin[*Account]](engine)
+
+	if err != nil {
+		return err
+	}
+	return (*databasePlugin).Save(account)
 }

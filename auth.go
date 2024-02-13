@@ -14,7 +14,7 @@ func (engine *Akevitt) Login(username, password string, session *ActiveSession) 
 		return err
 	}
 
-	account, err := login(username, password, engine.db)
+	account, err := login(username, password, engine)
 	if err != nil {
 		return err
 	}
@@ -40,12 +40,12 @@ func (engine *Akevitt) Register(username, password, repeatPassword string, sessi
 		return errors.New("passwords don't match")
 	}
 
-	exists := isAccountExists(username, engine.db)
+	exists := isAccountExists(username, engine)
 
 	if exists {
 		return errors.New("account already exists")
 	}
-	account, err := createAccount(engine.db, username, password)
+	account, err := createAccount(engine, username, password)
 	session.Account = account
 
 	return err

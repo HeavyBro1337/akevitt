@@ -37,7 +37,7 @@ func NewEngine() *akevittBuilder {
 	engine.rsaKey = "id_rsa"
 	engine.dbPath = "data/database.db"
 	engine.mouse = false
-	engine.heartbeats = make(map[int]*pair[time.Ticker, []func() error])
+	engine.heartbeats = make(map[int]*Pair[time.Ticker, []func() error])
 	engine.plugins = make([]Plugin, 0)
 
 	builder := &akevittBuilder{engine}

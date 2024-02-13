@@ -1,9 +1,7 @@
 package akevitt
 
 import (
-	"bytes"
 	"encoding/binary"
-	"encoding/gob"
 	"errors"
 	"fmt"
 	"hash/fnv"
@@ -40,30 +38,6 @@ func intToByte(value uint64) []byte {
 	binaryId := make([]byte, 8)
 	binary.BigEndian.PutUint64(binaryId, uint64(value))
 	return binaryId
-}
-
-// Converts `T` to byte array.
-func serialize[T Object](v T) ([]byte, error) {
-	var buff bytes.Buffer
-	enc := gob.NewEncoder(&buff)
-	err := enc.Encode(v)
-	if err != nil {
-		return nil, err
-	}
-	return buff.Bytes(), nil
-}
-
-// Converts byte array to T struct.
-func deserialize[T Object](b []byte) (T, error) {
-	var result T
-	var decodeBuffer bytes.Buffer
-	decodeBuffer.Write(b)
-	dec := gob.NewDecoder(&decodeBuffer)
-	err := dec.Decode(&result)
-	if err != nil {
-		return result, err
-	}
-	return result, err
 }
 
 func FindByKey[TCollection, T comparable](collection []TCollection, selector func(key TCollection) T, value T) *TCollection {
@@ -146,33 +120,28 @@ func BindRooms(emptyExit Exit, room *Room, otherRooms ...*Room) {
 	room.Exits = exits
 }
 
-// Saves object to database.
-func SaveObject[T Object](engine *Akevitt, obj T, category string, key uint64) error {
-	return overwriteObject[T](engine.db, key, category, obj)
-}
-
-// Finds game object associated with an account in database.
-func FindObject[T GameObject](engine *Akevitt, session *ActiveSession, key uint64) (T, error) {
-	return findObject[T](engine.db, *session.Account, key)
-}
-
 // Saves game object in a database associated with an account.
 func (engine *Akevitt) SaveGameObject(gameObject GameObject, key uint64, account *Account) error {
 	if account == nil {
 		return errors.New("account is nil")
 	}
 
-	return overwriteObject(engine.db, key, account.Username, gameObject)
+	databasePlugin, err := FetchPlugin[DatabasePlugin[GameObject]](engine)
+
+	if err != nil {
+		return err
+	}
+	return (*databasePlugin).Save(gameObject)
 }
 
 // Saves object into a database.
-func (engine *Akevitt) SaveObject(gameObject GameObject, key uint64) error {
-	return overwriteObject(engine.db, key, gameObject.GetName(), gameObject)
-}
+func (engine *Akevitt) SaveObject(gameObject GameObject) error {
+	databasePlugin, err := FetchPlugin[DatabasePlugin[GameObject]](engine)
 
-// Auto-increment uint64 key by object's name.
-func (engine *Akevitt) GenerateKey(gameobject GameObject) (uint64, error) {
-	return generateKey(engine.db, gameobject.GetName())
+	if err != nil {
+		return err
+	}
+	return (*databasePlugin).Save(gameObject)
 }
 
 func CreateObject[T GameObject](engine *Akevitt, session *ActiveSession, object T, params interface{}) (T, error) {

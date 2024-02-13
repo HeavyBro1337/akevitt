@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/boltdb/bolt"
 	"github.com/gliderlabs/ssh"
 	"github.com/rivo/tview"
 )
@@ -31,7 +30,6 @@ type Akevitt struct {
 	dbPath        string
 	initFunc      func(*ActiveSession)
 	commands      map[string]CommandFunc
-	db            *bolt.DB
 	onMessage     MessageFunc
 	onDeadSession DeadSessionFunc
 	onDialogue    DialogueFunc
@@ -39,7 +37,7 @@ type Akevitt struct {
 	rooms         map[uint64]*Room
 	plugins       []Plugin
 	rsaKey        string
-	heartbeats    map[int]*pair[time.Ticker, []func() error]
+	heartbeats    map[int]*Pair[time.Ticker, []func() error]
 }
 
 // Execute the command specified in a `command`.
@@ -83,60 +81,31 @@ func (engine *Akevitt) GetRoom(key uint64) (*Room, error) {
 	return room, nil
 }
 
-func (engine *Akevitt) startHeartBeats(interval int) {
-	go func() {
-		t, ok := engine.heartbeats[interval]
-		errResults := make([]int, 0)
-		if !ok {
-			LogWarn(fmt.Sprintf("ticker %d does not exist", interval))
-			return
-		}
-		for range t.f.C {
-			for i, v := range t.s {
-				if v == nil {
-					continue
-				}
-				if v() != nil {
-					errResults = append(errResults, i)
-				}
-			}
-
-			for i := len(errResults) - 1; i >= 0; i-- {
-				t.s = RemoveItemByIndex(t.s, i)
-			}
-		}
-
-	}()
-
-}
-
 // Run the given instance of engine.
 // You should pass your own implementation of ActiveSession,
 // so it can be controlled of how your game would behave
 func (engine *Akevitt) Run() error {
 	fmt.Println("Running Akevitt")
-	err := createDatabase(engine)
-	if err != nil {
-		return err
+
+	fmt.Println("Building plugins...")
+
+	for _, plugin := range engine.plugins {
+		if err := plugin.Build(engine); err != nil {
+			return err
+		}
 	}
 
-	fmt.Println("Opened database")
+	fmt.Println("Done!")
 
 	fmt.Println("Loading rooms recursively...")
 
-	err = saveRoomsRecursively(engine, engine.defaultRoom, nil)
-
-	for k := range engine.heartbeats {
-		engine.startHeartBeats(k)
-	}
+	err := saveRoomsRecursively(engine, engine.defaultRoom, nil)
 
 	if err != nil {
 		return err
 	}
 
 	fmt.Println("Done!")
-
-	defer engine.db.Close()
 
 	gob.Register(Account{})
 

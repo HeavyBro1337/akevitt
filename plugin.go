@@ -5,10 +5,8 @@ import (
 	"reflect"
 )
 
-type AkevittConfig = akevittBuilder
-
 type Plugin interface {
-	Build(*AkevittConfig) error
+	Build(*Akevitt) error
 }
 
 func FetchPlugin[T Plugin](engine *Akevitt) (*T, error) {
