@@ -43,9 +43,10 @@ func (plugin *MessagePlugin) Build(engine *akevitt.Akevitt) error {
 	return nil
 }
 
-func NewMessagePlugin(includeCmd bool) *MessagePlugin {
+func NewMessagePlugin(includeCmd bool, fn MessageFunc) *MessagePlugin {
 	return &MessagePlugin{
-		includeCmd: includeCmd,
+		includeCmd:  includeCmd,
+		onMessageFn: fn,
 	}
 }
 
