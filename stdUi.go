@@ -16,11 +16,11 @@ func AppendText(message string, chatlog *logview.LogView) {
 	chatlog.ScrollToBottom()
 }
 
-func ErrorBox(message string, app *tview.Application, back *tview.Primitive) {
+func ErrorBox(message string, app *tview.Application, back tview.Primitive) {
 	result := tview.NewModal().SetText("Error!").SetText(message).SetTextColor(tcell.ColorRed).
 		SetBackgroundColor(tcell.ColorBlack).
 		AddButtons([]string{"Close"}).SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-		app.SetRoot(*back, true)
+		app.SetRoot(back, true)
 	})
 
 	result.SetBorder(true).SetBorderColor(tcell.ColorDarkRed)

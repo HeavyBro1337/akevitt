@@ -20,5 +20,6 @@ func (builder *akevittBuilder) UseOnDialogue(f DialogueFunc) *akevittBuilder {
 // and in result: the application will crash.
 func (builder *akevittBuilder) UseOnSessionEnd(f DeadSessionFunc) *akevittBuilder {
 	builder.engine.onDeadSession = f
+
 	return builder
 }
