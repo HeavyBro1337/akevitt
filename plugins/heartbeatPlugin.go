@@ -23,17 +23,21 @@ func (plugin *HeartBeatsPlugin) Build(engine *akevitt.Akevitt) error {
 
 func NewHeartbeatPlugin() *HeartBuilder {
 	return &HeartBuilder{
-		plugin: HeartBeatsPlugin{heartbeats: make(HeartbeatMap)},
+		plugin: &HeartBeatsPlugin{heartbeats: make(HeartbeatMap)},
 	}
 }
 
 type HeartBuilder struct {
-	plugin HeartBeatsPlugin
+	plugin *HeartBeatsPlugin
 }
 
 func (builder *HeartBuilder) NewDuration(duration time.Duration) *HeartBuilder {
 	builder.plugin.heartbeats[duration] = &akevitt.Pair[time.Ticker, []func() error]{L: *time.NewTicker(duration), R: make([]func() error, 0)}
 	return builder
+}
+
+func (builder *HeartBuilder) Finish(duration time.Duration) *HeartBeatsPlugin {
+	return builder.plugin
 }
 
 func (plugin *HeartBeatsPlugin) startHeartBeats(interval time.Duration) {
