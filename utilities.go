@@ -1,7 +1,6 @@
 package akevitt
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"hash/fnv"
@@ -31,13 +30,6 @@ func Find[T comparable](collection []T, value T) bool {
 		}
 	}
 	return false
-}
-
-// Converts `Uint64` to byte array.
-func intToByte(value uint64) []byte {
-	binaryId := make([]byte, 8)
-	binary.BigEndian.PutUint64(binaryId, uint64(value))
-	return binaryId
 }
 
 func FindByKey[TCollection, T comparable](collection []TCollection, selector func(key TCollection) T, value T) *TCollection {

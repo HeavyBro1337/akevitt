@@ -3,6 +3,6 @@ package akevitt
 type DatabasePlugin[T Object] interface {
 	Plugin
 
-	Save(Object) error
+	Save(T) error
 	LoadAll() ([]T, error)
 }

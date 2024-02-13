@@ -3,8 +3,6 @@ package akevitt
 import (
 	"errors"
 	"fmt"
-
-	"github.com/boltdb/bolt"
 )
 
 func isSessionAlreadyActive(acc Account, sessions *Sessions, engine *Akevitt) bool {
@@ -19,26 +17,6 @@ func isSessionAlreadyActive(acc Account, sessions *Sessions, engine *Akevitt) bo
 		}
 	}
 	return false
-}
-
-func generateKey(db *bolt.DB, bucketName string) (uint64, error) {
-	result := uint64(0)
-
-	return result, db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(bucketName))
-
-		if err != nil {
-			return err
-		}
-		key, err := bucket.NextSequence()
-
-		if err != nil {
-			return err
-		}
-		result = key
-
-		return nil
-	})
 }
 
 func login(username string, password string, engine *Akevitt) (*Account, error) {
