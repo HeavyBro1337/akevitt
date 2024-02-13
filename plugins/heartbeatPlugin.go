@@ -43,7 +43,6 @@ func (builder *HeartBuilder) Finish() *HeartBeatsPlugin {
 func (plugin *HeartBeatsPlugin) startHeartBeats(interval time.Duration) {
 	go func() {
 		t, ok := plugin.heartbeats[interval]
-		errResults := make([]int, 0)
 		if !ok {
 			akevitt.LogWarn(fmt.Sprintf("ticker %d does not exist", interval))
 			return
@@ -54,12 +53,8 @@ func (plugin *HeartBeatsPlugin) startHeartBeats(interval time.Duration) {
 					continue
 				}
 				if fn() != nil {
-					errResults = append(errResults, i)
+					t.R[i] = nil
 				}
-			}
-
-			for i := len(errResults) - 1; i >= 0; i-- {
-				t.R = akevitt.RemoveItemByIndex(t.R, i)
 			}
 		}
 
