@@ -17,6 +17,7 @@ func (plugin *DefaultPlugins) Build(engine *akevitt.Akevitt) error {
 		if err := p.Build(engine); err != nil {
 			return err
 		}
+		engine.AddPlugin(p)
 	}
 	return nil
 }
