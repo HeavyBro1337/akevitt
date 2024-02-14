@@ -34,7 +34,7 @@ func (plugin *BoltDbPlugin[T]) Save(object T) error {
 			return err
 		}
 
-		return bkt.Put(bytes, nil)
+		return bkt.Put([]byte(object.GetName()), bytes)
 	})
 }
 
@@ -49,7 +49,7 @@ func (plugin *BoltDbPlugin[T]) LoadAll() ([]T, error) {
 		}
 
 		return bkt.ForEach(func(k []byte, v []byte) error {
-			obj, err := plugin.deserialize(k)
+			obj, err := plugin.deserialize(v)
 
 			if err != nil {
 				return err
