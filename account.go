@@ -8,6 +8,10 @@ type Account struct {
 	Password string
 }
 
+func (account *Account) GetName() string {
+	return account.Username
+}
+
 // Save account into a database
 func (account *Account) Save(engine *Akevitt) error {
 	databasePlugin, err := FetchPlugin[DatabasePlugin[*Account]](engine)

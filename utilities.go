@@ -112,43 +112,25 @@ func BindRooms(emptyExit Exit, room *Room, otherRooms ...*Room) {
 	room.Exits = exits
 }
 
-// Saves game object in a database associated with an account.
-func (engine *Akevitt) SaveGameObject(gameObject GameObject, key uint64, account *Account) error {
-	if account == nil {
-		return errors.New("account is nil")
-	}
-
-	databasePlugin, err := FetchPlugin[DatabasePlugin[GameObject]](engine)
-
-	if err != nil {
-		return err
-	}
-	return (*databasePlugin).Save(gameObject)
-}
-
 // Saves object into a database.
-func (engine *Akevitt) SaveObject(gameObject GameObject) error {
-	databasePlugin, err := FetchPlugin[DatabasePlugin[GameObject]](engine)
+func (engine *Akevitt) SaveObject(object Object) error {
+	databasePlugin, err := FetchPlugin[DatabasePlugin[Object]](engine)
 
 	if err != nil {
 		return err
 	}
-	return (*databasePlugin).Save(gameObject)
+	return (*databasePlugin).Save(object)
 }
 
-func CreateObject[T GameObject](engine *Akevitt, session *ActiveSession, object T, params interface{}) (T, error) {
-	return object, object.Create(engine, session, params)
-}
-
-func (engine *Akevitt) GlobalLookup(room *Room, name string) []GameObject {
+func (engine *Akevitt) GlobalLookup(room *Room, name string) []Object {
 	return globalSearchRecursive(engine.defaultRoom, name, nil, nil)
 }
 
-func LookupOfType[T GameObject](room Room) []T {
-	return FilterByType[T, GameObject](room.Objects)
+func LookupOfType[T Object](room Room) []T {
+	return FilterByType[T, Object](room.Objects)
 }
 
-func globalSearchRecursive(room *Room, name string, visited []string, result []GameObject) []GameObject {
+func globalSearchRecursive(room *Room, name string, visited []string, result []Object) []Object {
 	if visited == nil {
 		visited = make([]string, 0)
 	}
@@ -157,7 +139,7 @@ func globalSearchRecursive(room *Room, name string, visited []string, result []G
 		return nil
 	}
 	if result == nil {
-		result = make([]GameObject, 0)
+		result = make([]Object, 0)
 	}
 
 	visited = append(visited, room.Name)
