@@ -61,7 +61,7 @@ func (plugin *MessagePlugin) Build(engine *akevitt.Akevitt) error {
 
 func NewMessagePlugin(includeCmd bool, fn MessageFunc, format string) *MessagePlugin {
 	if format == "" {
-		format = "%[0]s (%[1]s) says %[2]s"
+		format = "%[1]s (%[1]s) says %[2]s"
 	}
 
 	return &MessagePlugin{
