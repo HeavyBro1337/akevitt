@@ -12,7 +12,7 @@ func isSessionAlreadyActive(acc Account, sessions *Sessions, engine *Akevitt) bo
 		if v.Account == nil {
 			continue
 		}
-		if *v.Account == acc {
+		if v.Account.Username == acc.Username {
 			return true
 		}
 	}
@@ -67,8 +67,9 @@ func createAccount(engine *Akevitt, username, password string) (*Account, error)
 	}
 
 	account := &Account{
-		Username: username,
-		Password: hash,
+		Username:       username,
+		Password:       hash,
+		PersistentData: make(map[string]any),
 	}
 
 	err = (*databasePlugin).Save(account)

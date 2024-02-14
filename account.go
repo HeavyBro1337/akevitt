@@ -4,8 +4,9 @@ package akevitt
 // After registering an account, the password is hashed in a proper way
 // To create one you would need to invoke `engine.Register(username, password, session)`
 type Account struct {
-	Username string
-	Password string
+	Username       string
+	Password       string
+	PersistentData map[string]any
 }
 
 func (account *Account) GetName() string {
