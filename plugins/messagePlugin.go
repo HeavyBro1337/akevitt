@@ -1,7 +1,6 @@
 package plugins
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/IvanKorchmit/akevitt"
@@ -21,9 +20,6 @@ type MessagePlugin struct {
 
 // Send the message to other current sessions
 func (plugin *MessagePlugin) Message(engine *akevitt.Akevitt, channel, message, username string, session *akevitt.ActiveSession) error {
-	if plugin.onMessageFn == nil {
-		return errors.New("message callback is nil")
-	}
 	akevitt.PurgeDeadSessions(engine, engine.GetOnDeadSession())
 
 	for _, v := range engine.GetSessions() {
