@@ -33,8 +33,6 @@ func login(username string, password string, engine *Akevitt) (*Account, error) 
 	}
 
 	for _, account := range accounts {
-		fmt.Printf("account: %v\n", account)
-
 		if account.Username != username {
 			continue
 		}
