@@ -2,17 +2,21 @@ package plugins
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/IvanKorchmit/akevitt"
+	"github.com/uaraven/logview"
 )
 
 const MessagePluginData string = "MessagePlugin"
+const logElem string = "MessagePluginLog"
 
 type MessageFunc = func(engine *akevitt.Akevitt, session *akevitt.ActiveSession, channel, message, username string) error
 
 type MessagePlugin struct {
 	onMessageFn MessageFunc
 	includeCmd  bool
+	format      string
 }
 
 // Send the message to other current sessions
@@ -28,15 +32,20 @@ func (plugin *MessagePlugin) Message(engine *akevitt.Akevitt, channel, message, 
 		if !akevitt.Find(channels, channel) {
 			continue
 		}
+		if plugin.onMessageFn != nil {
+			err := plugin.onMessageFn(engine, v, channel, message, username)
 
-		err := plugin.onMessageFn(engine, v, channel, message, username)
+			if err != nil {
+				return err
+			}
+		}
+
+		st := fmt.Sprintf(plugin.format, username, channel, message)
+
+		akevitt.AppendText(st, plugin.GetChatLog(v))
 
 		if session != v {
 			v.Application.Draw()
-		}
-
-		if err != nil {
-			return err
 		}
 	}
 
@@ -48,15 +57,21 @@ func (plugin *MessagePlugin) Build(engine *akevitt.Akevitt) error {
 		engine.AddCommand("ooc", plugin.oocCmd)
 	}
 	engine.AddInit(func(session *akevitt.ActiveSession) {
+		session.Data[logElem] = logview.NewLogView()
 		session.Data[MessagePluginData] = []string{"ooc"}
 	})
 	return nil
 }
 
-func NewMessagePlugin(includeCmd bool, fn MessageFunc) *MessagePlugin {
+func NewMessagePlugin(includeCmd bool, fn MessageFunc, format string) *MessagePlugin {
+	if format == "" {
+		format = "%[0]s (%[1]s) says %[2]s"
+	}
+
 	return &MessagePlugin{
 		includeCmd:  includeCmd,
 		onMessageFn: fn,
+		format:      format,
 	}
 }
 
@@ -64,4 +79,10 @@ func NewMessagePlugin(includeCmd bool, fn MessageFunc) *MessagePlugin {
 func (plugin *MessagePlugin) oocCmd(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
 
 	return plugin.Message(engine, "ooc", command, session.Account.Username, session)
+}
+
+func (plugin *MessagePlugin) GetChatLog(session *akevitt.ActiveSession) *logview.LogView {
+	lv := session.Data[logElem].(*logview.LogView)
+
+	return lv
 }
