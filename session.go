@@ -12,6 +12,12 @@ type ActiveSession struct {
 	Data        map[string]any
 }
 
+func (session *ActiveSession) loadData() {
+	for k, v := range session.Account.PersistentData {
+		session.Data[k] = &v
+	}
+}
+
 func PurgeDeadSessions(engine *Akevitt, callback DeadSessionFunc) {
 	deadSessions := make([]*ActiveSession, 0)
 	liveSessions := make([]*ActiveSession, 0)

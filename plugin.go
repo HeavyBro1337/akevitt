@@ -20,3 +20,9 @@ func FetchPlugin[T Plugin](engine *Akevitt) (*T, error) {
 
 	return nil, fmt.Errorf("couldn't fetch the plugin of type %s", reflect.TypeOf(new(T)))
 }
+
+func FetchPluginUnsafe[T Plugin](engine *Akevitt) T {
+	plugin, _ := FetchPlugin[T](engine)
+
+	return *plugin
+}

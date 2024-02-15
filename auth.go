@@ -24,6 +24,8 @@ func (engine *Akevitt) Login(username, password string, session *ActiveSession) 
 
 	session.Account = account
 
+	session.loadData()
+
 	return nil
 }
 
