@@ -3,6 +3,8 @@ package akevitt
 import (
 	"unicode"
 
+	"github.com/IvanKorchmit/akevitt"
+	"github.com/IvanKorchmit/akevitt/plugins"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/uaraven/logview"
@@ -29,10 +31,12 @@ func ErrorBox(message string, app *tview.Application, back tview.Primitive) {
 	app.SetRoot(result, true)
 }
 
-func RegistrationScreen(engine *Akevitt, session *ActiveSession, nextScreen UIFunc) tview.Primitive {
+func RegistrationScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession, nextScreen akevitt.UIFunc) tview.Primitive {
 	username := ""
 	password := ""
 	repeatPassword := ""
+
+	account := akevitt.FetchPluginUnsafe[*plugins.AccountPlugin](engine)
 
 	form := tview.NewForm()
 
@@ -51,7 +55,7 @@ func RegistrationScreen(engine *Akevitt, session *ActiveSession, nextScreen UIFu
 			repeatPassword = text
 		}).
 		AddButton("Register", func() {
-			err := engine.Register(username, password, repeatPassword, session)
+			err := account.Register(username, password, repeatPassword, session)
 
 			if err != nil {
 				ErrorBox(err.Error(), session.Application, form)
@@ -64,11 +68,13 @@ func RegistrationScreen(engine *Akevitt, session *ActiveSession, nextScreen UIFu
 	return form
 }
 
-func LoginScreen(engine *Akevitt, session *ActiveSession, nextScreen UIFunc) tview.Primitive {
+func LoginScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession, nextScreen akevitt.UIFunc) tview.Primitive {
 	username := ""
 	password := ""
 
 	form := tview.NewForm()
+
+	account := akevitt.FetchPluginUnsafe[*plugins.AccountPlugin](engine)
 
 	form.AddInputField("Username", "", 0, func(textToCheck string, lastChar rune) bool {
 		if !unicode.IsLetter(lastChar) && !unicode.IsDigit(lastChar) || lastChar > unicode.MaxASCII {
@@ -82,7 +88,7 @@ func LoginScreen(engine *Akevitt, session *ActiveSession, nextScreen UIFunc) tvi
 			password = text
 		}).
 		AddButton("Login", func() {
-			err := engine.Login(username, password, session)
+			err := account.Login(username, password, session)
 
 			if err != nil {
 				ErrorBox(err.Error(), session.Application, form)

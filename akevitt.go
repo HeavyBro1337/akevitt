@@ -177,3 +177,34 @@ func (engine *Akevitt) Run() error {
 
 	return ssh.ListenAndServe(engine.bind, nil, allowKeys, usePubKey)
 }
+
+func saveRoomsRecursively(engine *Akevitt, room *Room, visited []string) error {
+	if visited == nil {
+		visited = make([]string, 0)
+	}
+
+	if room == nil {
+		return errors.New("room is nil")
+	}
+
+	fmt.Printf("Loading Room: %s\n", room.Name)
+
+	engine.rooms[room.GetKey()] = room
+
+	visited = append(visited, room.Name)
+
+	for _, v := range room.Exits {
+		r := v.Room
+
+		if Find[string](visited, r.Name) {
+			continue
+		}
+
+		err := saveRoomsRecursively(engine, r, visited)
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
