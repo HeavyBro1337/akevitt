@@ -26,7 +26,6 @@ type Akevitt struct {
 	initFunc      []func(*ActiveSession)
 	commands      map[string]CommandFunc
 	onDeadSession DeadSessionFunc
-	onDialogue    DialogueFunc
 	defaultRoom   *Room
 	rooms         map[uint64]*Room
 	plugins       []Plugin
