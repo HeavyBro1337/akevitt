@@ -75,12 +75,12 @@ func (builder *akevittBuilder) UseKeyPath(path string) *akevittBuilder {
 	return builder
 }
 
-func (builder *akevittBuilder) AddPlugin(plugin Plugin) *akevittBuilder {
-	builder.engine.AddPlugin(plugin)
+func (builder *akevittBuilder) AddPlugin(plugin ...Plugin) *akevittBuilder {
+	builder.engine.AddPlugin(plugin...)
 
 	return builder
 }
 
-func (engine *Akevitt) AddPlugin(plugin Plugin) {
-	engine.plugins = append(engine.plugins, plugin)
+func (engine *Akevitt) AddPlugin(plugins ...Plugin) {
+	engine.plugins = append(engine.plugins, plugins...)
 }

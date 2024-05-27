@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"unicode"
 
 	"github.com/IvanKorchmit/akevitt"
+	"github.com/rivo/tview"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -13,7 +15,7 @@ type AccountPlugin struct {
 	engine *akevitt.Akevitt
 }
 
-func (plugin *AccountPlugin) login(username string, password string) (*akevitt.Account, error) {
+func (plugin *AccountPlugin) login(username, password string) (*akevitt.Account, error) {
 	databasePlugin, err := akevitt.FetchPlugin[akevitt.DatabasePlugin[*akevitt.Account]](plugin.engine)
 
 	if err != nil {
@@ -39,6 +41,21 @@ func (plugin *AccountPlugin) login(username string, password string) (*akevitt.A
 	}
 
 	return nil, errors.New("wrong username or password")
+}
+
+func (plugin *AccountPlugin) LoginSession(username, password string, session *akevitt.ActiveSession) error {
+	acc, err := plugin.login(username, password)
+	if err != nil {
+		return err
+	}
+
+	sessions := plugin.engine.GetSessions()
+
+	if plugin.isSessionAlreadyActive(*acc, &sessions) {
+		return errors.New("the session is already active")
+	}
+	session.Account = acc
+	return nil
 }
 
 func (plugin *AccountPlugin) isSessionAlreadyActive(acc akevitt.Account, sessions *akevitt.Sessions) bool {
@@ -159,4 +176,76 @@ func hashString(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 
 	return string(bytes), err
+}
+
+func RegistrationScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession, nextScreen akevitt.UIFunc) tview.Primitive {
+	username := ""
+	password := ""
+	repeatPassword := ""
+
+	account := akevitt.FetchPluginUnsafe[*AccountPlugin](engine)
+
+	form := tview.NewForm()
+
+	form.AddInputField("Username", "", 0, func(textToCheck string, lastChar rune) bool {
+		if !unicode.IsLetter(lastChar) && !unicode.IsDigit(lastChar) || lastChar > unicode.MaxASCII {
+			return false
+		}
+
+		username = textToCheck
+		return true
+	}, nil).
+		AddPasswordField("Repeat password", "", 0, '*', func(text string) {
+			password = text
+		}).
+		AddPasswordField("Repeat password", "", 0, '*', func(text string) {
+			repeatPassword = text
+		}).
+		AddButton("Register", func() {
+			err := account.Register(username, password, repeatPassword, session)
+
+			if err != nil {
+				akevitt.ErrorBox(err.Error(), session.Application, form)
+				return
+			}
+
+			session.Application.SetRoot(nextScreen(engine, session), true)
+		})
+
+	return form
+}
+
+func LoginScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession, nextScreen akevitt.UIFunc) tview.Primitive {
+	username := ""
+	password := ""
+
+	form := tview.NewForm()
+
+	account := akevitt.FetchPluginUnsafe[*AccountPlugin](engine)
+
+	form.AddInputField("Username", "", 0, func(textToCheck string, lastChar rune) bool {
+		if !unicode.IsLetter(lastChar) && !unicode.IsDigit(lastChar) || lastChar > unicode.MaxASCII {
+			return false
+		}
+
+		username = textToCheck
+		return true
+	}, nil).
+		AddPasswordField("Password", "", 0, '*', func(text string) {
+			password = text
+		}).
+		AddButton("Login", func() {
+			err := account.LoginSession(username, password, session)
+
+			if err != nil {
+				akevitt.ErrorBox(err.Error(), session.Application, form)
+				return
+			}
+
+			session.Application.SetRoot(nextScreen(engine, session), true)
+		})
+
+	form.SetTitle("Login")
+
+	return form
 }
