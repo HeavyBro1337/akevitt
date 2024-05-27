@@ -10,7 +10,7 @@ import (
 
 func main() {
 	room := akevitt.Room{
-		Name: "LOOL",
+		Name: "Example room",
 	}
 
 	app := akevitt.NewEngine().
