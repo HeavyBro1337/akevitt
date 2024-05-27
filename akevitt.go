@@ -13,32 +13,24 @@ import (
 	"strings"
 	"time"
 
-	"github.com/boltdb/bolt"
 	"github.com/gliderlabs/ssh"
 	"github.com/rivo/tview"
 )
 
-// The engine instance which can be passed as an argument and provide some useful methods like
-// Login, Register, Message, Dialogue, etc.
-// Methods with name starting like Use should be called in a main function during the initialisation step.
-// To actually run the engine, you must call Run function and pass the engine instance
-// Example: fmt.Fatal(akevitt.Run[*MySessionStruct](engine))
 type Akevitt struct {
 	sessions      Sessions
 	root          UIFunc
 	bind          string
 	mouse         bool
 	dbPath        string
-	initFunc      func(*ActiveSession)
+	initFunc      []func(*ActiveSession)
 	commands      map[string]CommandFunc
-	db            *bolt.DB
-	onMessage     MessageFunc
 	onDeadSession DeadSessionFunc
-	onDialogue    DialogueFunc
 	defaultRoom   *Room
 	rooms         map[uint64]*Room
+	plugins       []Plugin
 	rsaKey        string
-	heartbeats    map[int]*pair[time.Ticker, []func() error]
+	heartbeats    map[int]*Pair[time.Ticker, []func() error]
 }
 
 // Execute the command specified in a `command`.
@@ -82,31 +74,12 @@ func (engine *Akevitt) GetRoom(key uint64) (*Room, error) {
 	return room, nil
 }
 
-func (engine *Akevitt) startHeartBeats(interval int) {
-	go func() {
-		t, ok := engine.heartbeats[interval]
-		errResults := make([]int, 0)
-		if !ok {
-			LogWarn(fmt.Sprintf("ticker %d does not exist", interval))
-			return
-		}
-		for range t.f.C {
-			for i, v := range t.s {
-				if v == nil {
-					continue
-				}
-				if v() != nil {
-					errResults = append(errResults, i)
-				}
-			}
+func (engine *Akevitt) GetSessions() Sessions {
+	return engine.sessions
+}
 
-			for i := len(errResults) - 1; i >= 0; i-- {
-				t.s = RemoveItemByIndex(t.s, i)
-			}
-		}
-
-	}()
-
+func (engine *Akevitt) GetOnDeadSession() DeadSessionFunc {
+	return engine.onDeadSession
 }
 
 // Run the given instance of engine.
@@ -114,28 +87,27 @@ func (engine *Akevitt) startHeartBeats(interval int) {
 // so it can be controlled of how your game would behave
 func (engine *Akevitt) Run() error {
 	fmt.Println("Running Akevitt")
-	err := createDatabase(engine)
-	if err != nil {
-		return err
+
+	fmt.Println("Building plugins...")
+
+	for _, plugin := range engine.plugins {
+		if err := plugin.Build(engine); err != nil {
+			fmt.Println("Build failed...")
+			return err
+		}
 	}
 
-	fmt.Println("Opened database")
+	fmt.Println("Done!")
 
 	fmt.Println("Loading rooms recursively...")
 
-	err = saveRoomsRecursively(engine, engine.defaultRoom, nil)
-
-	for k := range engine.heartbeats {
-		engine.startHeartBeats(k)
-	}
+	err := saveRoomsRecursively(engine, engine.defaultRoom, nil)
 
 	if err != nil {
 		return err
 	}
 
 	fmt.Println("Done!")
-
-	defer engine.db.Close()
 
 	gob.Register(Account{})
 
@@ -149,7 +121,7 @@ func (engine *Akevitt) Run() error {
 		for {
 			select {
 			case <-ticker.C:
-				purgeDeadSessions(&engine.sessions, engine, engine.onDeadSession)
+				PurgeDeadSessions(engine, engine.onDeadSession)
 			case <-quit:
 				ticker.Stop()
 				return
@@ -163,14 +135,16 @@ func (engine *Akevitt) Run() error {
 			fmt.Fprintln(sesh.Stderr(), "unable to create screen:", err)
 			return
 		}
-		purgeDeadSessions(&engine.sessions, engine, engine.onDeadSession)
+		PurgeDeadSessions(engine, engine.onDeadSession)
 		app := tview.NewApplication().SetScreen(screen).EnableMouse(engine.mouse)
 
 		emptySession.Application = app
 		emptySession.Data = make(map[string]any)
 
 		if engine.initFunc != nil {
-			engine.initFunc(&emptySession)
+			for _, fn := range engine.initFunc {
+				fn(&emptySession)
+			}
 		}
 
 		engine.sessions[sesh] = &emptySession
@@ -201,4 +175,35 @@ func (engine *Akevitt) Run() error {
 	})
 
 	return ssh.ListenAndServe(engine.bind, nil, allowKeys, usePubKey)
+}
+
+func saveRoomsRecursively(engine *Akevitt, room *Room, visited []string) error {
+	if visited == nil {
+		visited = make([]string, 0)
+	}
+
+	if room == nil {
+		return errors.New("room is nil")
+	}
+
+	fmt.Printf("Loading Room: %s\n", room.Name)
+
+	engine.rooms[room.GetKey()] = room
+
+	visited = append(visited, room.Name)
+
+	for _, v := range room.Exits {
+		r := v.Room
+
+		if Find[string](visited, r.Name) {
+			continue
+		}
+
+		err := saveRoomsRecursively(engine, r, visited)
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

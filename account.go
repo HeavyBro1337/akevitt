@@ -4,11 +4,21 @@ package akevitt
 // After registering an account, the password is hashed in a proper way
 // To create one you would need to invoke `engine.Register(username, password, session)`
 type Account struct {
-	Username string
-	Password string
+	Username       string
+	Password       string
+	PersistentData map[string]any
+}
+
+func (account *Account) GetName() string {
+	return account.Username
 }
 
 // Save account into a database
 func (account *Account) Save(engine *Akevitt) error {
-	return overwriteObject[*Account](engine.db, 0, account.Username, account)
+	databasePlugin, err := FetchPlugin[DatabasePlugin[*Account]](engine)
+
+	if err != nil {
+		return err
+	}
+	return (*databasePlugin).Save(account)
 }

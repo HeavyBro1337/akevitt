@@ -20,25 +20,20 @@ func (builder *akevittBuilder) UseRootUI(uiFunc UIFunc) *akevittBuilder {
 	return builder
 }
 
-// Specify path to save database
-func (builder *akevittBuilder) UseDBPath(path string) *akevittBuilder {
-	builder.engine.dbPath = path
-
+// Register command with an alias and function
+func (builder *akevittBuilder) UseRegisterCommand(command string, function CommandFunc) *akevittBuilder {
+	builder.engine.AddCommand(command, function)
 	return builder
 }
 
-// Enable mouse integration feature
-func (builder *akevittBuilder) UseMouse() *akevittBuilder {
-	builder.engine.mouse = true
-
-	return builder
+func (engine *Akevitt) AddInit(fn func(*ActiveSession)) {
+	engine.initFunc = append(engine.initFunc, fn)
 }
 
 // Register command with an alias and function
-func (builder *akevittBuilder) UseRegisterCommand(command string, function CommandFunc) *akevittBuilder {
+func (engine *Akevitt) AddCommand(command string, function CommandFunc) {
 	command = strings.TrimSpace(command)
-	builder.engine.commands[command] = function
-	return builder
+	engine.commands[command] = function
 }
 
 // Engine default constructor
@@ -51,7 +46,8 @@ func NewEngine() *akevittBuilder {
 	engine.rsaKey = "id_rsa"
 	engine.dbPath = "data/database.db"
 	engine.mouse = false
-	engine.heartbeats = make(map[int]*pair[time.Ticker, []func() error])
+	engine.heartbeats = make(map[int]*Pair[time.Ticker, []func() error])
+	engine.plugins = make([]Plugin, 0)
 
 	builder := &akevittBuilder{engine}
 
@@ -67,15 +63,8 @@ func (builder *akevittBuilder) UseSpawnRoom(r *Room) *akevittBuilder {
 	return builder
 }
 
-func (builder *akevittBuilder) UseNewHeartbeat(interval int) *akevittBuilder {
-	dur := time.Duration(interval) * time.Second
-
-	builder.engine.heartbeats[interval] = &pair[time.Ticker, []func() error]{f: *time.NewTicker(dur), s: make([]func() error, 0)}
-	return builder
-}
-
-func (builder *akevittBuilder) UseOnJoin(f func(*ActiveSession)) *akevittBuilder {
-	builder.engine.initFunc = f
+func (builder *akevittBuilder) UseOnJoin(fn func(*ActiveSession)) *akevittBuilder {
+	builder.engine.AddInit(fn)
 
 	return builder
 }
@@ -84,4 +73,14 @@ func (builder *akevittBuilder) UseKeyPath(path string) *akevittBuilder {
 	builder.engine.rsaKey = path
 
 	return builder
+}
+
+func (builder *akevittBuilder) AddPlugin(plugin ...Plugin) *akevittBuilder {
+	builder.engine.addPlugin(plugin...)
+
+	return builder
+}
+
+func (engine *Akevitt) addPlugin(plugins ...Plugin) {
+	engine.plugins = append(engine.plugins, plugins...)
 }

@@ -57,8 +57,13 @@ func (t *tty) Stop() error {
 func (t *tty) Drain() error {
 	return nil
 }
-func (t *tty) WindowSize() (width int, height int, err error) {
-	return t.size.Width, t.size.Height, nil
+func (t *tty) WindowSize() (tcell.WindowSize, error) {
+	return tcell.WindowSize{
+		Width:       t.size.Width,
+		Height:      t.size.Height,
+		PixelWidth:  16,
+		PixelHeight: 16,
+	}, nil
 }
 func (t *tty) NotifyResize(cb func()) {
 	t.mu.Lock()

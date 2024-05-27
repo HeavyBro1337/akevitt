@@ -1,29 +1,11 @@
 package akevitt
 
 import (
-	"bytes"
-	"encoding/binary"
-	"encoding/gob"
 	"errors"
 	"fmt"
 	"hash/fnv"
 	"strings"
-
-	"golang.org/x/crypto/bcrypt"
 )
-
-// Hashes password using Bcrypt algorithm
-func hashString(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-
-	return string(bytes), err
-}
-
-// Compares hash and password.
-func compareHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
-}
 
 // Finds `T` value of []T.
 func Find[T comparable](collection []T, value T) bool {
@@ -33,37 +15,6 @@ func Find[T comparable](collection []T, value T) bool {
 		}
 	}
 	return false
-}
-
-// Converts `Uint64` to byte array.
-func intToByte(value uint64) []byte {
-	binaryId := make([]byte, 8)
-	binary.BigEndian.PutUint64(binaryId, uint64(value))
-	return binaryId
-}
-
-// Converts `T` to byte array.
-func serialize[T Object](v T) ([]byte, error) {
-	var buff bytes.Buffer
-	enc := gob.NewEncoder(&buff)
-	err := enc.Encode(v)
-	if err != nil {
-		return nil, err
-	}
-	return buff.Bytes(), nil
-}
-
-// Converts byte array to T struct.
-func deserialize[T Object](b []byte) (T, error) {
-	var result T
-	var decodeBuffer bytes.Buffer
-	decodeBuffer.Write(b)
-	dec := gob.NewDecoder(&decodeBuffer)
-	err := dec.Decode(&result)
-	if err != nil {
-		return result, err
-	}
-	return result, err
 }
 
 func FindByKey[TCollection, T comparable](collection []TCollection, selector func(key TCollection) T, value T) *TCollection {
@@ -146,48 +97,25 @@ func BindRooms(emptyExit Exit, room *Room, otherRooms ...*Room) {
 	room.Exits = exits
 }
 
-// Saves object to database.
-func SaveObject[T Object](engine *Akevitt, obj T, category string, key uint64) error {
-	return overwriteObject[T](engine.db, key, category, obj)
-}
-
-// Finds game object associated with an account in database.
-func FindObject[T GameObject](engine *Akevitt, session *ActiveSession, key uint64) (T, error) {
-	return findObject[T](engine.db, *session.Account, key)
-}
-
-// Saves game object in a database associated with an account.
-func (engine *Akevitt) SaveGameObject(gameObject GameObject, key uint64, account *Account) error {
-	if account == nil {
-		return errors.New("account is nil")
-	}
-
-	return overwriteObject(engine.db, key, account.Username, gameObject)
-}
-
 // Saves object into a database.
-func (engine *Akevitt) SaveObject(gameObject GameObject, key uint64) error {
-	return overwriteObject(engine.db, key, gameObject.GetName(), gameObject)
+func (engine *Akevitt) SaveObject(object Object) error {
+	databasePlugin, err := FetchPlugin[DatabasePlugin[Object]](engine)
+
+	if err != nil {
+		return err
+	}
+	return (*databasePlugin).Save(object)
 }
 
-// Auto-increment uint64 key by object's name.
-func (engine *Akevitt) GenerateKey(gameobject GameObject) (uint64, error) {
-	return generateKey(engine.db, gameobject.GetName())
-}
-
-func CreateObject[T GameObject](engine *Akevitt, session *ActiveSession, object T, params interface{}) (T, error) {
-	return object, object.Create(engine, session, params)
-}
-
-func (engine *Akevitt) GlobalLookup(room *Room, name string) []GameObject {
+func (engine *Akevitt) GlobalLookup(room *Room, name string) []Object {
 	return globalSearchRecursive(engine.defaultRoom, name, nil, nil)
 }
 
-func LookupOfType[T GameObject](room Room) []T {
-	return FilterByType[T, GameObject](room.Objects)
+func LookupOfType[T Object](room Room) []T {
+	return FilterByType[T, Object](room.Objects)
 }
 
-func globalSearchRecursive(room *Room, name string, visited []string, result []GameObject) []GameObject {
+func globalSearchRecursive(room *Room, name string, visited []string, result []Object) []Object {
 	if visited == nil {
 		visited = make([]string, 0)
 	}
@@ -196,7 +124,7 @@ func globalSearchRecursive(room *Room, name string, visited []string, result []G
 		return nil
 	}
 	if result == nil {
-		result = make([]GameObject, 0)
+		result = make([]Object, 0)
 	}
 
 	visited = append(visited, room.Name)
@@ -233,37 +161,6 @@ func FilterByType[T any, TCollection any](collection []TCollection) []T {
 		}
 	}
 	return result
-}
-
-func saveRoomsRecursively(engine *Akevitt, room *Room, visited []string) error {
-	if visited == nil {
-		visited = make([]string, 0)
-	}
-
-	if room == nil {
-		return errors.New("room is nil")
-	}
-
-	fmt.Printf("Loading Room: %s\n", room.Name)
-
-	engine.rooms[room.GetKey()] = room
-
-	visited = append(visited, room.Name)
-
-	for _, v := range room.Exits {
-		r := v.Room
-
-		if Find[string](visited, r.Name) {
-			continue
-		}
-
-		err := saveRoomsRecursively(engine, r, visited)
-
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func hash(s string) uint64 {

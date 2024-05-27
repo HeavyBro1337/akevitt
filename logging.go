@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-const format string = "[%s] %s: %s"
+const format string = "[%s] %s: %s\n"
 
 func LogInfo(message string) {
 	fmt.Printf(format, time.Now(), "LOG", message)
