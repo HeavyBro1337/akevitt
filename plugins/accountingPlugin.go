@@ -15,6 +15,10 @@ type AccountPlugin struct {
 	engine *akevitt.Akevitt
 }
 
+func NewAccountPlugin() *AccountPlugin {
+	return &AccountPlugin{}
+}
+
 func (plugin *AccountPlugin) login(username, password string) (*akevitt.Account, error) {
 	databasePlugin, err := akevitt.FetchPlugin[akevitt.DatabasePlugin[*akevitt.Account]](plugin.engine)
 

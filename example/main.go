@@ -15,12 +15,24 @@ func main() {
 
 	app := akevitt.NewEngine().
 		AddPlugin(plugins.DefaultPlugins()...).
+		AddPlugin(plugins.NewAccountPlugin()).
+		AddPlugin(plugins.NewBoltPlugin[*akevitt.Account]("database.db")).
 		UseSpawnRoom(&room).
-		UseRootUI(func(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {
-			return tview.NewTextView().SetText("Hello, World!")
-		}).
+		UseRootUI(Root).
 		UseBind(":2222").
 		Finish()
 
 	log.Fatal(app.Run())
+}
+
+func Root(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {
+	modal := tview.NewModal().AddButtons([]string{"Go!"})
+
+	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+		session.Application.SetRoot(plugins.RegistrationScreen(engine, session, func(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {
+			return tview.NewTextView().SetText("Thank you!!")
+		}), true)
+	})
+
+	return modal
 }

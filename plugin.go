@@ -22,7 +22,11 @@ func FetchPlugin[T Plugin](engine *Akevitt) (*T, error) {
 }
 
 func FetchPluginUnsafe[T Plugin](engine *Akevitt) T {
-	plugin, _ := FetchPlugin[T](engine)
+	plugin, err := FetchPlugin[T](engine)
+
+	if err != nil {
+		panic(err)
+	}
 
 	return *plugin
 }

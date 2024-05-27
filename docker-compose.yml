@@ -1,12 +1,12 @@
 version: '3.4'
 
 services:
-  ironexalt:
+  example:
     image: akevitt-example
     volumes:
       - .:/app
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: Dockerfile
     ports:
       - 1487:2222

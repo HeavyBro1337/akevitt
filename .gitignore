@@ -2,6 +2,7 @@
 *.exe
 iron-exalt
 generator/akevitt-gen*
+*.o
 # database files
 *.db
 *.db.lock
