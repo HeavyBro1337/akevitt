@@ -1,19 +1,15 @@
 package akevitt
 
 import (
+	"fmt"
+	"io"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/uaraven/logview"
 )
 
-func AppendText(message string, chatlog *logview.LogView) {
-	ev := logview.NewLogEvent("message", message)
-	ev.Level = logview.LogLevelInfo
-	chatlog.AppendEvent(ev)
-	chatlog.SetFocusFunc(func() {
-		chatlog.Blur()
-	})
-	chatlog.ScrollToBottom()
+func AppendText(message string, chatlog io.Writer) {
+	fmt.Fprintln(chatlog)
 }
 
 func ErrorBox(message string, app *tview.Application, back tview.Primitive) {

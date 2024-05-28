@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/IvanKorchmit/akevitt"
-	"github.com/uaraven/logview"
+	"github.com/rivo/tview"
 )
 
 const MessagePluginData string = "MessagePlugin"
@@ -60,7 +60,8 @@ func (plugin *MessagePlugin) Build(engine *akevitt.Akevitt) error {
 		engine.AddCommand("ooc", plugin.oocCmd)
 	}
 	engine.AddInit(func(session *akevitt.ActiveSession) {
-		session.Data[logElem] = logview.NewLogView()
+		textView := tview.NewTextView()
+		session.Data[logElem] = textView
 		session.Data[MessagePluginData] = []string{"ooc"}
 	})
 	return nil
@@ -84,8 +85,8 @@ func (plugin *MessagePlugin) oocCmd(engine *akevitt.Akevitt, session *akevitt.Ac
 	return plugin.Message(engine, "ooc", command, session.Account.Username, session)
 }
 
-func (plugin *MessagePlugin) GetChatLog(session *akevitt.ActiveSession) *logview.LogView {
-	lv := session.Data[logElem].(*logview.LogView)
+func (plugin *MessagePlugin) GetChatLog(session *akevitt.ActiveSession) *tview.TextView {
+	tv := session.Data[logElem].(*tview.TextView)
 
-	return lv
+	return tv
 }
