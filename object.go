@@ -14,7 +14,7 @@ type Room struct {
 }
 
 func (room *Room) Enter(engine *Akevitt, session *ActiveSession, targetExit *Exit) error {
-	belongs := Find(room.Exits, targetExit)
+	belongs := room == targetExit.Room
 
 	if !belongs {
 		return fmt.Errorf("the exit does not belong to %s", room.Name)
