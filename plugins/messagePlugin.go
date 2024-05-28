@@ -59,7 +59,7 @@ func (plugin *MessagePlugin) Build(engine *akevitt.Akevitt) error {
 	if plugin.includeCmd {
 		engine.AddCommand("ooc", plugin.oocCmd)
 	}
-	engine.AddInit(func(session *akevitt.ActiveSession) {
+	engine.AddInit(func(engine *akevitt.Akevitt, session *akevitt.ActiveSession) {
 		textView := tview.NewTextView()
 		session.Data[logElem] = textView
 		session.Data[MessagePluginData] = []string{"ooc"}

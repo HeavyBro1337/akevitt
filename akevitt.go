@@ -23,7 +23,7 @@ type Akevitt struct {
 	bind          string
 	mouse         bool
 	dbPath        string
-	initFunc      []func(*ActiveSession)
+	initFunc      []func(*Akevitt, *ActiveSession)
 	commands      map[string]CommandFunc
 	onDeadSession DeadSessionFunc
 	defaultRoom   *Room
@@ -143,7 +143,7 @@ func (engine *Akevitt) Run() error {
 
 		if engine.initFunc != nil {
 			for _, fn := range engine.initFunc {
-				fn(&emptySession)
+				fn(engine, &emptySession)
 			}
 		}
 
