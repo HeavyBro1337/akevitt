@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/IvanKorchmit/akevitt"
@@ -28,6 +29,38 @@ func NewHelpPlugin() *helpPluginBuilder {
 	}
 }
 
+func (builder *helpPluginBuilder) Command(cmd, brief, long string) *helpPluginBuilder {
+	builder.plugin.docs[cmd] = Doc{
+		Long:  long,
+		Brief: brief,
+	}
+
+	return builder
+}
+
+func (builder *helpPluginBuilder) CommandFromFile(cmd, briefFile, longFile string) *helpPluginBuilder {
+	briefBytes, err := os.ReadFile(briefFile)
+	if err != nil {
+		panic(err)
+	}
+
+	longBytes, err := os.ReadFile(longFile)
+	if err != nil {
+		panic(err)
+	}
+
+	builder.plugin.docs[cmd] = Doc{
+		Long:  string(longBytes),
+		Brief: string(briefBytes),
+	}
+
+	return builder
+}
+
+func (builder *helpPluginBuilder) Finish() *HelpPlugin {
+	return builder.plugin
+}
+
 func (plugin *HelpPlugin) Build(engine *akevitt.Akevitt) error {
 	lenDocs := len(plugin.docs)
 	lenCommands := len(engine.GetCommands())
@@ -35,7 +68,6 @@ func (plugin *HelpPlugin) Build(engine *akevitt.Akevitt) error {
 	if lenDocs != lenCommands {
 		return fmt.Errorf("help plugin: amount of documented commands are %d, but the game has %d", lenDocs, lenCommands)
 	}
-
 	for _, cmd := range engine.GetCommands() {
 		_, ok := plugin.docs[cmd]
 
