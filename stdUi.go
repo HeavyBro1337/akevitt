@@ -9,7 +9,7 @@ import (
 )
 
 func AppendText(message string, chatlog io.Writer) {
-	fmt.Fprintln(chatlog)
+	fmt.Fprintln(chatlog, message)
 }
 
 func ErrorBox(message string, app *tview.Application, back tview.Primitive) {
