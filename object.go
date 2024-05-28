@@ -14,24 +14,25 @@ type Room struct {
 }
 
 func (room *Room) Enter(engine *Akevitt, session *ActiveSession, targetExit *Exit) error {
-	belongs := func() bool {
-		for _, v := range targetExit.Room.Exits {
-			if v.Room == room {
-				return true
-			}
-		}
+	belongs := Find(room.Exits, targetExit)
 
-		return false
-	}
-
-	if !belongs() {
+	if !belongs {
 		return fmt.Errorf("the exit does not belong to %s", room.Name)
 	}
 
 	if room.OnPreEnter != nil {
-		return room.OnPreEnter(engine, session, targetExit)
+		err := room.OnPreEnter(engine, session, targetExit)
+		if err != nil {
+			return err
+		}
 	}
 
+	if targetExit.OnPreEnter != nil {
+		err := targetExit.OnPreEnter(engine, session)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -40,5 +41,6 @@ func (room *Room) GetKey() uint64 {
 }
 
 type Exit struct {
-	Room *Room
+	Room       *Room
+	OnPreEnter func(*Akevitt, *ActiveSession) error
 }
