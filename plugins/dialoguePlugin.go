@@ -82,8 +82,8 @@ func (dial *Dialogue) Proceed(index int, session *akevitt.ActiveSession, plugin 
 }
 
 // Ends the dialogue with "Close" option
-func (dial *Dialogue) End() *Dialogue {
-	dial.AddOption("Close", nil)
+func (dial *Dialogue) End(text string) *Dialogue {
+	dial.AddOption(text, nil)
 	return dial
 }
 
