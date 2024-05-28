@@ -17,7 +17,7 @@ func (room *Room) Enter(engine *Akevitt, session *ActiveSession, targetExit *Exi
 	belongs := Find(room.Exits, targetExit)
 
 	if !belongs {
-		return fmt.Errorf("the exit %s does not belong to %s", targetExit.Name, room.Name)
+		return fmt.Errorf("the exit does not belong to %s", room.Name)
 	}
 
 	if room.OnPreEnter != nil {
@@ -32,6 +32,5 @@ func (room *Room) GetKey() uint64 {
 }
 
 type Exit struct {
-	Name string
 	Room *Room
 }
