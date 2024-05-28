@@ -55,6 +55,18 @@ func (plugin *MessagePlugin) UpdateChannel(old, new string, session *akevitt.Act
 	session.Data[MessagePluginData] = channels
 }
 
+func (plugin *MessagePlugin) AddChannel(channel string, session *akevitt.ActiveSession) {
+	channels := session.Data[MessagePluginData].([]string)
+	channels = append(channels, channel)
+	session.Data[MessagePluginData] = channels
+}
+
+func (plugin *MessagePlugin) RemoveChannel(channel string, session *akevitt.ActiveSession) {
+	channels := session.Data[MessagePluginData].([]string)
+	channels = akevitt.RemoveItem(channels, channel)
+	session.Data[MessagePluginData] = channels
+}
+
 func (plugin *MessagePlugin) Build(engine *akevitt.Akevitt) error {
 	if plugin.includeCmd {
 		engine.AddCommand("ooc", plugin.oocCmd)
