@@ -86,12 +86,12 @@ func IsRoomReachable[T Room](engine *Akevitt, session *ActiveSession, name strin
 }
 
 // Binds room with an exit.
-func BindRooms(emptyExit Exit, room *Room, otherRooms ...*Room) {
+func BindRooms(room *Room, otherRooms ...*Room) {
 	exits := make([]*Exit, 0)
 	for _, v := range otherRooms {
-		exit := emptyExit
+		exit := new(Exit)
 		exit.Room = v // Setting exit's current room
-		exits = append(exits, &exit)
+		exits = append(exits, exit)
 	}
 
 	room.Exits = exits
@@ -111,8 +111,8 @@ func (engine *Akevitt) GlobalLookup(room *Room, name string) []Object {
 	return globalSearchRecursive(engine.defaultRoom, name, nil, nil)
 }
 
-func LookupOfType[T Object](room Room) []T {
-	return FilterByType[T, Object](room.Objects)
+func LookupOfType[T Object](room *Room) []T {
+	return FilterByType[T](room.Objects)
 }
 
 func globalSearchRecursive(room *Room, name string, visited []string, result []Object) []Object {
