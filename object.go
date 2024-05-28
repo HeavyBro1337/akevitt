@@ -8,7 +8,7 @@ type Room struct {
 	Name       string
 	Exits      []*Exit
 	Objects    []Object
-	OnPreEnter func(*ActiveSession) error
+	OnPreEnter func(*Akevitt, *ActiveSession) error
 }
 
 func (room *Room) GetKey() uint64 {
