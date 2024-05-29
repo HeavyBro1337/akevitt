@@ -50,8 +50,13 @@ func (plugin *MessagePlugin) Message(engine *akevitt.Akevitt, channel, message, 
 
 func (plugin *MessagePlugin) UpdateChannel(old, new string, session *akevitt.ActiveSession) {
 	channels := session.Data[MessagePluginData].([]string)
-	channels = akevitt.RemoveItem(channels, old)
-	channels = append(channels, new)
+
+	for i, v := range channels {
+		if v == old {
+			channels[i] = new
+			return
+		}
+	}
 	session.Data[MessagePluginData] = channels
 }
 
