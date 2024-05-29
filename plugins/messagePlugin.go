@@ -55,6 +55,10 @@ func (plugin *MessagePlugin) UpdateChannel(old, new string, session *akevitt.Act
 	session.Data[MessagePluginData] = channels
 }
 
+func (plugin *MessagePlugin) GetChannels(session *akevitt.ActiveSession) []string {
+	return session.Data[MessagePluginData].([]string)
+}
+
 func (plugin *MessagePlugin) AddChannel(channel string, session *akevitt.ActiveSession) {
 	channels := session.Data[MessagePluginData].([]string)
 	channels = append(channels, channel)
