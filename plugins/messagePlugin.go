@@ -102,6 +102,7 @@ func NewMessagePlugin(includeCmd bool, fn MessageFunc, format string) *MessagePl
 		includeCmd:  includeCmd,
 		onMessageFn: fn,
 		format:      format,
+		sessions:    make(map[*akevitt.ActiveSession]map[string]*tview.TextView),
 	}
 }
 
