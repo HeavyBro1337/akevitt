@@ -8,6 +8,39 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestBiRooms(t *testing.T) {
+	assrt := assert.New(t)
+
+	spawn := akevitt.Room{
+		Name: "Spawn",
+	}
+
+	otherRoom := akevitt.Room{
+		Name: "Markte",
+	}
+
+	akevitt.BindRoomsBidirectional(&spawn, akevitt.Exit{}, &otherRoom)
+
+	roomsOfSpawn := akevitt.MapSlice(spawn.Exits, func(v *akevitt.Exit) *akevitt.Room {
+		return v.Room
+	})
+
+	roomsOfOther := akevitt.MapSlice(otherRoom.Exits, func(v *akevitt.Exit) *akevitt.Room {
+		return v.Room
+	})
+	assrt.True(akevitt.Find(roomsOfSpawn, &otherRoom), roomsOfSpawn)
+	assrt.True(akevitt.Find(roomsOfOther, &spawn), roomsOfOther)
+}
+
+func TestFind(t *testing.T) {
+	assrt := assert.New(t)
+
+	input := []int{1, 2, 3, 4, 5, 6}
+
+	assrt.True(akevitt.Find(input, 3))
+	assrt.False(akevitt.Find(input, 7))
+}
+
 func TestBindRooms(t *testing.T) {
 	assrt := assert.New(t)
 
@@ -19,7 +52,7 @@ func TestBindRooms(t *testing.T) {
 		Name: "Markte",
 	}
 
-	akevitt.BindRooms(&spawn, &otherRoom)
+	akevitt.BindRooms(&spawn, akevitt.Exit{}, &otherRoom)
 
 	roomsOfSpawn := akevitt.MapSlice(spawn.Exits, func(v *akevitt.Exit) *akevitt.Room {
 		return v.Room
