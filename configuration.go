@@ -6,7 +6,7 @@ import (
 )
 
 // Specify an address to listen.
-// Example: :22, 127.0.0.1:2222, etc.
+// Example: :1999, 127.0.0.1:1999, etc.
 func (builder *akevittBuilder) UseBind(bindAddress string) *akevittBuilder {
 	builder.engine.bind = bindAddress
 
@@ -42,9 +42,8 @@ func NewEngine() *akevittBuilder {
 	engine.rooms = make(map[uint64]*Room)
 	engine.sessions = make(Sessions)
 	engine.commands = make(map[string]CommandFunc)
-	engine.bind = ":2222"
+	engine.bind = ":1999"
 	engine.rsaKey = "id_rsa"
-	engine.dbPath = "data/database.db"
 	engine.mouse = false
 	engine.heartbeats = make(map[int]*Pair[time.Ticker, []func() error])
 	engine.plugins = make([]Plugin, 0)

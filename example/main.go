@@ -19,7 +19,7 @@ func main() {
 		AddPlugin(plugins.NewBoltPlugin[*akevitt.Account]("database.db")).
 		UseSpawnRoom(&room).
 		UseRootUI(Root).
-		UseBind(":2222").
+		UseBind(":1999").
 		Finish()
 
 	log.Fatal(app.Run())
