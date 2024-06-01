@@ -16,7 +16,7 @@ func TestBiRooms(t *testing.T) {
 	}
 
 	otherRoom := akevitt.Room{
-		Name: "Markte",
+		Name: "Market",
 	}
 
 	akevitt.BindRoomsBidirectional(&spawn, akevitt.Exit{}, &otherRoom)
@@ -49,7 +49,7 @@ func TestBindRooms(t *testing.T) {
 	}
 
 	otherRoom := akevitt.Room{
-		Name: "Markte",
+		Name: "Market",
 	}
 
 	akevitt.BindRooms(&spawn, akevitt.Exit{}, &otherRoom)
