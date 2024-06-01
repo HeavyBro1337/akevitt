@@ -54,8 +54,8 @@ func (plugin *MessagePlugin) Message(engine *akevitt.Akevitt, channel, message, 
 
 func (plugin *MessagePlugin) UpdateChannel(old, new string, session *akevitt.ActiveSession) {
 	tv := plugin.sessions[session][old]
+	plugin.sessions[session][old] = nil
 	delete(plugin.sessions[session], old)
-
 	plugin.sessions[session][new] = tv
 }
 
