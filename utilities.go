@@ -86,11 +86,14 @@ func IsRoomReachable[T Room](engine *Akevitt, session *ActiveSession, name strin
 }
 
 // Binds room with an exit.
-func BindRooms(room *Room, exit *Exit, otherRooms ...*Room) {
+func BindRooms(room *Room, otherRooms ...*Room) {
 	exits := make([]*Exit, 0)
 	for _, v := range otherRooms {
+		exit := Exit{
+			Room: v,
+		}
 		exit.Room = v // Setting exit's current room
-		exits = append(exits, exit)
+		exits = append(exits, &exit)
 	}
 
 	room.Exits = exits
