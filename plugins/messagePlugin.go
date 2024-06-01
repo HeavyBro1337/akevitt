@@ -86,6 +86,7 @@ func (plugin *MessagePlugin) Build(engine *akevitt.Akevitt) error {
 		plugin.sessions[session]["all"] = tview.NewTextView()
 		plugin.sessions[session]["ooc"] = tview.NewTextView()
 	})
+
 	engine.AddSessionDead(func(deadSession *akevitt.ActiveSession, liveSessions []*akevitt.ActiveSession, engine *akevitt.Akevitt) {
 		delete(plugin.sessions, deadSession)
 	})
