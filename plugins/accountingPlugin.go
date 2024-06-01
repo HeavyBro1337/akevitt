@@ -64,7 +64,7 @@ func (plugin *AccountPlugin) LoginSession(username, password string, session *ak
 
 func (plugin *AccountPlugin) isSessionAlreadyActive(acc akevitt.Account, sessions *akevitt.Sessions) bool {
 	// We want make sure we purge dead sessions before looking for active.
-	akevitt.PurgeDeadSessions(plugin.engine, plugin.engine.GetOnDeadSession())
+	akevitt.PurgeDeadSessions(plugin.engine, plugin.engine.GetOnDeadSession()...)
 	for _, v := range *sessions {
 		if v.Account == nil {
 			continue
