@@ -167,3 +167,19 @@ func hash(s string) uint64 {
 	h.Write([]byte(s))
 	return uint64(h.Sum32())
 }
+
+func GetMapValues[TKey comparable, TMap map[TKey]TResult, TResult any](m TMap) (values []TResult) {
+	for _, v := range m {
+		values = append(values, v)
+	}
+
+	return
+}
+
+func GetMapKeys[TKey comparable, TMap map[TKey]TValues, TValues any](m TMap) (keys []TKey) {
+	for k := range m {
+		keys = append(keys, k)
+	}
+
+	return
+}
