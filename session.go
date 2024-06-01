@@ -18,7 +18,7 @@ func (session *ActiveSession) loadData() {
 	}
 }
 
-func PurgeDeadSessions(engine *Akevitt, callback DeadSessionFunc) {
+func PurgeDeadSessions(engine *Akevitt, callback ...DeadSessionFunc) {
 	deadSessions := make([]*ActiveSession, 0)
 	liveSessions := make([]*ActiveSession, 0)
 	for k, v := range engine.sessions {
@@ -32,7 +32,9 @@ func PurgeDeadSessions(engine *Akevitt, callback DeadSessionFunc) {
 	}
 	if callback != nil {
 		for _, v := range deadSessions {
-			callback(v, liveSessions, engine)
+			for _, fn := range callback {
+				fn(v, liveSessions, engine)
+			}
 		}
 	}
 }

@@ -7,8 +7,7 @@ import (
 	"github.com/rivo/tview"
 )
 
-const MessagePluginData string = "MessagePlugin"
-const logElem string = "MessagePluginLog"
+type mapLogs = map[string]*tview.TextView
 
 type MessageFunc = func(engine *akevitt.Akevitt, session *akevitt.ActiveSession, channel, message, username string) error
 
@@ -16,18 +15,22 @@ type MessagePlugin struct {
 	onMessageFn MessageFunc
 	includeCmd  bool
 	format      string
+	sessions    map[*akevitt.ActiveSession]mapLogs
 }
 
 // Send the message to other current sessions
 func (plugin *MessagePlugin) Message(engine *akevitt.Akevitt, channel, message, username string, session *akevitt.ActiveSession) error {
-	akevitt.PurgeDeadSessions(engine, engine.GetOnDeadSession())
+	akevitt.PurgeDeadSessions(engine, engine.GetOnDeadSession()...)
 
 	for _, v := range engine.GetSessions() {
-		channels := v.Data[MessagePluginData].([]string)
+		tvChannel, ok := plugin.sessions[session][channel]
 
-		if !akevitt.Find(channels, channel) {
+		if !ok {
 			continue
 		}
+
+		tvAll := plugin.sessions[session]["all"]
+
 		if plugin.onMessageFn != nil {
 			err := plugin.onMessageFn(engine, v, channel, message, username)
 
@@ -38,7 +41,8 @@ func (plugin *MessagePlugin) Message(engine *akevitt.Akevitt, channel, message, 
 
 		st := fmt.Sprintf(plugin.format, username, channel, message)
 
-		akevitt.AppendText(st, plugin.GetChatLog(v))
+		akevitt.AppendText(st, tvChannel)
+		akevitt.AppendText(st, tvAll)
 
 		if session != v {
 			v.Application.Draw()
@@ -49,31 +53,28 @@ func (plugin *MessagePlugin) Message(engine *akevitt.Akevitt, channel, message, 
 }
 
 func (plugin *MessagePlugin) UpdateChannel(old, new string, session *akevitt.ActiveSession) {
-	channels := session.Data[MessagePluginData].([]string)
+	tv := plugin.sessions[session][old]
+	delete(plugin.sessions[session], old)
 
-	for i, v := range channels {
-		if v == old {
-			channels[i] = new
-			return
-		}
-	}
-	session.Data[MessagePluginData] = channels
+	plugin.sessions[session][new] = tv
 }
 
 func (plugin *MessagePlugin) GetChannels(session *akevitt.ActiveSession) []string {
-	return session.Data[MessagePluginData].([]string)
+	return akevitt.GetMapKeys(plugin.sessions[session])
 }
 
 func (plugin *MessagePlugin) AddChannel(channel string, session *akevitt.ActiveSession) {
-	channels := session.Data[MessagePluginData].([]string)
-	channels = append(channels, channel)
-	session.Data[MessagePluginData] = channels
+	_, ok := plugin.sessions[session][channel]
+
+	if ok {
+		return
+	}
+
+	plugin.sessions[session][channel] = tview.NewTextView()
 }
 
 func (plugin *MessagePlugin) RemoveChannel(channel string, session *akevitt.ActiveSession) {
-	channels := session.Data[MessagePluginData].([]string)
-	channels = akevitt.RemoveItem(channels, channel)
-	session.Data[MessagePluginData] = channels
+	delete(plugin.sessions[session], channel)
 }
 
 func (plugin *MessagePlugin) Build(engine *akevitt.Akevitt) error {
@@ -81,9 +82,9 @@ func (plugin *MessagePlugin) Build(engine *akevitt.Akevitt) error {
 		engine.AddCommand("ooc", plugin.oocCmd)
 	}
 	engine.AddInit(func(engine *akevitt.Akevitt, session *akevitt.ActiveSession) {
-		textView := tview.NewTextView()
-		session.Data[logElem] = textView
-		session.Data[MessagePluginData] = []string{"ooc"}
+		plugin.sessions[session] = make(map[string]*tview.TextView)
+		plugin.sessions[session]["all"] = tview.NewTextView()
+		plugin.sessions[session]["ooc"] = tview.NewTextView()
 	})
 	return nil
 }
@@ -107,7 +108,7 @@ func (plugin *MessagePlugin) oocCmd(engine *akevitt.Akevitt, session *akevitt.Ac
 }
 
 func (plugin *MessagePlugin) GetChatLog(session *akevitt.ActiveSession) *tview.TextView {
-	tv := session.Data[logElem].(*tview.TextView)
+	tv := plugin.sessions[session]["all"]
 
 	return tv
 }
