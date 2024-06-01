@@ -112,3 +112,9 @@ func (plugin *MessagePlugin) GetChatLog(session *akevitt.ActiveSession) *tview.T
 
 	return tv
 }
+
+func (plugin *MessagePlugin) GetChatLogChannel(channel string, session *akevitt.ActiveSession) *tview.TextView {
+	tv := plugin.sessions[session][channel]
+
+	return tv
+}
