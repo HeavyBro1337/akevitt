@@ -23,13 +23,13 @@ func (plugin *MessagePlugin) Message(engine *akevitt.Akevitt, channel, message, 
 	akevitt.PurgeDeadSessions(engine, engine.GetOnDeadSession()...)
 
 	for _, v := range engine.GetSessions() {
-		tvChannel, ok := plugin.sessions[session][channel]
+		tvChannel, ok := plugin.sessions[v][channel]
 
 		if !ok {
 			continue
 		}
 
-		tvAll := plugin.sessions[session]["all"]
+		tvAll := plugin.sessions[v]["all"]
 
 		if plugin.onMessageFn != nil {
 			err := plugin.onMessageFn(engine, v, channel, message, username)
