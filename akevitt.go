@@ -63,6 +63,10 @@ func (engine *Akevitt) GetSpawnRoom() *Room {
 	return engine.defaultRoom
 }
 
+func (engine *Akevitt) AddSessionDead(fn DeadSessionFunc) {
+	engine.onDeadSession = append(engine.onDeadSession, fn)
+}
+
 // Obtains currently loaded rooms by key. It will return an error if room not found.
 func (engine *Akevitt) GetRoom(key uint64) (*Room, error) {
 	room, ok := engine.rooms[key]
