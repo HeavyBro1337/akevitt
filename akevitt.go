@@ -22,10 +22,9 @@ type Akevitt struct {
 	root          UIFunc
 	bind          string
 	mouse         bool
-	dbPath        string
 	initFunc      []func(*Akevitt, *ActiveSession)
 	commands      map[string]CommandFunc
-	onDeadSession DeadSessionFunc
+	onDeadSession []DeadSessionFunc
 	defaultRoom   *Room
 	rooms         map[uint64]*Room
 	plugins       []Plugin
@@ -78,7 +77,7 @@ func (engine *Akevitt) GetSessions() Sessions {
 	return engine.sessions
 }
 
-func (engine *Akevitt) GetOnDeadSession() DeadSessionFunc {
+func (engine *Akevitt) GetOnDeadSession() []DeadSessionFunc {
 	return engine.onDeadSession
 }
 
@@ -121,7 +120,7 @@ func (engine *Akevitt) Run() error {
 		for {
 			select {
 			case <-ticker.C:
-				PurgeDeadSessions(engine, engine.onDeadSession)
+				PurgeDeadSessions(engine, engine.onDeadSession...)
 			case <-quit:
 				ticker.Stop()
 				return
@@ -135,7 +134,7 @@ func (engine *Akevitt) Run() error {
 			fmt.Fprintln(sesh.Stderr(), "unable to create screen:", err)
 			return
 		}
-		PurgeDeadSessions(engine, engine.onDeadSession)
+		PurgeDeadSessions(engine, engine.onDeadSession...)
 		app := tview.NewApplication().SetScreen(screen).EnableMouse(engine.mouse)
 
 		emptySession.Application = app
