@@ -3,12 +3,18 @@ package akevitt
 import (
 	"io"
 
+	"github.com/gliderlabs/ssh"
 	"github.com/rivo/tview"
 )
 
 type ActiveSession struct {
+	s           ssh.Session
 	Application *tview.Application
 	Data        map[string]any
+}
+
+func (a *ActiveSession) Kill(engine *Akevitt) error {
+	return a.s.Exit(0)
 }
 
 func PurgeDeadSessions(engine *Akevitt, callback ...DeadSessionFunc) {
