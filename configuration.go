@@ -62,6 +62,12 @@ func (builder *akevittBuilder) UseSpawnRoom(r *Room) *akevittBuilder {
 	return builder
 }
 
+func (builder *akevittBuilder) UseMouse() *akevittBuilder {
+	builder.engine.mouse = true
+
+	return builder
+}
+
 func (builder *akevittBuilder) UseOnJoin(fn func(*Akevitt, *ActiveSession)) *akevittBuilder {
 	builder.engine.AddInit(fn)
 
