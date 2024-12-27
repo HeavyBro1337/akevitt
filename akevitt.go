@@ -146,11 +146,10 @@ func (engine *Akevitt) Run() error {
 				fn(engine, &emptySession)
 			}
 		}
-
+		emptySession.s = sesh
 		engine.sessions[sesh] = &emptySession
-
-		emptySession.Application.SetRoot(engine.root(engine, engine.sessions[sesh]), true)
-
+		root := engine.root(engine, engine.sessions[sesh])
+		emptySession.Application.SetRoot(root, true)
 		go func() {
 			for {
 				select {
