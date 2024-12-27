@@ -1,0 +1,27 @@
+package ui
+
+const (
+	proportionKey       = "proportion"
+	fullscreenKey       = "fullscreen"
+	fixedSizeKey        = "fixed-size"
+	focusedKey          = "focused"
+	borderKey           = "border"
+	directionKey        = "layout"
+	directionVertical   = "vertical"
+	directionHorizontal = "horizontal"
+	labelKey            = "label"
+	rowsKey             = "rows"
+	colsKey             = "cols"
+	rowKey              = "row"
+	colKey              = "col"
+	rowSpanKey          = "row-span"
+	colSpanKey          = "col-span"
+	minWidthKey         = "min-width"
+	minHeightKey        = "min-height"
+	titleKey            = "title"
+	widthKey            = "width"
+	heightKey           = "height"
+	maskKey             = "mask"
+	checkedKey          = "checked"
+	keyKey              = "key"
+)
