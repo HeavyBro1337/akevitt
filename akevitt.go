@@ -7,7 +7,6 @@ For more information, view LICENCE or README
 package akevitt
 
 import (
-	"encoding/gob"
 	"errors"
 	"fmt"
 	"strings"
@@ -111,8 +110,6 @@ func (engine *Akevitt) Run() error {
 	}
 
 	fmt.Println("Done!")
-
-	gob.Register(Account{})
 
 	if engine.root == nil {
 		return errors.New("base screen is not provided")

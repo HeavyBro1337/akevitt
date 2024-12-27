@@ -7,7 +7,6 @@ import (
 )
 
 type ActiveSession struct {
-	Account     *Account
 	Application *tview.Application
 	Data        map[string]any
 }

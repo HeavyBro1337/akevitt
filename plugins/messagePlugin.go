@@ -13,7 +13,6 @@ type MessageFunc = func(engine *akevitt.Akevitt, session *akevitt.ActiveSession,
 
 type MessagePlugin struct {
 	onMessageFn MessageFunc
-	includeCmd  bool
 	format      string
 	sessions    map[*akevitt.ActiveSession]mapLogs
 }
@@ -77,9 +76,6 @@ func (plugin *MessagePlugin) RemoveChannel(channel string, session *akevitt.Acti
 }
 
 func (plugin *MessagePlugin) Build(engine *akevitt.Akevitt) error {
-	if plugin.includeCmd {
-		engine.AddCommand("ooc", plugin.oocCmd)
-	}
 	engine.AddInit(func(engine *akevitt.Akevitt, session *akevitt.ActiveSession) {
 		plugin.sessions[session] = make(map[string]*tview.TextView)
 		plugin.sessions[session]["all"] = tview.NewTextView()
@@ -98,17 +94,10 @@ func NewMessagePlugin(includeCmd bool, fn MessageFunc, format string) *MessagePl
 	}
 
 	return &MessagePlugin{
-		includeCmd:  includeCmd,
 		onMessageFn: fn,
 		format:      format,
 		sessions:    make(map[*akevitt.ActiveSession]map[string]*tview.TextView),
 	}
-}
-
-// Out-of-character chat command
-func (plugin *MessagePlugin) oocCmd(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
-
-	return plugin.Message(engine, "ooc", command, session.Account.Username, session)
 }
 
 func (plugin *MessagePlugin) GetChatLog(session *akevitt.ActiveSession) *tview.TextView {

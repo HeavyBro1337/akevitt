@@ -10,19 +10,18 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-var db *bolt.DB = nil
-
-type BoltDbPlugin[T akevitt.Object] struct {
+type BoltDbPlugin struct {
 	path string
+	db   *bolt.DB
 }
 
-func (plugin *BoltDbPlugin[T]) Build(engine *akevitt.Akevitt) error {
+func (plugin *BoltDbPlugin) Build(engine *akevitt.Akevitt) error {
 	return createBoltDatabase(plugin)
 }
 
-func (plugin *BoltDbPlugin[T]) Save(object T) error {
-	return db.Update(func(tx *bolt.Tx) error {
-		bkt, err := tx.CreateBucketIfNotExists([]byte(fmt.Sprint(reflect.TypeOf(new(T)))))
+func (plugin *BoltDbPlugin) Save(object akevitt.Object) error {
+	return plugin.db.Update(func(tx *bolt.Tx) error {
+		bkt, err := tx.CreateBucketIfNotExists([]byte(fmt.Sprint(reflect.TypeOf(object))))
 
 		if err != nil {
 			return err
@@ -38,18 +37,19 @@ func (plugin *BoltDbPlugin[T]) Save(object T) error {
 	})
 }
 
-func (plugin *BoltDbPlugin[T]) LoadAll() ([]T, error) {
-	objects := make([]T, 0)
+func (plugin *BoltDbPlugin) LoadAll() ([]akevitt.Object, error) {
+	objects := make([]akevitt.Object, 0)
 
-	err := db.Update(func(tx *bolt.Tx) error {
-		bkt, err := tx.CreateBucketIfNotExists([]byte(fmt.Sprint(reflect.TypeOf(new(T)))))
+	err := plugin.db.Update(func(tx *bolt.Tx) error {
+		bkt, err := tx.CreateBucketIfNotExists([]byte(fmt.Sprint(reflect.TypeOf(new(akevitt.Object)))))
 
 		if err != nil {
 			return err
 		}
 
 		return bkt.ForEach(func(k []byte, v []byte) error {
-			obj, err := plugin.deserialize(v)
+			var obj akevitt.Object
+			err := plugin.deserialize(v, &obj)
 
 			if err != nil {
 				return err
@@ -64,21 +64,21 @@ func (plugin *BoltDbPlugin[T]) LoadAll() ([]T, error) {
 	return objects, err
 }
 
-func NewBoltPlugin[T akevitt.Object](path string) *BoltDbPlugin[T] {
-	return &BoltDbPlugin[T]{
+func NewBoltPlugin(path string) *BoltDbPlugin {
+	return &BoltDbPlugin{
 		path: path,
 	}
 }
 
-func createBoltDatabase[T akevitt.Object](boltPlugin *BoltDbPlugin[T]) error {
+func createBoltDatabase(boltPlugin *BoltDbPlugin) error {
 	_db, err := bolt.Open(boltPlugin.path, 0600, nil)
-	db = _db
+	boltPlugin.db = _db
 
 	return err
 }
 
 // Converts `T` to byte array.
-func (plugin *BoltDbPlugin[T]) serialize(v T) ([]byte, error) {
+func (plugin *BoltDbPlugin) serialize(v akevitt.Object) ([]byte, error) {
 	var buff bytes.Buffer
 	enc := gob.NewEncoder(&buff)
 	err := enc.Encode(v)
@@ -89,14 +89,13 @@ func (plugin *BoltDbPlugin[T]) serialize(v T) ([]byte, error) {
 }
 
 // Converts byte array to T struct.
-func (plugin *BoltDbPlugin[T]) deserialize(b []byte) (T, error) {
-	var result T
+func (plugin *BoltDbPlugin) deserialize(b []byte, dest any) error {
 	var decodeBuffer bytes.Buffer
 	decodeBuffer.Write(b)
 	dec := gob.NewDecoder(&decodeBuffer)
-	err := dec.Decode(&result)
+	err := dec.Decode(&dest)
 	if err != nil {
-		return result, err
+		return err
 	}
-	return result, err
+	return nil
 }
