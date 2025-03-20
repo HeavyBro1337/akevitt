@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/IvanKorchmit/akevitt"
-	"github.com/IvanKorchmit/akevitt/plugins"
+	"github.com/HeavyBro1337/akevitt"
+	"github.com/HeavyBro1337/akevitt/plugins"
 	"github.com/rivo/tview"
 )
 

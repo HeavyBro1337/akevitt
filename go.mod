@@ -1,4 +1,4 @@
-module github.com/IvanKorchmit/akevitt
+module github.com/HeavyBro1337/akevitt
 
 require (
 	github.com/boltdb/bolt v1.3.1
