@@ -1,38 +1,33 @@
 package main
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/HeavyBro1337/akevitt"
-	"github.com/HeavyBro1337/akevitt/plugins"
-	"github.com/rivo/tview"
 )
 
 func main() {
-	room := akevitt.Room{
-		Name: "Example room",
+	game := akevitt.NewGame(
+		akevitt.Telnet(":1999"),
+		akevitt.SSH(":1998", "id_rsa"),
+	).
+		Handle(func(ctx *akevitt.Context) {
+			fmt.Fprintln(ctx, "Hello, World!")
+		}).
+		Plugin(akevitt.NewShellPlugin("# ", func(ctx *akevitt.Context, e *akevitt.Engine, s string) {
+			fmt.Println("User says: " + s)
+
+			for _, v := range e.Sessions() {
+				if v == ctx {
+					continue
+				}
+
+				fmt.Fprintf(v, "\nUser says: %s\n", s)
+			}
+		})).
+		Engine()
+
+	if err := game.Run(); err != nil {
+		panic(err)
 	}
-
-	app := akevitt.NewEngine().
-		AddPlugin(plugins.DefaultPlugins()...).
-		AddPlugin(plugins.NewAccountPlugin()).
-		AddPlugin(plugins.NewBoltPlugin[*akevitt.Account]("database.db")).
-		UseSpawnRoom(&room).
-		UseRootUI(Root).
-		UseBind(":1999").
-		Finish()
-
-	log.Fatal(app.Run())
-}
-
-func Root(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {
-	modal := tview.NewModal().AddButtons([]string{"Go!"})
-
-	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-		session.Application.SetRoot(plugins.RegistrationScreen(engine, session, func(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {
-			return tview.NewTextView().SetText("Thank you!!")
-		}), true)
-	})
-
-	return modal
 }
