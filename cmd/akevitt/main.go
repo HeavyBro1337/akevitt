@@ -157,7 +157,7 @@ return look
 
 go 1.22
 
-require github.com/IvanKorchmit/akevitt v0.3.6
+require github.com/IvanKorchmit/akevitt v0.4.0
 `
 
 	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte(goMod), 0644); err != nil {
