@@ -69,7 +69,7 @@ func initProject(dir string) {
 import (
 	"log"
 
-	"github.com/IvanKorchmit/akevitt/internal/engine"
+	"github.com/IvanKorchmit/akevitt/engine"
 	"github.com/IvanKorchmit/akevitt/plugins"
 	"github.com/rivo/tview"
 )
@@ -157,7 +157,7 @@ return look
 
 go 1.22
 
-require github.com/IvanKorchmit/akevitt v0.1.0
+require github.com/IvanKorchmit/akevitt v0.3.6
 `
 
 	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte(goMod), 0644); err != nil {
@@ -169,7 +169,7 @@ require github.com/IvanKorchmit/akevitt v0.1.0
 	fmt.Println("")
 	fmt.Println("To get started:")
 	fmt.Printf("  cd %s\n", dir)
-	fmt.Println("  go mod tidy")
+	fmt.Println("  GOSUMDB=off go mod tidy")
 	fmt.Println("  go run main.go")
 	fmt.Println("")
 	fmt.Println("Then connect with: ssh -p 2222 localhost")

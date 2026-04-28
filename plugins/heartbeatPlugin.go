@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/IvanKorchmit/akevitt/internal/engine"
+	"github.com/IvanKorchmit/akevitt/engine"
 )
 
 type HeartbeatMap = map[time.Duration]*engine.Pair[time.Ticker, []func() error]

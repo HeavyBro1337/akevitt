@@ -3,7 +3,7 @@ package plugins
 import (
 	"time"
 
-	"github.com/IvanKorchmit/akevitt/internal/engine"
+	"github.com/IvanKorchmit/akevitt/engine"
 )
 
 func DefaultPlugins() []engine.Plugin {

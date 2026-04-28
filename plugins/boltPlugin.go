@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/IvanKorchmit/akevitt/internal/engine"
+	"github.com/IvanKorchmit/akevitt/engine"
 	"github.com/boltdb/bolt"
 )
 

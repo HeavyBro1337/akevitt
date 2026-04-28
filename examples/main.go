@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/IvanKorchmit/akevitt/internal/engine"
+	"github.com/IvanKorchmit/akevitt/engine"
 	"github.com/IvanKorchmit/akevitt/plugins"
 	"github.com/rivo/tview"
 )

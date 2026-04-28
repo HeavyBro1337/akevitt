@@ -6,7 +6,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/IvanKorchmit/akevitt/internal/engine"
+	"github.com/IvanKorchmit/akevitt/engine"
 	"github.com/rivo/tview"
 	"golang.org/x/crypto/bcrypt"
 )

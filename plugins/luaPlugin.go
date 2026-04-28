@@ -1,7 +1,7 @@
 package plugins
 
 import (
-	"github.com/IvanKorchmit/akevitt/internal/engine"
+	"github.com/IvanKorchmit/akevitt/engine"
 )
 
 type LuaCommandPlugin struct {
