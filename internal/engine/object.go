@@ -1,7 +1,8 @@
-package akevitt
+package engine
 
 import (
 	"fmt"
+	"hash/fnv"
 	"sync"
 	"sync/atomic"
 )
@@ -11,6 +12,12 @@ var objectCounter uint64
 func generateGUID() string {
 	id := atomic.AddUint64(&objectCounter, 1)
 	return fmt.Sprintf("obj_%d", id)
+}
+
+func hash(s string) uint64 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return uint64(h.Sum32())
 }
 
 type Object interface {
@@ -109,8 +116,8 @@ type Exit struct {
 
 type NPC struct {
 	ObjectImpl
-	RoomID    string
-	Dialogue  string
+	RoomID     string
+	Dialogue   string
 	OnInteract func(*Akevitt, *ActiveSession) error
 }
 
@@ -118,7 +125,7 @@ func NewNPC(name string) *NPC {
 	return &NPC{
 		ObjectImpl: ObjectImpl{
 			Name: name,
-			GUID:  generateGUID(),
+			GUID: generateGUID(),
 		},
 	}
 }
@@ -132,8 +139,29 @@ func NewItem(name string) *Item {
 	return &Item{
 		ObjectImpl: ObjectImpl{
 			Name: name,
-			GUID:  generateGUID(),
+			GUID: generateGUID(),
 		},
 		Properties: make(map[string]any),
 	}
+}
+
+// Account is a basic structure for storing credential information.
+type Account struct {
+	ObjectImpl
+	Username       string
+	Password       string
+	PersistentData map[string]any
+}
+
+func (account *Account) GetName() string {
+	return account.Username
+}
+
+func (account *Account) Save(engine *Akevitt) error {
+	databasePlugin, err := FetchPlugin[DatabasePlugin[*Account]](engine)
+
+	if err != nil {
+		return err
+	}
+	return (*databasePlugin).Save(account)
 }

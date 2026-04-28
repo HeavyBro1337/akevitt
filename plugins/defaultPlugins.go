@@ -3,11 +3,11 @@ package plugins
 import (
 	"time"
 
-	"github.com/IvanKorchmit/akevitt"
+	"github.com/IvanKorchmit/akevitt/internal/engine"
 )
 
-func DefaultPlugins() []akevitt.Plugin {
-	result := make([]akevitt.Plugin, 0)
+func DefaultPlugins() []engine.Plugin {
+	result := make([]engine.Plugin, 0)
 
 	result = append(result, NewHeartbeatPlugin().
 		NewDuration(time.Second).

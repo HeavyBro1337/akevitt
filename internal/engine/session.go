@@ -1,10 +1,12 @@
-package akevitt
+package engine
 
 import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -27,12 +29,6 @@ func (session *ActiveSession) SendLines(lines ...string) {
 	session.Send(strings.Join(lines, "\n"))
 }
 
-func (session *ActiveSession) loadData() {
-	for k, v := range session.Account.PersistentData {
-		session.Data[k] = v
-	}
-}
-
 func PurgeDeadSessions(engine *Akevitt, callback ...DeadSessionFunc) {
 	deadSessions := make([]*ActiveSession, 0)
 	liveSessions := make([]*ActiveSession, 0)
@@ -52,4 +48,31 @@ func PurgeDeadSessions(engine *Akevitt, callback ...DeadSessionFunc) {
 			}
 		}
 	}
+}
+
+func AppendText(message string, chatlog io.Writer) {
+	fmt.Fprintln(chatlog, message)
+}
+
+func ErrorBox(message string, app *tview.Application, back tview.Primitive) {
+	result := tview.NewModal().SetText("Error!").SetText(message).SetTextColor(tcell.ColorRed).
+		SetBackgroundColor(tcell.ColorBlack).
+		AddButtons([]string{"Close"}).SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+		app.SetRoot(back, true)
+	})
+
+	result.SetBorder(true).SetBorderColor(tcell.ColorDarkRed)
+	app.SetRoot(result, true)
+}
+
+const format string = "[%s] %s: %s\n"
+
+func LogInfo(message string) {
+	fmt.Printf(format, time.Now(), "LOG", message)
+}
+func LogWarn(message string) {
+	fmt.Printf(format, time.Now(), "WARN", message)
+}
+func LogError(message string) {
+	fmt.Printf(format, time.Now(), "ERR", message)
 }

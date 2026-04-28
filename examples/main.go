@@ -3,18 +3,18 @@ package main
 import (
 	"log"
 
-	"github.com/IvanKorchmit/akevitt"
+	"github.com/IvanKorchmit/akevitt/internal/engine"
 	"github.com/IvanKorchmit/akevitt/plugins"
 	"github.com/rivo/tview"
 )
 
 func main() {
-	room := akevitt.NewRoom("Example room")
+	room := engine.NewRoom("Example room")
 
-	app := akevitt.NewEngine().
+	app := engine.NewEngine().
 		AddPlugin(plugins.DefaultPlugins()...).
 		AddPlugin(plugins.NewAccountPlugin()).
-		AddPlugin(plugins.NewBoltPlugin[*akevitt.Account]("database.db")).
+		AddPlugin(plugins.NewBoltPlugin[*engine.Account]("database.db")).
 		UseSpawnRoom(room).
 		UseRootUI(Root).
 		UseBind(":1999").
@@ -23,11 +23,11 @@ func main() {
 	log.Fatal(app.Run())
 }
 
-func Root(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {
+func Root(eng *engine.Akevitt, session *engine.ActiveSession) tview.Primitive {
 	modal := tview.NewModal().AddButtons([]string{"Go!"})
 
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-		session.Application.SetRoot(plugins.RegistrationScreen(engine, session, func(engine *akevitt.Akevitt, session *akevitt.ActiveSession) tview.Primitive {
+		session.Application.SetRoot(plugins.RegistrationScreen(eng, session, func(eng *engine.Akevitt, session *engine.ActiveSession) tview.Primitive {
 			return tview.NewTextView().SetText("Thank you!!")
 		}), true)
 	})

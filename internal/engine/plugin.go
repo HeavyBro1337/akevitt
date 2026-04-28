@@ -1,4 +1,4 @@
-package akevitt
+package engine
 
 import (
 	"fmt"
@@ -29,4 +29,11 @@ func FetchPluginUnsafe[T Plugin](engine *Akevitt) T {
 	}
 
 	return *plugin
+}
+
+type DatabasePlugin[T Object] interface {
+	Plugin
+
+	Save(T) error
+	LoadAll() ([]T, error)
 }

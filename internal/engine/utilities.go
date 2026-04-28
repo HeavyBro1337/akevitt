@@ -1,13 +1,10 @@
-package akevitt
+package engine
 
 import (
-	"errors"
 	"fmt"
-	"hash/fnv"
 	"strings"
 )
 
-// Finds `T` value of []T.
 func Find[T comparable](collection []T, value T) bool {
 	for _, b := range collection {
 		if b == value {
@@ -19,7 +16,7 @@ func Find[T comparable](collection []T, value T) bool {
 
 func FindByKey[TCollection, T comparable](collection []TCollection, selector func(key TCollection) T, value T) *TCollection {
 	if collection == nil {
-		panic(errors.New("collection is nil"))
+		panic(fmt.Errorf("collection is nil"))
 	}
 	for _, b := range collection {
 		if selector(b) == value {
@@ -29,7 +26,6 @@ func FindByKey[TCollection, T comparable](collection []TCollection, selector fun
 	return nil
 }
 
-// Removes item from collection and returns it.
 func RemoveItem[T comparable](l []T, item T) []T {
 	for i, other := range l {
 		if other == item {
@@ -43,7 +39,6 @@ func RemoveItemByIndex[T any](l []T, i int) []T {
 	return append(l[:i], l[i+1:]...)
 }
 
-// Maps slice, similar to JavaScript's map method.
 func MapSlice[T any, TResult any](l []T, callback func(v T) TResult) []TResult {
 	result := make([]TResult, 0)
 
@@ -63,7 +58,6 @@ func FindNeighboringRoomByName(currentRoom *Room, name string) (*Room, *Exit, er
 	return nil, nil, fmt.Errorf("room %s not found", name)
 }
 
-// Checks if current room specified reachable to another room.
 func IsRoomReachable[T Room](engine *Akevitt, session *ActiveSession, name string, currentRoomKey uint64) (*Exit, error) {
 	room, err := engine.GetRoom(currentRoomKey)
 
@@ -74,22 +68,21 @@ func IsRoomReachable[T Room](engine *Akevitt, session *ActiveSession, name strin
 	exits := room.Exits
 
 	if exits == nil {
-		return nil, errors.New("array of exits is nil")
+		return nil, fmt.Errorf("array of exits is nil")
 	}
 	exit := FindByKey(exits, func(key *Exit) string {
 		return strings.ToLower(key.Room.Name)
 	}, strings.ToLower(name))
 	if exit == nil {
-		return nil, errors.New("unreachable")
+		return nil, fmt.Errorf("unreachable")
 	}
 	return *exit, nil
 }
 
-// Binds room with an exit.
 func BindRooms(room *Room, exit Exit, otherRooms ...*Room) {
 	exits := make([]*Exit, 0)
 	for _, v := range otherRooms {
-		exit.Room = v // Setting exit's current room
+		exit.Room = v
 		exits = append(exits, &exit)
 	}
 
@@ -103,7 +96,6 @@ func BindRoomsBidirectional(room *Room, exit Exit, otherRooms ...*Room) {
 	}
 }
 
-// Saves object into a database.
 func (engine *Akevitt) SaveObject(object Object) error {
 	databasePlugin, err := FetchPlugin[DatabasePlugin[Object]](engine)
 
@@ -169,23 +161,17 @@ func FilterByType[T any, TCollection any](collection []TCollection) []T {
 	return result
 }
 
-func hash(s string) uint64 {
-	h := fnv.New32a()
-	h.Write([]byte(s))
-	return uint64(h.Sum32())
-}
-
-func GetMapValues[TKey comparable, TMap map[TKey]TResult, TResult any](m TMap) (values []TResult) {
-	for _, v := range m {
-		values = append(values, v)
+func GetMapKeys[TKey comparable, TMap map[TKey]TValues, TValues any](m TMap) (keys []TKey) {
+	for k := range m {
+		keys = append(keys, k)
 	}
 
 	return
 }
 
-func GetMapKeys[TKey comparable, TMap map[TKey]TValues, TValues any](m TMap) (keys []TKey) {
-	for k := range m {
-		keys = append(keys, k)
+func GetMapValues[TKey comparable, TMap map[TKey]TResult, TResult any](m TMap) (values []TResult) {
+	for _, v := range m {
+		values = append(values, v)
 	}
 
 	return

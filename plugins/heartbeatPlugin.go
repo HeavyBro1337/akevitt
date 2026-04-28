@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/IvanKorchmit/akevitt"
+	"github.com/IvanKorchmit/akevitt/internal/engine"
 )
 
-type HeartbeatMap = map[time.Duration]*akevitt.Pair[time.Ticker, []func() error]
+type HeartbeatMap = map[time.Duration]*engine.Pair[time.Ticker, []func() error]
 
 type HeartBeatsPlugin struct {
 	heartbeats HeartbeatMap
 }
 
-func (plugin *HeartBeatsPlugin) Build(engine *akevitt.Akevitt) error {
+func (plugin *HeartBeatsPlugin) Build(eng *engine.Akevitt) error {
 	for k := range plugin.heartbeats {
 		plugin.startHeartBeats(k)
 	}
@@ -32,7 +32,7 @@ type HeartBuilder struct {
 }
 
 func (builder *HeartBuilder) NewDuration(duration time.Duration) *HeartBuilder {
-	builder.plugin.heartbeats[duration] = &akevitt.Pair[time.Ticker, []func() error]{L: *time.NewTicker(duration), R: make([]func() error, 0)}
+	builder.plugin.heartbeats[duration] = &engine.Pair[time.Ticker, []func() error]{L: *time.NewTicker(duration), R: make([]func() error, 0)}
 	return builder
 }
 
@@ -44,7 +44,7 @@ func (plugin *HeartBeatsPlugin) startHeartBeats(interval time.Duration) {
 	go func() {
 		t, ok := plugin.heartbeats[interval]
 		if !ok {
-			akevitt.LogWarn(fmt.Sprintf("ticker %d does not exist", interval))
+			engine.LogWarn(fmt.Sprintf("ticker %d does not exist", interval))
 			return
 		}
 		for range t.L.C {

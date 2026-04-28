@@ -6,21 +6,21 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/IvanKorchmit/akevitt"
+	"github.com/IvanKorchmit/akevitt/internal/engine"
 	"github.com/rivo/tview"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AccountPlugin struct {
-	engine *akevitt.Akevitt
+	engine *engine.Akevitt
 }
 
 func NewAccountPlugin() *AccountPlugin {
 	return &AccountPlugin{}
 }
 
-func (plugin *AccountPlugin) login(username, password string) (*akevitt.Account, error) {
-	databasePlugin, err := akevitt.FetchPlugin[akevitt.DatabasePlugin[*akevitt.Account]](plugin.engine)
+func (plugin *AccountPlugin) login(username, password string) (*engine.Account, error) {
+	databasePlugin, err := engine.FetchPlugin[engine.DatabasePlugin[*engine.Account]](plugin.engine)
 
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (plugin *AccountPlugin) login(username, password string) (*akevitt.Account,
 	return nil, errors.New("wrong username or password")
 }
 
-func (plugin *AccountPlugin) LoginSession(username, password string, session *akevitt.ActiveSession) error {
+func (plugin *AccountPlugin) LoginSession(username, password string, session *engine.ActiveSession) error {
 	acc, err := plugin.login(username, password)
 	if err != nil {
 		return err
@@ -62,9 +62,9 @@ func (plugin *AccountPlugin) LoginSession(username, password string, session *ak
 	return nil
 }
 
-func (plugin *AccountPlugin) isSessionAlreadyActive(acc akevitt.Account, sessions *akevitt.Sessions) bool {
+func (plugin *AccountPlugin) isSessionAlreadyActive(acc engine.Account, sessions *engine.Sessions) bool {
 	// We want make sure we purge dead sessions before looking for active.
-	akevitt.PurgeDeadSessions(plugin.engine, plugin.engine.GetOnDeadSession()...)
+	engine.PurgeDeadSessions(plugin.engine, plugin.engine.GetOnDeadSession()...)
 	for _, v := range *sessions {
 		if v.Account == nil {
 			continue
@@ -82,12 +82,12 @@ func compareHash(password, hash string) bool {
 	return err == nil
 }
 
-func (plugin *AccountPlugin) Build(engine *akevitt.Akevitt) error {
+func (plugin *AccountPlugin) Build(engine *engine.Akevitt) error {
 	plugin.engine = engine
 	return nil
 }
 
-func (plugin *AccountPlugin) Register(username, password, repeatPassword string, session *akevitt.ActiveSession) error {
+func (plugin *AccountPlugin) Register(username, password, repeatPassword string, session *engine.ActiveSession) error {
 	err := validateCredentials(username, password)
 
 	if err != nil {
@@ -123,8 +123,8 @@ func validateCredentials(username, password string) error {
 	return nil
 }
 
-func isAccountExists(username string, engine *akevitt.Akevitt) bool {
-	databasePlugin, err := akevitt.FetchPlugin[akevitt.DatabasePlugin[*akevitt.Account]](engine)
+func isAccountExists(username string, eng *engine.Akevitt) bool {
+	databasePlugin, err := engine.FetchPlugin[engine.DatabasePlugin[*engine.Account]](eng)
 
 	if err != nil {
 		panic(err)
@@ -145,8 +145,8 @@ func isAccountExists(username string, engine *akevitt.Akevitt) bool {
 	return false
 }
 
-func createAccount(engine *akevitt.Akevitt, username, password string) (*akevitt.Account, error) {
-	exists := isAccountExists(username, engine)
+func createAccount(eng *engine.Akevitt, username, password string) (*engine.Account, error) {
+	exists := isAccountExists(username, eng)
 
 	if exists {
 		return nil, fmt.Errorf("account with name %s already exists", username)
@@ -158,13 +158,13 @@ func createAccount(engine *akevitt.Akevitt, username, password string) (*akevitt
 		return nil, err
 	}
 
-	databasePlugin, err := akevitt.FetchPlugin[akevitt.DatabasePlugin[*akevitt.Account]](engine)
+	databasePlugin, err := engine.FetchPlugin[engine.DatabasePlugin[*engine.Account]](eng)
 
 	if err != nil {
 		return nil, err
 	}
 
-	account := &akevitt.Account{
+	account := &engine.Account{
 		Username:       username,
 		Password:       hash,
 		PersistentData: make(map[string]any),
@@ -182,12 +182,12 @@ func hashString(password string) (string, error) {
 	return string(bytes), err
 }
 
-func RegistrationScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession, nextScreen akevitt.UIFunc) tview.Primitive {
+func RegistrationScreen(eng *engine.Akevitt, session *engine.ActiveSession, nextScreen engine.UIFunc) tview.Primitive {
 	username := ""
 	password := ""
 	repeatPassword := ""
 
-	account := akevitt.FetchPluginUnsafe[*AccountPlugin](engine)
+	account := engine.FetchPluginUnsafe[*AccountPlugin](eng)
 
 	form := tview.NewForm()
 
@@ -209,23 +209,23 @@ func RegistrationScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession,
 			err := account.Register(username, password, repeatPassword, session)
 
 			if err != nil {
-				akevitt.ErrorBox(err.Error(), session.Application, form)
+				engine.ErrorBox(err.Error(), session.Application, form)
 				return
 			}
 
-			session.Application.SetRoot(nextScreen(engine, session), true)
+			session.Application.SetRoot(nextScreen(eng, session), true)
 		})
 
 	return form
 }
 
-func LoginScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession, nextScreen akevitt.UIFunc) tview.Primitive {
+func LoginScreen(eng *engine.Akevitt, session *engine.ActiveSession, nextScreen engine.UIFunc) tview.Primitive {
 	username := ""
 	password := ""
 
 	form := tview.NewForm()
 
-	account := akevitt.FetchPluginUnsafe[*AccountPlugin](engine)
+	account := engine.FetchPluginUnsafe[*AccountPlugin](eng)
 
 	form.AddInputField("Username", "", 0, func(textToCheck string, lastChar rune) bool {
 		if !unicode.IsLetter(lastChar) && !unicode.IsDigit(lastChar) || lastChar > unicode.MaxASCII {
@@ -242,11 +242,11 @@ func LoginScreen(engine *akevitt.Akevitt, session *akevitt.ActiveSession, nextSc
 			err := account.LoginSession(username, password, session)
 
 			if err != nil {
-				akevitt.ErrorBox(err.Error(), session.Application, form)
+				engine.ErrorBox(err.Error(), session.Application, form)
 				return
 			}
 
-			session.Application.SetRoot(nextScreen(engine, session), true)
+			session.Application.SetRoot(nextScreen(eng, session), true)
 		})
 
 	form.SetTitle("Login")

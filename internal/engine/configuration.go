@@ -1,26 +1,22 @@
-package akevitt
+package engine
 
 import (
 	"strings"
 	"time"
 )
 
-// Specify an address to listen.
-// Example: :1999, 127.0.0.1:1999, etc.
 func (builder *akevittBuilder) UseBind(bindAddress string) *akevittBuilder {
 	builder.engine.bind = bindAddress
 
 	return builder
 }
 
-// Accepts function which returns the UI root screen.
 func (builder *akevittBuilder) UseRootUI(uiFunc UIFunc) *akevittBuilder {
 	builder.engine.root = uiFunc
 
 	return builder
 }
 
-// Register command with an alias and function
 func (builder *akevittBuilder) UseRegisterCommand(command string, function CommandFunc) *akevittBuilder {
 	builder.engine.AddCommand(command, function)
 	return builder
@@ -30,13 +26,11 @@ func (engine *Akevitt) AddInit(fn func(*Akevitt, *ActiveSession)) {
 	engine.initFunc = append(engine.initFunc, fn)
 }
 
-// Register command with an alias and function
 func (engine *Akevitt) AddCommand(command string, function CommandFunc) {
 	command = strings.TrimSpace(command)
 	engine.commands[command] = function
 }
 
-// Engine default constructor
 func NewEngine() *akevittBuilder {
 	engine := &Akevitt{}
 	engine.rooms = make(map[uint64]*Room)
@@ -58,9 +52,6 @@ func NewEngine() *akevittBuilder {
 	return builder
 }
 
-// Sets the spawn room.
-// Note: During startup, the engine traverses from spawn room to exits associated with that room recursively.
-// Make sure you connect rooms with BindRoom function
 func (builder *akevittBuilder) UseSpawnRoom(r *Room) *akevittBuilder {
 	builder.engine.defaultRoom = r
 
@@ -89,8 +80,6 @@ func (engine *Akevitt) addPlugin(plugins ...Plugin) {
 	engine.plugins = append(engine.plugins, plugins...)
 }
 
-// Room management for Lua API
-
 func (engine *Akevitt) AddRoom(room *Room) error {
 	engine.mu.Lock()
 	defer engine.mu.Unlock()
@@ -117,8 +106,6 @@ func (engine *Akevitt) GetRoomByGUID(guid string) *Room {
 	defer engine.mu.RUnlock()
 	return engine.roomsByGUID[guid]
 }
-
-// NPC management for Lua API
 
 func (engine *Akevitt) AddNPC(npc *NPC) {
 	engine.mu.Lock()
@@ -148,8 +135,6 @@ func (engine *Akevitt) GetNPCByName(name string) *NPC {
 	return nil
 }
 
-// Item management for Lua API
-
 func (engine *Akevitt) AddItem(item *Item) {
 	engine.mu.Lock()
 	defer engine.mu.Unlock()
@@ -166,8 +151,6 @@ func (engine *Akevitt) GetItemByGUID(guid string) *Item {
 	defer engine.mu.RUnlock()
 	return engine.items[guid]
 }
-
-// Lua VM management
 
 func (engine *Akevitt) GetLuaVM() *LuaVM {
 	return engine.luaVM

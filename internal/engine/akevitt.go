@@ -1,10 +1,4 @@
-/*
-Program written by Ivan Korchmit (c) 2023
-Licensed under European Union Public Licence 1.2.
-For more information, view LICENCE or README
-*/
-
-package akevitt
+package engine
 
 import (
 	"encoding/gob"
@@ -39,9 +33,6 @@ type Akevitt struct {
 	mu            sync.RWMutex
 }
 
-// Execute the command specified in a `command`.
-// The command can be registered using the useRegisterCommand method.
-// Returns an error if the given command not found or the result of associated function returns an error.
 func (engine *Akevitt) ExecuteCommand(command string, session *ActiveSession) error {
 	zeroArg := strings.Fields(command)[0]
 	noZeroArgArray := strings.Fields(command)[1:]
@@ -54,7 +45,6 @@ func (engine *Akevitt) ExecuteCommand(command string, session *ActiveSession) er
 	return commandFunc(engine, session, noZeroArg)
 }
 
-// Gets currently registered commands. This is useful if your game implements auto-completion.
 func (engine *Akevitt) GetCommands() []string {
 	result := make([]string, 0)
 
@@ -65,7 +55,6 @@ func (engine *Akevitt) GetCommands() []string {
 	return result
 }
 
-// Get sspawn room if specified. Useful for setting character's initial room during its creation.
 func (engine *Akevitt) GetSpawnRoom() *Room {
 	return engine.defaultRoom
 }
@@ -74,7 +63,6 @@ func (engine *Akevitt) AddSessionDead(fn DeadSessionFunc) {
 	engine.onDeadSession = append(engine.onDeadSession, fn)
 }
 
-// Obtains currently loaded rooms by key. It will return an error if room not found.
 func (engine *Akevitt) GetRoom(key uint64) (*Room, error) {
 	room, ok := engine.rooms[key]
 	if !ok {
@@ -92,9 +80,6 @@ func (engine *Akevitt) GetOnDeadSession() []DeadSessionFunc {
 	return engine.onDeadSession
 }
 
-// Run the given instance of engine.
-// You should pass your own implementation of ActiveSession,
-// so it can be controlled of how your game would behave
 func (engine *Akevitt) Run() error {
 	fmt.Println("Running Akevitt")
 
@@ -140,7 +125,7 @@ func (engine *Akevitt) Run() error {
 	}()
 	ssh.Handle(func(sesh ssh.Session) {
 		emptySession := ActiveSession{}
-		screen, err := newSessionScreen(sesh)
+		screen, err := NewSessionScreen(sesh)
 		if err != nil {
 			fmt.Fprintln(sesh.Stderr(), "unable to create screen:", err)
 			return

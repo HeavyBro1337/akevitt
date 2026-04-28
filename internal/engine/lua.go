@@ -1,4 +1,4 @@
-package akevitt
+package engine
 
 import (
 	"fmt"
@@ -10,9 +10,9 @@ import (
 )
 
 type LuaVM struct {
-	mu       sync.Mutex
-	L        *lua.LState
-	scripts  map[string]*lua.LFunction
+	mu        sync.Mutex
+	L         *lua.LState
+	scripts   map[string]*lua.LFunction
 	scriptsPath string
 }
 
@@ -50,20 +50,20 @@ func (vm *LuaVM) LoadScriptsDir(dir string) error {
 func (vm *LuaVM) registerAPI(engine *Akevitt) {
 	vm.L.PreloadModule("akevitt", func(L *lua.LState) int {
 		mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
-			"version":              vm.apiVersion,
-			"addRoom":              vm.makeRoomFunc(engine),
-			"getRoom":              vm.getRoomFunc(engine),
-			"bindRooms":            vm.bindRoomsFunc(engine),
-			"addNPC":               vm.addNPCFunc(engine),
-			"sendMessage":          vm.sendMessageFunc(engine),
-			"sendMessageToRoom":    vm.sendMessageToRoomFunc(engine),
-			"getSessions":          vm.getSessionsFunc(engine),
-			"getPlayerRoom":        vm.getPlayerRoomFunc(engine),
-			"setPlayerRoom":        vm.setPlayerRoomFunc(engine),
-			"setPlayerData":        vm.setPlayerDataFunc(engine),
-			"getPlayerData":        vm.getPlayerDataFunc(engine),
-			"createItem":           vm.createItemFunc(engine),
-			"getRoomExits":         vm.getRoomExitsFunc(engine),
+			"version":           vm.apiVersion,
+			"addRoom":           vm.makeRoomFunc(engine),
+			"getRoom":           vm.getRoomFunc(engine),
+			"bindRooms":         vm.bindRoomsFunc(engine),
+			"addNPC":            vm.addNPCFunc(engine),
+			"sendMessage":       vm.sendMessageFunc(engine),
+			"sendMessageToRoom": vm.sendMessageToRoomFunc(engine),
+			"getSessions":       vm.getSessionsFunc(engine),
+			"getPlayerRoom":     vm.getPlayerRoomFunc(engine),
+			"setPlayerRoom":     vm.setPlayerRoomFunc(engine),
+			"setPlayerData":     vm.setPlayerDataFunc(engine),
+			"getPlayerData":     vm.getPlayerDataFunc(engine),
+			"createItem":        vm.createItemFunc(engine),
+			"getRoomExits":      vm.getRoomExitsFunc(engine),
 		})
 		L.Push(mod)
 		return 1
@@ -206,7 +206,7 @@ func (vm *LuaVM) addNPCFunc(engine *Akevitt) lua.LGFunction {
 	}
 }
 
-func (vm *LuaVM) sendMessageFunc(engine *Akevitt) lua.LGFunction {
+func (vm *LuaVM) sendMessageFunc(_ *Akevitt) lua.LGFunction {
 	return func(L *lua.LState) int {
 		session := L.CheckUserData(1)
 		message := L.CheckString(2)
@@ -307,7 +307,7 @@ func (vm *LuaVM) setPlayerRoomFunc(engine *Akevitt) lua.LGFunction {
 	}
 }
 
-func (vm *LuaVM) setPlayerDataFunc(engine *Akevitt) lua.LGFunction {
+func (vm *LuaVM) setPlayerDataFunc(_ *Akevitt) lua.LGFunction {
 	return func(L *lua.LState) int {
 		session := L.CheckUserData(1)
 		key := L.CheckString(2)
@@ -324,7 +324,7 @@ func (vm *LuaVM) setPlayerDataFunc(engine *Akevitt) lua.LGFunction {
 	}
 }
 
-func (vm *LuaVM) getPlayerDataFunc(engine *Akevitt) lua.LGFunction {
+func (vm *LuaVM) getPlayerDataFunc(_ *Akevitt) lua.LGFunction {
 	return func(L *lua.LState) int {
 		session := L.CheckUserData(1)
 		key := L.CheckString(2)

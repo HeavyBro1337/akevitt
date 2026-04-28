@@ -1,9 +1,4 @@
-/*
-Program written by Ivan Korchmit (c) 2023
-Licensed under European Union Public Licence 1.2.
-For more information, view LICENCE or README
-*/
-package akevitt
+package engine
 
 import (
 	"errors"
@@ -14,7 +9,7 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-func newSessionScreen(s ssh.Session) (tcell.Screen, error) {
+func NewSessionScreen(s ssh.Session) (tcell.Screen, error) {
 	pi, ch, ok := s.Pty()
 	if !ok {
 		return nil, errors.New("no pty requested")

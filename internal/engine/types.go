@@ -1,4 +1,4 @@
-package akevitt
+package engine
 
 import (
 	"github.com/gliderlabs/ssh"

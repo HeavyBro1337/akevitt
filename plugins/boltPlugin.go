@@ -6,17 +6,17 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/IvanKorchmit/akevitt"
+	"github.com/IvanKorchmit/akevitt/internal/engine"
 	"github.com/boltdb/bolt"
 )
 
 var db *bolt.DB = nil
 
-type BoltDbPlugin[T akevitt.Object] struct {
+type BoltDbPlugin[T engine.Object] struct {
 	path string
 }
 
-func (plugin *BoltDbPlugin[T]) Build(engine *akevitt.Akevitt) error {
+func (plugin *BoltDbPlugin[T]) Build(engine *engine.Akevitt) error {
 	return createBoltDatabase(plugin)
 }
 
@@ -28,13 +28,13 @@ func (plugin *BoltDbPlugin[T]) Save(object T) error {
 			return err
 		}
 
-		bytes, err := plugin.serialize(object)
+		serialized, err := plugin.serialize(object)
 
 		if err != nil {
 			return err
 		}
 
-		return bkt.Put([]byte(object.GetName()), bytes)
+		return bkt.Put([]byte(object.GetName()), serialized)
 	})
 }
 
@@ -64,13 +64,13 @@ func (plugin *BoltDbPlugin[T]) LoadAll() ([]T, error) {
 	return objects, err
 }
 
-func NewBoltPlugin[T akevitt.Object](path string) *BoltDbPlugin[T] {
+func NewBoltPlugin[T engine.Object](path string) *BoltDbPlugin[T] {
 	return &BoltDbPlugin[T]{
 		path: path,
 	}
 }
 
-func createBoltDatabase[T akevitt.Object](boltPlugin *BoltDbPlugin[T]) error {
+func createBoltDatabase[T engine.Object](boltPlugin *BoltDbPlugin[T]) error {
 	_db, err := bolt.Open(boltPlugin.path, 0600, nil)
 	db = _db
 

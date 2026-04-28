@@ -3,26 +3,26 @@ package plugins
 import (
 	"fmt"
 
-	"github.com/IvanKorchmit/akevitt"
+	"github.com/IvanKorchmit/akevitt/internal/engine"
 	"github.com/rivo/tview"
 )
 
 type mapLogs = map[string]*tview.TextView
 
-type MessageFunc = func(engine *akevitt.Akevitt, session *akevitt.ActiveSession, channel, message, username string) error
+type MessageFunc = func(engine *engine.Akevitt, session *engine.ActiveSession, channel, message, username string) error
 
 type MessagePlugin struct {
 	onMessageFn MessageFunc
 	includeCmd  bool
 	format      string
-	sessions    map[*akevitt.ActiveSession]mapLogs
+	sessions    map[*engine.ActiveSession]mapLogs
 }
 
 // Send the message to other current sessions
-func (plugin *MessagePlugin) Message(engine *akevitt.Akevitt, channel, message, username string, session *akevitt.ActiveSession) error {
-	akevitt.PurgeDeadSessions(engine, engine.GetOnDeadSession()...)
+func (plugin *MessagePlugin) Message(eng *engine.Akevitt, channel, message, username string, session *engine.ActiveSession) error {
+	engine.PurgeDeadSessions(eng, eng.GetOnDeadSession()...)
 
-	for _, v := range engine.GetSessions() {
+	for _, v := range eng.GetSessions() {
 		tvChannel, ok := plugin.sessions[v][channel]
 
 		if !ok {
@@ -32,7 +32,7 @@ func (plugin *MessagePlugin) Message(engine *akevitt.Akevitt, channel, message, 
 		tvAll := plugin.sessions[v]["all"]
 
 		if plugin.onMessageFn != nil {
-			err := plugin.onMessageFn(engine, v, channel, message, username)
+			err := plugin.onMessageFn(eng, v, channel, message, username)
 
 			if err != nil {
 				return err
@@ -41,8 +41,8 @@ func (plugin *MessagePlugin) Message(engine *akevitt.Akevitt, channel, message, 
 
 		st := fmt.Sprintf(plugin.format, username, channel, message)
 
-		akevitt.AppendText(st, tvChannel)
-		akevitt.AppendText(st, tvAll)
+		engine.AppendText(st, tvChannel)
+		engine.AppendText(st, tvAll)
 
 		if session != v {
 			v.Application.Draw()
@@ -52,17 +52,17 @@ func (plugin *MessagePlugin) Message(engine *akevitt.Akevitt, channel, message, 
 	return nil
 }
 
-func (plugin *MessagePlugin) UpdateChannel(old, new string, session *akevitt.ActiveSession) {
+func (plugin *MessagePlugin) UpdateChannel(old, new string, session *engine.ActiveSession) {
 	plugin.sessions[session][old] = nil
 	delete(plugin.sessions[session], old)
 	plugin.sessions[session][new] = tview.NewTextView()
 }
 
-func (plugin *MessagePlugin) GetChannels(session *akevitt.ActiveSession) []string {
-	return akevitt.GetMapKeys(plugin.sessions[session])
+func (plugin *MessagePlugin) GetChannels(session *engine.ActiveSession) []string {
+	return engine.GetMapKeys(plugin.sessions[session])
 }
 
-func (plugin *MessagePlugin) AddChannel(channel string, session *akevitt.ActiveSession) {
+func (plugin *MessagePlugin) AddChannel(channel string, session *engine.ActiveSession) {
 	_, ok := plugin.sessions[session][channel]
 
 	if ok {
@@ -72,21 +72,21 @@ func (plugin *MessagePlugin) AddChannel(channel string, session *akevitt.ActiveS
 	plugin.sessions[session][channel] = tview.NewTextView()
 }
 
-func (plugin *MessagePlugin) RemoveChannel(channel string, session *akevitt.ActiveSession) {
+func (plugin *MessagePlugin) RemoveChannel(channel string, session *engine.ActiveSession) {
 	delete(plugin.sessions[session], channel)
 }
 
-func (plugin *MessagePlugin) Build(engine *akevitt.Akevitt) error {
+func (plugin *MessagePlugin) Build(eng *engine.Akevitt) error {
 	if plugin.includeCmd {
-		engine.AddCommand("ooc", plugin.oocCmd)
+		eng.AddCommand("ooc", plugin.oocCmd)
 	}
-	engine.AddInit(func(engine *akevitt.Akevitt, session *akevitt.ActiveSession) {
+	eng.AddInit(func(eng *engine.Akevitt, session *engine.ActiveSession) {
 		plugin.sessions[session] = make(map[string]*tview.TextView)
 		plugin.sessions[session]["all"] = tview.NewTextView()
 		plugin.sessions[session]["ooc"] = tview.NewTextView()
 	})
 
-	engine.AddSessionDead(func(deadSession *akevitt.ActiveSession, liveSessions []*akevitt.ActiveSession, engine *akevitt.Akevitt) {
+	eng.AddSessionDead(func(deadSession *engine.ActiveSession, liveSessions []*engine.ActiveSession, eng *engine.Akevitt) {
 		delete(plugin.sessions, deadSession)
 	})
 	return nil
@@ -101,23 +101,23 @@ func NewMessagePlugin(includeCmd bool, fn MessageFunc, format string) *MessagePl
 		includeCmd:  includeCmd,
 		onMessageFn: fn,
 		format:      format,
-		sessions:    make(map[*akevitt.ActiveSession]map[string]*tview.TextView),
+		sessions:    make(map[*engine.ActiveSession]map[string]*tview.TextView),
 	}
 }
 
 // Out-of-character chat command
-func (plugin *MessagePlugin) oocCmd(engine *akevitt.Akevitt, session *akevitt.ActiveSession, command string) error {
+func (plugin *MessagePlugin) oocCmd(eng *engine.Akevitt, session *engine.ActiveSession, command string) error {
 
-	return plugin.Message(engine, "ooc", command, session.Account.Username, session)
+	return plugin.Message(eng, "ooc", command, session.Account.Username, session)
 }
 
-func (plugin *MessagePlugin) GetChatLog(session *akevitt.ActiveSession) *tview.TextView {
+func (plugin *MessagePlugin) GetChatLog(session *engine.ActiveSession) *tview.TextView {
 	tv := plugin.sessions[session]["all"]
 
 	return tv
 }
 
-func (plugin *MessagePlugin) GetChatLogChannel(channel string, session *akevitt.ActiveSession) *tview.TextView {
+func (plugin *MessagePlugin) GetChatLogChannel(channel string, session *engine.ActiveSession) *tview.TextView {
 	tv := plugin.sessions[session][channel]
 
 	return tv

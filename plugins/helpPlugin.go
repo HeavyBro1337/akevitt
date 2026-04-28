@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/IvanKorchmit/akevitt"
+	"github.com/IvanKorchmit/akevitt/internal/engine"
 )
 
 type Doc struct {
@@ -61,14 +61,14 @@ func (builder *helpPluginBuilder) Finish() *HelpPlugin {
 	return builder.plugin
 }
 
-func (plugin *HelpPlugin) Build(engine *akevitt.Akevitt) error {
+func (plugin *HelpPlugin) Build(eng *engine.Akevitt) error {
 	lenDocs := len(plugin.docs)
-	lenCommands := len(engine.GetCommands())
+	lenCommands := len(eng.GetCommands())
 
 	if lenDocs != lenCommands {
 		return fmt.Errorf("help plugin: amount of documented commands are %d, but the game has %d", lenDocs, lenCommands)
 	}
-	for _, cmd := range engine.GetCommands() {
+	for _, cmd := range eng.GetCommands() {
 		_, ok := plugin.docs[cmd]
 
 		if !ok {

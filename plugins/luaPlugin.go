@@ -1,11 +1,11 @@
 package plugins
 
 import (
-	"github.com/IvanKorchmit/akevitt"
+	"github.com/IvanKorchmit/akevitt/internal/engine"
 )
 
 type LuaCommandPlugin struct {
-	engine     *akevitt.Akevitt
+	engine     *engine.Akevitt
 	scriptsDir string
 }
 
@@ -15,18 +15,18 @@ func NewLuaCommandPlugin(scriptsDir string) *LuaCommandPlugin {
 	}
 }
 
-func (plugin *LuaCommandPlugin) Build(engine *akevitt.Akevitt) error {
-	plugin.engine = engine
+func (plugin *LuaCommandPlugin) Build(eng *engine.Akevitt) error {
+	plugin.engine = eng
 
-	if err := engine.LoadLuaScriptsDir(plugin.scriptsDir); err != nil {
+	if err := eng.LoadLuaScriptsDir(plugin.scriptsDir); err != nil {
 		return err
 	}
 
-	engine.AddCommand("*", plugin.handleLuaCommand)
+	eng.AddCommand("*", plugin.handleLuaCommand)
 
 	return nil
 }
 
-func (plugin *LuaCommandPlugin) handleLuaCommand(engine *akevitt.Akevitt, session *akevitt.ActiveSession, arguments string) error {
-	return engine.ExecuteLuaCommand(arguments, session)
+func (plugin *LuaCommandPlugin) handleLuaCommand(eng *engine.Akevitt, session *engine.ActiveSession, arguments string) error {
+	return eng.ExecuteLuaCommand(arguments, session)
 }

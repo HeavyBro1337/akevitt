@@ -3,14 +3,14 @@ package plugins
 import (
 	"errors"
 
-	"github.com/IvanKorchmit/akevitt"
+	"github.com/IvanKorchmit/akevitt/internal/engine"
 	"github.com/rivo/tview"
 )
 
-type DialogueFunc = func(engine *akevitt.Akevitt, session *akevitt.ActiveSession, dialogue *Dialogue) error
+type DialogueFunc = func(engine *engine.Akevitt, session *engine.ActiveSession, dialogue *Dialogue) error
 
 type DialoguePlugin struct {
-	engine     *akevitt.Akevitt
+	engine     *engine.Akevitt
 	onDialogue DialogueFunc
 }
 
@@ -30,8 +30,8 @@ func NewDialoguePlugin(fn DialogueFunc) *DialoguePlugin {
 	}
 }
 
-func (plugin *DialoguePlugin) Build(engine *akevitt.Akevitt) error {
-	plugin.engine = engine
+func (plugin *DialoguePlugin) Build(eng *engine.Akevitt) error {
+	plugin.engine = eng
 	return nil
 }
 
@@ -77,7 +77,7 @@ func (dial *Dialogue) GetTitle() string {
 }
 
 // Invokes engine.Dialogue of the specified index from options.
-func (dial *Dialogue) Proceed(index int, session *akevitt.ActiveSession, plugin *DialoguePlugin) error {
+func (dial *Dialogue) Proceed(index int, session *engine.ActiveSession, plugin *DialoguePlugin) error {
 	return plugin.Dialogue(dial.options[index], session)
 }
 
@@ -89,7 +89,7 @@ func (dial *Dialogue) End(text string) *Dialogue {
 
 // Invokes dialogue event.
 // Make sure you have installed the hook during initalisation.
-func (plugin *DialoguePlugin) Dialogue(dialogue *Dialogue, session *akevitt.ActiveSession) error {
+func (plugin *DialoguePlugin) Dialogue(dialogue *Dialogue, session *engine.ActiveSession) error {
 	if plugin.onDialogue == nil {
 		return errors.New("dialogue callback is not installed")
 	}
