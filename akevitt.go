@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gliderlabs/ssh"
@@ -27,9 +28,15 @@ type Akevitt struct {
 	onDeadSession []DeadSessionFunc
 	defaultRoom   *Room
 	rooms         map[uint64]*Room
+	roomsByName   map[string]*Room
+	roomsByGUID   map[string]*Room
+	npcs          map[string]*NPC
+	items         map[string]*Item
 	plugins       []Plugin
 	rsaKey        string
 	heartbeats    map[int]*Pair[time.Ticker, []func() error]
+	luaVM         *LuaVM
+	mu            sync.RWMutex
 }
 
 // Execute the command specified in a `command`.

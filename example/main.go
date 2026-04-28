@@ -9,15 +9,13 @@ import (
 )
 
 func main() {
-	room := akevitt.Room{
-		Name: "Example room",
-	}
+	room := akevitt.NewRoom("Example room")
 
 	app := akevitt.NewEngine().
 		AddPlugin(plugins.DefaultPlugins()...).
 		AddPlugin(plugins.NewAccountPlugin()).
 		AddPlugin(plugins.NewBoltPlugin[*akevitt.Account]("database.db")).
-		UseSpawnRoom(&room).
+		UseSpawnRoom(room).
 		UseRootUI(Root).
 		UseBind(":1999").
 		Finish()

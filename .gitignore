@@ -1,8 +1,12 @@
 # executables
+akevitt
 *.exe
 iron-exalt
 generator/akevitt-gen*
 *.o
+*.dll
+*.so
+*.dylib
 # database files
 *.db
 *.db.lock
@@ -18,3 +22,26 @@ generator/akevitt-gen*
 *.key
 *.csr
 id_rsa*
+
+# Test binary, built with `go test -c`
+*.test
+
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# env file
+.env
+
+# Honk
+.crush
+AGENTS.md

@@ -11,15 +11,10 @@ import (
 func TestBiRooms(t *testing.T) {
 	assrt := assert.New(t)
 
-	spawn := akevitt.Room{
-		Name: "Spawn",
-	}
+	spawn := akevitt.NewRoom("Spawn")
+	otherRoom := akevitt.NewRoom("Market")
 
-	otherRoom := akevitt.Room{
-		Name: "Market",
-	}
-
-	akevitt.BindRoomsBidirectional(&spawn, akevitt.Exit{}, &otherRoom)
+	akevitt.BindRoomsBidirectional(spawn, akevitt.Exit{}, otherRoom)
 
 	roomsOfSpawn := akevitt.MapSlice(spawn.Exits, func(v *akevitt.Exit) *akevitt.Room {
 		return v.Room
@@ -28,8 +23,8 @@ func TestBiRooms(t *testing.T) {
 	roomsOfOther := akevitt.MapSlice(otherRoom.Exits, func(v *akevitt.Exit) *akevitt.Room {
 		return v.Room
 	})
-	assrt.True(akevitt.Find(roomsOfSpawn, &otherRoom), roomsOfSpawn)
-	assrt.True(akevitt.Find(roomsOfOther, &spawn), roomsOfOther)
+	assrt.True(akevitt.Find(roomsOfSpawn, otherRoom), roomsOfSpawn)
+	assrt.True(akevitt.Find(roomsOfOther, spawn), roomsOfOther)
 }
 
 func TestFind(t *testing.T) {
@@ -44,15 +39,10 @@ func TestFind(t *testing.T) {
 func TestBindRooms(t *testing.T) {
 	assrt := assert.New(t)
 
-	spawn := akevitt.Room{
-		Name: "Spawn",
-	}
+	spawn := akevitt.NewRoom("Spawn")
+	otherRoom := akevitt.NewRoom("Market")
 
-	otherRoom := akevitt.Room{
-		Name: "Market",
-	}
-
-	akevitt.BindRooms(&spawn, akevitt.Exit{}, &otherRoom)
+	akevitt.BindRooms(spawn, akevitt.Exit{}, otherRoom)
 
 	roomsOfSpawn := akevitt.MapSlice(spawn.Exits, func(v *akevitt.Exit) *akevitt.Room {
 		return v.Room
@@ -62,8 +52,8 @@ func TestBindRooms(t *testing.T) {
 		return v.Room
 	})
 
-	assrt.True(akevitt.Find(roomsOfSpawn, &otherRoom), roomsOfSpawn)
-	assrt.False(akevitt.Find(roomsOfOther, &spawn), roomsOfOther)
+	assrt.True(akevitt.Find(roomsOfSpawn, otherRoom), roomsOfSpawn)
+	assrt.False(akevitt.Find(roomsOfOther, spawn), roomsOfOther)
 }
 
 func TestMap(t *testing.T) {

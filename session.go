@@ -1,7 +1,9 @@
 package akevitt
 
 import (
+	"fmt"
 	"io"
+	"strings"
 
 	"github.com/rivo/tview"
 )
@@ -10,11 +12,24 @@ type ActiveSession struct {
 	Account     *Account
 	Application *tview.Application
 	Data        map[string]any
+	RoomID      string
+}
+
+func (session *ActiveSession) Send(message string) {
+	fmt.Println(message)
+}
+
+func (session *ActiveSession) Sendf(format string, args ...any) {
+	session.Send(fmt.Sprintf(format, args...))
+}
+
+func (session *ActiveSession) SendLines(lines ...string) {
+	session.Send(strings.Join(lines, "\n"))
 }
 
 func (session *ActiveSession) loadData() {
 	for k, v := range session.Account.PersistentData {
-		session.Data[k] = &v
+		session.Data[k] = v
 	}
 }
 
